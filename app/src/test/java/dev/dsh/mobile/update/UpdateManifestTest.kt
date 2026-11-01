@@ -65,6 +65,15 @@ class UpdateManifestTest {
     }
 
     @Test
+    fun `utf8 byte order mark is tolerated`() {
+        val json = "\uFEFF" + """
+            {"versionCode":3,"versionName":"0.2.1-preview",
+             "apkUrl":"https://example.com/app.apk","sha256":"$validSha"}
+        """.trimIndent()
+        assertEquals(3L, requireNotNull(UpdateManifestParser.parse(json)).versionCode)
+    }
+
+    @Test
     fun `sha256 is normalised to lowercase`() {
         val json = """
             {"versionCode":3,"versionName":"0.2.1-preview",

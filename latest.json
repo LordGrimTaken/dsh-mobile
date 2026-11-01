@@ -1,14 +1,14 @@
 {
     "schemaVersion":  1,
-    "versionCode":  142,
-    "versionName":  "0.2.140-preview",
-    "tag":  "v0.2.140-preview",
-    "publishedAt":  "2026-11-01T15:52:00Z",
-    "apkUrl":  "https://github.com/LordGrimTaken/dsh-mobile/releases/download/v0.2.140-preview/dsh-mobile-0.2.140-preview-debug.apk",
-    "apkAssetName":  "dsh-mobile-0.2.140-preview-debug.apk",
+    "versionCode":  143,
+    "versionName":  "0.2.141-preview",
+    "tag":  "v0.2.141-preview",
+    "publishedAt":  "2026-11-01T15:58:00Z",
+    "apkUrl":  "https://github.com/LordGrimTaken/dsh-mobile/releases/download/v0.2.141-preview/dsh-mobile-0.2.141-preview-debug.apk",
+    "apkAssetName":  "dsh-mobile-0.2.141-preview-debug.apk",
     "apkSizeBytes":  19380693,
-    "sha256":  "2faf6a0e01de90d48312590d96c6607c48d741d8d1fd877471326af8811c2961",
+    "sha256":  "4070de616ba5f4d52e517f7dd887af312e1d1a581759f60d577e2861552f12f8",
     "minSdk":  26,
-    "notes":  "First public open-source release: live DSH sessions, chat and approvals, files with mention-in-prompt, plans/teams/trajectory/jobs, usage and context meters, adaptive layout, accent themes, share cards, startup recovery and the paired-launch NPE fix. Debug-signed preview APK; see README and SECURITY.md.",
-    "releaseUrl":  "https://github.com/LordGrimTaken/dsh-mobile/releases/tag/v0.2.140-preview"
+    "notes":  "Public preview: live DSH sessions, chat/approvals, files with mention-in-prompt, plans/teams/trajectory/jobs, usage and context meters, adaptive layout, accent themes, share cards, startup recovery and the paired-launch NPE fix. Feed now uses the release asset URL.",
+    "releaseUrl":  "https://github.com/LordGrimTaken/dsh-mobile/releases/tag/v0.2.141-preview"
 }

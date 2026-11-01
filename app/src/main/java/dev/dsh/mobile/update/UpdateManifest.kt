@@ -13,9 +13,13 @@ import kotlinx.serialization.json.jsonPrimitive
  * point at a staging feed while testing; a Settings override can come later.
  */
 object UpdateConfig {
-    /** Published update manifest (GitHub Releases repo, `main` branch). */
+    /**
+     * Published update manifest, attached to the latest GitHub release. The release-asset URL is
+     * used instead of a raw repository path so the feed bytes are immutable per release and the
+     * latest redirect always points at the current feed.
+     */
     const val DEFAULT_FEED_URL =
-        "https://raw.githubusercontent.com/LordGrimTaken/dsh-mobile/main/latest.json"
+        "https://github.com/LordGrimTaken/dsh-mobile/releases/latest/download/latest.json"
 
     /** Launch-time auto check is throttled to once per day. */
     const val CHECK_INTERVAL_MS: Long = 24L * 60L * 60L * 1000L
@@ -60,7 +64,9 @@ object UpdateManifestParser {
 
     fun parse(raw: String?): UpdateManifest? {
         if (raw.isNullOrBlank()) return null
-        val root = runCatching { DshJson.parseToJsonElement(raw) }.getOrNull() as? JsonObject
+        val root = runCatching {
+            DshJson.parseToJsonElement(raw.trimStart('\uFEFF'))
+        }.getOrNull() as? JsonObject
             ?: return null
 
         fun text(vararg keys: String): String = keys.firstNotNullOfOrNull { key ->

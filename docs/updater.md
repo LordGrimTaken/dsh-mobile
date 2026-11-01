@@ -5,7 +5,7 @@ DSH Mobile is distributed as a **debug-signed preview APK** from this repository
 | Thing | Value |
 | --- | --- |
 | Repository | `LordGrimTaken/dsh-mobile` |
-| Update feed | `https://raw.githubusercontent.com/LordGrimTaken/dsh-mobile/main/latest.json` |
+| Update feed | `https://github.com/LordGrimTaken/dsh-mobile/releases/latest/download/latest.json` |
 | Release pages | `https://github.com/LordGrimTaken/dsh-mobile/releases` |
 | APK asset naming | `dsh-mobile-<versionName>-debug.apk` |
 
@@ -17,7 +17,7 @@ DSH Mobile is distributed as a **debug-signed preview APK** from this repository
 | --- | --- | --- |
 | `schemaVersion` | integer | Feed format version. Currently `1`. |
 | `versionCode` | integer | Android `versionCode` of the published APK (monotonic). |
-| `versionName` | string | Android `versionName`, e.g. `0.2.140-preview`. |
+| `versionName` | string | Android `versionName`, e.g. `0.2.141-preview`. |
 | `tag` | string | Release tag, `v<versionName>`. |
 | `publishedAt` | string | ISO-8601 UTC timestamp. |
 | `apkUrl` | string | Direct HTTPS download URL for the APK asset. |
@@ -49,11 +49,11 @@ The project publishes a release from a machine that can build the APK:
 ./gradlew :app:testDebugUnitTest :app:assembleDebug :app:lintDebug
 
 # 3. Tag and create the release with the APK
-git tag v0.2.140-preview
+git tag v0.2.141-preview
 git push origin main v0.2.140-preview
-gh release create v0.2.140-preview \
+gh release create v0.2.141-preview \
   app/build/outputs/apk/debug/app-debug.apk \
-  --title "DSH Mobile v0.2.140-preview" \
+  --title "DSH Mobile v0.2.141-preview" \
   --notes-file RELEASE_NOTES.md
 
 # 4. Update latest.json from the SHA/size of the uploaded asset

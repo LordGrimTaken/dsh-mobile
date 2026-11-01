@@ -14,8 +14,8 @@ android {
         applicationId = "dev.dsh.mobile"
         minSdk = 26
         targetSdk = 35
-        versionCode = 142
-        versionName = "0.2.140-preview"
+        versionCode = 143
+        versionName = "0.2.141-preview"
         vectorDrawables { useSupportLibrary = true }
     }
 

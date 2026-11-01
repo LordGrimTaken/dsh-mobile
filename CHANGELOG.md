@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.2.141-preview
+- Update feed moved to the latest release asset (`releases/latest/download/latest.json`) for reliable, cache-safe manifests.
+- The updater tolerates a UTF-8 byte order mark in a feed.
+
 ## 0.2.140-preview — first public source release
 
 - Combined Android app, host plugin and release feed into a single public repository.
