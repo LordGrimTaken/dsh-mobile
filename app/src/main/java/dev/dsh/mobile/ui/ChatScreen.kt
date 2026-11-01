@@ -74,6 +74,7 @@ import androidx.compose.material.icons.filled.PhotoCamera
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Folder
 import androidx.compose.material.icons.filled.InsertDriveFile
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.TextSnippet
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
@@ -88,6 +89,8 @@ import androidx.compose.material.icons.filled.Stop
 import androidx.compose.material.icons.filled.Terminal
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.Icon
@@ -1053,12 +1056,13 @@ fun ChatScreen(state: AppState, session: Session) {
                 state.openSession(target.id)
             }
         },
+        compact = true,
         trailing = {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
                     modelChipLabel(state.modelCatalog, state.modelPreview?.selection),
                     modifier = Modifier
-                        .widthIn(max = 120.dp)
+                        .widthIn(max = 96.dp)
                         .clip(RoundedCornerShape(6.dp))
                         .clickable {
                             state.openModelPicker(session.id)
@@ -1070,68 +1074,96 @@ fun ChatScreen(state: AppState, session: Session) {
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                 )
-                Text(
-                    SKILLS_ACTION_LABEL,
-                    modifier = Modifier
-                        .heightIn(min = 48.dp)
-                        .widthIn(min = 48.dp)
-                        .clip(RoundedCornerShape(6.dp))
-                        .clickable(role = Role.Button) {
-                            showSkills = true
-                            state.openSkills(session.id)
-                        }
-                        .semantics { contentDescription = "Open skills" }
-                        .padding(horizontal = 6.dp),
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.primary,
-                )
                 val planHint = state.plan?.takeIf { it.supported }?.let { plan ->
                     planProgressHint(plan.counts)
                 }
-                Column(
-                    modifier = Modifier
-                        .heightIn(min = 48.dp)
-                        .widthIn(min = 48.dp)
-                        .clip(RoundedCornerShape(6.dp))
-                        .clickable(role = Role.Button) {
-                            showPlan = true
-                            state.openPlan(session.id)
-                        }
-                        .semantics {
-                            contentDescription = planActionContentDescription(
-                                state.plan?.takeIf { it.supported }?.counts,
-                            )
-                        }
-                        .padding(horizontal = 6.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.Center,
-                ) {
-                    Text(
-                        PLAN_ACTION_LABEL,
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.primary,
-                        maxLines = 1,
-                    )
-                    planHint?.let { hint ->
-                        Text(
-                            hint,
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.tertiary,
-                            maxLines = 1,
+                var moreOpen by remember { mutableStateOf(false) }
+                Box {
+                    IconButton(
+                        onClick = { moreOpen = true },
+                        modifier = Modifier.size(48.dp),
+                    ) {
+                        Icon(
+                            Icons.Filled.MoreVert,
+                            contentDescription = CHAT_MORE_CONTENT_DESCRIPTION,
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                    DropdownMenu(
+                        expanded = moreOpen,
+                        onDismissRequest = { moreOpen = false },
+                    ) {
+                        DropdownMenuItem(
+                            text = { Text(CHAT_OVERFLOW_SKILLS_LABEL) },
+                            modifier = Modifier.semantics {
+                                contentDescription = CHAT_OVERFLOW_SKILLS_LABEL
+                            },
+                            onClick = {
+                                moreOpen = false
+                                showSkills = true
+                                state.openSkills(session.id)
+                            },
+                        )
+                        DropdownMenuItem(
+                            text = {
+                                Text(
+                                    if (planHint != null) {
+                                        "$CHAT_OVERFLOW_PLAN_LABEL · $planHint"
+                                    } else {
+                                        CHAT_OVERFLOW_PLAN_LABEL
+                                    },
+                                )
+                            },
+                            modifier = Modifier.semantics {
+                                contentDescription = planActionContentDescription(
+                                    state.plan?.takeIf { it.supported }?.counts,
+                                )
+                            },
+                            onClick = {
+                                moreOpen = false
+                                showPlan = true
+                                state.openPlan(session.id)
+                            },
+                        )
+                        DropdownMenuItem(
+                            text = { Text(CHAT_OVERFLOW_TEMPLATES_LABEL) },
+                            modifier = Modifier.semantics {
+                                contentDescription = CHAT_OVERFLOW_TEMPLATES_LABEL
+                            },
+                            onClick = {
+                                moreOpen = false
+                                showTemplates = true
+                            },
+                        )
+                        DropdownMenuItem(
+                            text = { Text(CHAT_OVERFLOW_SESSION_INFO_LABEL) },
+                            modifier = Modifier.semantics {
+                                contentDescription = CHAT_OVERFLOW_SESSION_INFO_LABEL
+                            },
+                            onClick = {
+                                moreOpen = false
+                                showSessionInfo = true
+                            },
+                        )
+                        DropdownMenuItem(
+                            text = { Text(CHAT_OVERFLOW_TOOL_ACTIVITY_LABEL) },
+                            modifier = Modifier.semantics {
+                                contentDescription = CHAT_OVERFLOW_TOOL_ACTIVITY_LABEL
+                            },
+                            onClick = {
+                                moreOpen = false
+                                showToolActivity = true
+                            },
                         )
                     }
                 }
-                IconButton(onClick = { showTemplates = true }) {
-                    Icon(
-                        Icons.Filled.TextSnippet,
-                        contentDescription = "Prompt templates",
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                }
-                IconButton(onClick = {
-                    findOpen = !findOpen
-                    if (!findOpen) findQuery = ""
-                }) {
+                IconButton(
+                    onClick = {
+                        findOpen = !findOpen
+                        if (!findOpen) findQuery = ""
+                    },
+                    modifier = Modifier.size(48.dp),
+                ) {
                     Icon(
                         Icons.Filled.Search,
                         contentDescription = if (findOpen) "Close find" else "Find in conversation",
@@ -4450,7 +4482,7 @@ private fun ChatComposer(
             IconButton(
                 onClick = onVoice,
                 enabled = !voiceStarting,
-                modifier = Modifier.size(38.dp),
+                modifier = Modifier.size(48.dp),
             ) {
                 Icon(
                     Icons.Filled.Mic,
@@ -4462,13 +4494,13 @@ private fun ChatComposer(
                             alpha = if (voiceStarting) 0.35f else 1f,
                         )
                     },
-                    modifier = Modifier.size(18.dp),
+                    modifier = Modifier.size(20.dp),
                 )
             }
             IconButton(
                 onClick = onCamera,
                 enabled = cameraEnabled,
-                modifier = Modifier.size(38.dp),
+                modifier = Modifier.size(48.dp),
             ) {
                 Icon(
                     Icons.Filled.PhotoCamera,
@@ -4476,13 +4508,13 @@ private fun ChatComposer(
                     tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(
                         alpha = if (cameraEnabled) 1f else 0.35f,
                     ),
-                    modifier = Modifier.size(18.dp),
+                    modifier = Modifier.size(20.dp),
                 )
             }
             IconButton(
                 onClick = onAttach,
                 enabled = attachEnabled,
-                modifier = Modifier.size(38.dp),
+                modifier = Modifier.size(48.dp),
             ) {
                 Icon(
                     Icons.Filled.AttachFile,
@@ -4490,7 +4522,7 @@ private fun ChatComposer(
                     tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(
                         alpha = if (attachEnabled) 1f else 0.35f,
                     ),
-                    modifier = Modifier.size(18.dp),
+                    modifier = Modifier.size(20.dp),
                 )
             }
             Box(Modifier.weight(1f)) {
@@ -4548,13 +4580,13 @@ private fun ChatComposer(
                 if (working) {
                     IconButton(
                         onClick = onStop,
-                        modifier = Modifier.size(38.dp),
+                        modifier = Modifier.size(48.dp),
                     ) {
                         Icon(
                             Icons.Filled.Stop,
                             contentDescription = "Stop",
                             tint = Danger,
-                            modifier = Modifier.size(18.dp),
+                            modifier = Modifier.size(20.dp),
                         )
                     }
                     Spacer(Modifier.width(4.dp))
@@ -4562,7 +4594,7 @@ private fun ChatComposer(
                 FilledIconButton(
                     onClick = if (sendEnabled) onSend else ({ }),
                     enabled = sendEnabled,
-                    modifier = Modifier.size(40.dp),
+                    modifier = Modifier.size(48.dp),
                     colors = IconButtonDefaults.filledIconButtonColors(
                         containerColor = if (sendEnabled) {
                             MaterialTheme.colorScheme.primary
@@ -4579,7 +4611,7 @@ private fun ChatComposer(
                     Icon(
                         Icons.Filled.Send,
                         contentDescription = "Send",
-                        modifier = Modifier.size(17.dp),
+                        modifier = Modifier.size(20.dp),
                     )
                 }
             }
@@ -6116,38 +6148,7 @@ private fun SkillsSheet(
     }
 }
 
-/** Shared shell-style bottom sheet: 20dp top radius, drawer-toned surface, drag handle. */
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun DshBottomSheet(
-    onDismiss: () -> Unit,
-    content: @Composable ColumnScope.() -> Unit,
-) {
-    ModalBottomSheet(
-        onDismissRequest = onDismiss,
-        shape = RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp),
-        containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
-        contentColor = MaterialTheme.colorScheme.onSurface,
-        dragHandle = {
-            Box(
-                Modifier
-                    .padding(top = 10.dp, bottom = 8.dp)
-                    .width(36.dp)
-                    .height(4.dp)
-                    .clip(CircleShape)
-                    .background(MaterialTheme.colorScheme.outline),
-            )
-        },
-    ) {
-        Column(
-            Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp)
-                .padding(bottom = 20.dp),
-            content = content,
-        )
-    }
-}
+/** Shared shell-style bottom sheet lives in Shell.kt (DshBottomSheet) so Home can reuse it. */
 
 @Composable
 private fun InfoRow(label: String, value: String) {

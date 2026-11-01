@@ -21,7 +21,7 @@ DSH Mobile talks to a small **host plugin** that runs inside the DeepSeek Harnes
 | **Oversight** | Plan/todos, team board, trajectory journal, background jobs, lineage/delegation, skills |
 | **Usage & context** | Host-fed token usage and API balance, context-window pressure with warnings |
 | **Automation** | Schedules, goals, recovery pairing, push notification preferences |
-| **Presentation** | Dark/light/AMOLED, six accent themes, adaptive two-pane layout on tablets/foldables, share-message-as-image cards, configurable text size |
+| **Presentation** | Terminal-first UI with compact shell and single-line status; dark/light/AMOLED, six accent themes, adaptive two-pane layout on tablets/foldables, share-message-as-image cards, configurable text size |
 | **Resilience** | SSE reconnect diagnostics, snapshot cache, startup-recovery screen, crash reports |
 
 ## Architecture

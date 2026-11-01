@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.2.142-preview — terminal UI simplification
+- Compact terminal shell: Home and Chat hide the command strip/workspace deck and use a single-line status bar, reclaiming vertical space.
+- Home: simplified `dsh@<host>` header, New session, one-line filters summary, and a single Filters sheet (workspace/status/sort) instead of three chip rows.
+- Chat: Skills, Plan, Prompt templates, Session info and Tool activity now live in one accessible More overflow, so the top bar no longer holds five separate actions.
+- Readability: larger JetBrains Mono body/label sizes, softer radii, and 48dp composer/top-bar/action targets.
+- All previous screens remain reachable; Goals/Schedules/Archived/Search all/Inbox/Usage now in Home More.
+
 ## 0.2.141-preview
 - Update feed moved to the latest release asset (`releases/latest/download/latest.json`) for reliable, cache-safe manifests.
 - The updater tolerates a UTF-8 byte order mark in a feed.

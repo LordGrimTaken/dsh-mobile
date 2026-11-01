@@ -1,14 +1,14 @@
 {
     "schemaVersion":  1,
-    "versionCode":  143,
-    "versionName":  "0.2.141-preview",
-    "tag":  "v0.2.141-preview",
-    "publishedAt":  "2026-11-01T15:58:00Z",
-    "apkUrl":  "https://github.com/LordGrimTaken/dsh-mobile/releases/download/v0.2.141-preview/dsh-mobile-0.2.141-preview-debug.apk",
-    "apkAssetName":  "dsh-mobile-0.2.141-preview-debug.apk",
-    "apkSizeBytes":  19380693,
-    "sha256":  "4070de616ba5f4d52e517f7dd887af312e1d1a581759f60d577e2861552f12f8",
+    "versionCode":  144,
+    "versionName":  "0.2.142-preview",
+    "tag":  "v0.2.142-preview",
+    "publishedAt":  "2026-11-01T16:23:00Z",
+    "apkUrl":  "https://github.com/LordGrimTaken/dsh-mobile/releases/download/v0.2.142-preview/dsh-mobile-0.2.142-preview-debug.apk",
+    "apkAssetName":  "dsh-mobile-0.2.142-preview-debug.apk",
+    "apkSizeBytes":  19397077,
+    "sha256":  "7b4d39fff9d4dbad1a451c51ebcb6ab56d97c6ee99faf4bd0467d3566ec5d94b",
     "minSdk":  26,
-    "notes":  "Public preview: live DSH sessions, chat/approvals, files with mention-in-prompt, plans/teams/trajectory/jobs, usage and context meters, adaptive layout, accent themes, share cards, startup recovery and the paired-launch NPE fix. Feed now uses the release asset URL.",
-    "releaseUrl":  "https://github.com/LordGrimTaken/dsh-mobile/releases/tag/v0.2.141-preview"
+    "notes":  "Terminal UI simplification: compact shell, simplified Home with one Filters sheet, chat More overflow (Skills/Plan/Templates/Session info/Tool activity), larger mono type and 48dp touch targets. No features removed.",
+    "releaseUrl":  "https://github.com/LordGrimTaken/dsh-mobile/releases/tag/v0.2.142-preview"
 }

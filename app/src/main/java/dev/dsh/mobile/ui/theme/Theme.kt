@@ -183,29 +183,29 @@ private fun mono(
 )
 
 private val DshTypography = Typography(
-    displayLarge = mono(32, 40, FontWeight.SemiBold),
-    displayMedium = mono(28, 36, FontWeight.SemiBold),
-    displaySmall = mono(26, 34, FontWeight.SemiBold),
-    headlineLarge = mono(26, 32, FontWeight.SemiBold),
-    headlineMedium = mono(24, 30, FontWeight.SemiBold),
-    headlineSmall = mono(20, 26, FontWeight.SemiBold),
-    titleLarge = mono(18, 24, FontWeight.Medium),
-    titleMedium = mono(15, 21, FontWeight.Medium),
-    titleSmall = mono(13, 18, FontWeight.Medium),
-    bodyLarge = mono(14, 22),
-    bodyMedium = mono(13, 20),
-    bodySmall = mono(12, 18),
-    labelLarge = mono(12, 16, FontWeight.Medium),
-    labelMedium = mono(11, 15, FontWeight.Medium),
-    labelSmall = mono(10, 14, FontWeight.Medium),
+    displayLarge = mono(34, 42, FontWeight.SemiBold),
+    displayMedium = mono(30, 38, FontWeight.SemiBold),
+    displaySmall = mono(27, 35, FontWeight.SemiBold),
+    headlineLarge = mono(28, 36, FontWeight.SemiBold),
+    headlineMedium = mono(25, 32, FontWeight.SemiBold),
+    headlineSmall = mono(22, 29, FontWeight.SemiBold),
+    titleLarge = mono(20, 27, FontWeight.Medium),
+    titleMedium = mono(17, 24, FontWeight.Medium),
+    titleSmall = mono(15, 21, FontWeight.Medium),
+    bodyLarge = mono(16, 24),
+    bodyMedium = mono(14, 22),
+    bodySmall = mono(13, 20),
+    labelLarge = mono(13, 18, FontWeight.Medium),
+    labelMedium = mono(12, 16, FontWeight.Medium),
+    labelSmall = mono(11, 16, FontWeight.Medium),
 )
 
-/** Terminal-tight radii: 6 / 10 / 14 / 20. */
+/** Terminal-tight radii, slightly softer: 4 / 8 / 12 / 16. */
 private val DshShapes = Shapes(
-    small = RoundedCornerShape(6.dp),
-    medium = RoundedCornerShape(10.dp),
-    large = RoundedCornerShape(14.dp),
-    extraLarge = RoundedCornerShape(20.dp),
+    small = RoundedCornerShape(4.dp),
+    medium = RoundedCornerShape(8.dp),
+    large = RoundedCornerShape(12.dp),
+    extraLarge = RoundedCornerShape(16.dp),
 )
 
 @Composable

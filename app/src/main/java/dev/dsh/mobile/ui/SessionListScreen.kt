@@ -21,12 +21,14 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
@@ -38,14 +40,18 @@ import androidx.compose.material.icons.filled.Archive
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Flag
 import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Terminal
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
@@ -159,6 +165,7 @@ fun SessionListScreen(
     var archiveOnHostSession by remember { mutableStateOf<Session?>(null) }
     var forkSession by remember { mutableStateOf<Session?>(null) }
     var focusSearchSignal by remember { mutableStateOf(0) }
+    var showHomeFilters by remember { mutableStateOf(false) }
     val searchFocusRequester = remember { FocusRequester() }
     // The footer count must reflect what the user can actually see (filters + safety net).
     val filteredSessions = state.filteredSessions()
@@ -263,16 +270,19 @@ fun SessionListScreen(
                 onOpenSession(session.id)
             }
         },
+        compact = true,
     ) {
         Column(Modifier.fillMaxSize()) {
-            Hero(
+            CompactHomeHeader(
+                state = state,
+                sessionCount = filteredSessions.size,
                 onNewSession = state::openNewSession,
-                onOpenSettings = onOpenSettings,
-                onOpenUsage = onOpenUsage,
-                onOpenInbox = onOpenInbox,
                 onOpenGoals = onOpenGoals,
-                pendingInputCount = state.pendingInputCount,
-                goalCount = state.goalSessionCount,
+                onOpenSchedules = onOpenSchedules,
+                onOpenArchivedSessions = onOpenArchivedSessions,
+                onOpenHostSearch = onOpenHostSearch,
+                onOpenInbox = onOpenInbox,
+                onOpenUsage = onOpenUsage,
             )
             (state.updates.state as? UpdateUiState.Available)?.let { update ->
                 HadalGhostButton(
@@ -283,27 +293,25 @@ fun SessionListScreen(
                         .padding(horizontal = 16.dp),
                 )
             }
-            Spacer(Modifier.height(12.dp))
+            Spacer(Modifier.height(8.dp))
             SearchField(
                 value = state.searchQuery,
                 onValueChange = state::setSearch,
                 focusRequester = searchFocusRequester,
             )
-            Spacer(Modifier.height(10.dp))
-            WorkspaceChips(
-                workspaces = state.workspaces,
-                selected = state.selectedWorkspace,
-                onSelect = state::selectWorkspace,
-            )
-            Spacer(Modifier.height(6.dp))
-            StatusChips(
-                selected = state.statusFilter,
-                onSelect = state::updateStatusFilter,
-            )
-            Spacer(Modifier.height(6.dp))
-            SortChips(
-                selected = state.sessionSort,
-                onSelect = state::updateSessionSort,
+            Spacer(Modifier.height(8.dp))
+            HomeFilterBar(
+                workspaceName = state.workspaces
+                    .firstOrNull { it.id == state.selectedWorkspace }
+                    ?.name,
+                statusFilter = state.statusFilter,
+                sort = state.sessionSort,
+                activeCount = homeActiveFilterCount(
+                    workspaceId = state.selectedWorkspace,
+                    statusFilter = state.statusFilter,
+                    sort = state.sessionSort,
+                ),
+                onOpenFilters = { showHomeFilters = true },
             )
             Spacer(Modifier.height(8.dp))
             PullToRefreshBox(
@@ -318,6 +326,12 @@ fun SessionListScreen(
                     onOpenSession = onOpenSession,
                     onLongClickSession = { session -> actionSession = session },
                     modifier = Modifier.fillMaxSize(),
+                )
+            }
+            if (showHomeFilters) {
+                HomeFiltersSheet(
+                    state = state,
+                    onDismiss = { showHomeFilters = false },
                 )
             }
         }
@@ -492,6 +506,190 @@ fun SessionListScreen(
 }
 
 // region hero / search / filters
+
+/** Compact terminal header: prompt line, one-line stats, New session and the More overflow. */
+@Composable
+private fun CompactHomeHeader(
+    state: AppState,
+    sessionCount: Int,
+    onNewSession: () -> Unit,
+    onOpenGoals: () -> Unit,
+    onOpenSchedules: () -> Unit,
+    onOpenArchivedSessions: () -> Unit,
+    onOpenHostSearch: () -> Unit,
+    onOpenInbox: () -> Unit,
+    onOpenUsage: () -> Unit,
+) {
+    Column(
+        Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 8.dp),
+        verticalArrangement = Arrangement.spacedBy(6.dp),
+    ) {
+        Text(
+            homeTerminalPrompt(state.hostLabel),
+            style = MaterialTheme.typography.labelLarge,
+            color = MaterialTheme.colorScheme.primary,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+        )
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text(
+                if (sessionCount == 1) "1 session" else "$sessionCount sessions",
+                modifier = Modifier.weight(1f),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.tertiary,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+            HadalPrimaryButton(
+                text = HOME_NEW_SESSION_LABEL,
+                onClick = onNewSession,
+                modifier = Modifier
+                    .heightIn(min = 48.dp)
+                    .semantics { contentDescription = HOME_NEW_SESSION_LABEL },
+            )
+            var moreOpen by remember { mutableStateOf(false) }
+            Box {
+                IconButton(
+                    onClick = { moreOpen = true },
+                    modifier = Modifier.size(48.dp),
+                ) {
+                    Icon(
+                        Icons.Filled.MoreVert,
+                        contentDescription = HOME_MORE_CONTENT_DESCRIPTION,
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+                DropdownMenu(
+                    expanded = moreOpen,
+                    onDismissRequest = { moreOpen = false },
+                ) {
+                    HOME_MORE_MENU_ITEMS.forEach { label ->
+                        DropdownMenuItem(
+                            text = { Text(label) },
+                            modifier = Modifier.semantics { contentDescription = label },
+                            onClick = {
+                                moreOpen = false
+                                when (label) {
+                                    "Goals" -> onOpenGoals()
+                                    "Schedules" -> onOpenSchedules()
+                                    "Archived sessions" -> onOpenArchivedSessions()
+                                    "Search all sessions" -> onOpenHostSearch()
+                                    "Inbox" -> onOpenInbox()
+                                    "Usage" -> onOpenUsage()
+                                }
+                            },
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+/** One-line active-filter summary plus the single Filters action that opens the sheet. */
+@Composable
+private fun HomeFilterBar(
+    workspaceName: String?,
+    statusFilter: String?,
+    sort: SessionSort,
+    activeCount: Int,
+    onOpenFilters: () -> Unit,
+) {
+    Row(
+        Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        Text(
+            homeFilterSummary(workspaceName, statusFilter, sort),
+            modifier = Modifier.weight(1f),
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.tertiary,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+        )
+        HadalGhostButton(
+            text = homeFilterActionLabel(activeCount),
+            onClick = onOpenFilters,
+            modifier = Modifier
+                .heightIn(min = 48.dp)
+                .semantics {
+                    contentDescription = if (activeCount > 0) {
+                        "$HOME_FILTERS_LABEL, $activeCount active"
+                    } else {
+                        HOME_FILTERS_LABEL
+                    }
+                },
+        )
+    }
+}
+
+/** All filters live in one sheet: workspace, status and sort with Reset/Done. */
+@Composable
+private fun HomeFiltersSheet(
+    state: AppState,
+    onDismiss: () -> Unit,
+) {
+    DshBottomSheet(onDismiss = onDismiss) {
+        Column(
+            Modifier
+                .fillMaxWidth()
+                .verticalScroll(rememberScrollState()),
+        ) {
+        HadalCaps("Filters")
+        Spacer(Modifier.height(8.dp))
+        Text(
+            "Refine the session ledger. Changes apply immediately.",
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.tertiary,
+        )
+        Spacer(Modifier.height(10.dp))
+        Text("Workspace", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.tertiary)
+        WorkspaceChips(
+            workspaces = state.workspaces,
+            selected = state.selectedWorkspace,
+            onSelect = state::selectWorkspace,
+        )
+        Spacer(Modifier.height(10.dp))
+        Text("Status", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.tertiary)
+        StatusChips(
+            selected = state.statusFilter,
+            onSelect = state::updateStatusFilter,
+        )
+        Spacer(Modifier.height(10.dp))
+        Text("Sort", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.tertiary)
+        SortChips(
+            selected = state.sessionSort,
+            onSelect = state::updateSessionSort,
+        )
+        Spacer(Modifier.height(14.dp))
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            HadalGhostButton(
+                text = HOME_FILTERS_RESET_LABEL,
+                onClick = {
+                    state.selectWorkspace(null)
+                    state.updateStatusFilter(null)
+                    state.updateSessionSort(SessionSort.ACTIVITY)
+                },
+                modifier = Modifier
+                    .weight(1f)
+                    .heightIn(min = 48.dp),
+            )
+            HadalGhostButton(
+                text = HOME_FILTERS_DONE_LABEL,
+                onClick = onDismiss,
+                modifier = Modifier
+                    .weight(1f)
+                    .heightIn(min = 48.dp),
+            )
+        }
+        }
+    }
+}
 
 @Composable
 private fun Hero(

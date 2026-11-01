@@ -69,6 +69,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import dev.dsh.mobile.data.SessionSort
 import kotlinx.coroutines.launch
 
 // ---------------------------------------------------------------------------
@@ -158,6 +159,8 @@ fun ShellFrame(
     onBack: (() -> Unit)? = null,
     onMenu: (() -> Unit)? = null,
     showDeck: Boolean = true,
+    /** Terminal-style compact shell: no command strip, no workspace deck, shorter bar, one-line status. */
+    compact: Boolean = false,
     drawerSessions: List<String>? = null,
     onOpenSessionTitle: ((String) -> Unit)? = null,
     trailing: (@Composable RowScope.() -> Unit)? = null,
@@ -203,17 +206,21 @@ fun ShellFrame(
                 subtitle = subtitle,
                 onBack = onBack,
                 onMenuClick = { openDrawer() },
-                showDeck = showDeck,
+                showDeck = showDeck && !compact,
                 onOpenDeck = { deckOpen = true },
+                compact = compact,
                 trailing = trailing,
             )
-            ShellCommandStrip(onCommand = onCommand)
+            if (!compact) {
+                ShellCommandStrip(onCommand = onCommand)
+            }
             Box(
                 Modifier
                     .fillMaxWidth()
                     .height(1.dp)
                     .background(MaterialTheme.colorScheme.outlineVariant),
-            )
+            ) {
+            }
             Box(
                 Modifier
                     .fillMaxWidth()
@@ -221,11 +228,11 @@ fun ShellFrame(
             ) {
                 content()
             }
-            ShellStatusStrip(status = status)
+            ShellStatusStrip(status = status, compact = compact)
         }
     }
 
-    if (deckOpen) {
+    if (deckOpen && !compact) {
         WorkspaceDeckSheet(
             deckCards = deckCards,
             onCommand = onCommand,
@@ -246,6 +253,7 @@ private fun ShellTopBar(
     onMenuClick: () -> Unit,
     showDeck: Boolean,
     onOpenDeck: () -> Unit,
+    compact: Boolean,
     trailing: (@Composable RowScope.() -> Unit)?,
 ) {
     Column(
@@ -257,12 +265,15 @@ private fun ShellTopBar(
         Row(
             Modifier
                 .fillMaxWidth()
-                .heightIn(min = 56.dp)
+                .heightIn(min = if (compact) 48.dp else 56.dp)
                 .padding(end = 4.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             if (onBack != null) {
-                IconButton(onClick = onBack) {
+                IconButton(
+                    onClick = onBack,
+                    modifier = Modifier.size(48.dp),
+                ) {
                     Icon(
                         Icons.AutoMirrored.Filled.ArrowBack,
                         contentDescription = "Back",
@@ -271,7 +282,10 @@ private fun ShellTopBar(
                     )
                 }
             }
-            IconButton(onClick = onMenuClick) {
+            IconButton(
+                onClick = onMenuClick,
+                modifier = Modifier.size(48.dp),
+            ) {
                 Icon(
                     Icons.Filled.Menu,
                     contentDescription = "Navigation",
@@ -288,12 +302,16 @@ private fun ShellTopBar(
             Column(Modifier.weight(1f)) {
                 Text(
                     title,
-                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
+                    style = (if (compact) {
+                        MaterialTheme.typography.titleSmall
+                    } else {
+                        MaterialTheme.typography.titleMedium
+                    }).copy(fontWeight = FontWeight.SemiBold),
                     color = MaterialTheme.colorScheme.onSurface,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                 )
-                if (subtitle != null) {
+                if (!compact && subtitle != null) {
                     Text(
                         subtitle,
                         style = MaterialTheme.typography.labelSmall,
@@ -378,7 +396,7 @@ private fun ShellCommandStrip(onCommand: (ShellCommand) -> Unit) {
 }
 
 @Composable
-private fun ShellStatusStrip(status: ShellStatus) {
+private fun ShellStatusStrip(status: ShellStatus, compact: Boolean) {
     val promptColor = MaterialTheme.colorScheme.primary
     val metaColor = MaterialTheme.colorScheme.onSurfaceVariant
     val liveColor = MaterialTheme.colorScheme.primary
@@ -394,44 +412,73 @@ private fun ShellStatusStrip(status: ShellStatus) {
                 .height(1.dp)
                 .background(MaterialTheme.colorScheme.outlineVariant),
         )
-        Row(
-            Modifier
-                .fillMaxWidth()
-                .height(24.dp)
-                .padding(horizontal = 10.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Text(
-                promptAnnotated(status.left, promptColor),
-                style = MaterialTheme.typography.labelSmall,
-                color = metaColor,
-                maxLines = 1,
-            )
-            Spacer(Modifier.width(8.dp))
-            if (status.items.isNotEmpty()) {
+        if (compact) {
+            // Single-line status: no wrapping, no crowded right-aligned version block.
+            Row(
+                Modifier
+                    .fillMaxWidth()
+                    .heightIn(min = 24.dp)
+                    .padding(horizontal = 10.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
                 Text(
-                    statusItemsAnnotated(status.items, liveColor),
-                    modifier = Modifier.weight(1f),
+                    shellCompactStatusLine(status),
                     style = MaterialTheme.typography.labelSmall,
                     color = metaColor,
-                    textAlign = TextAlign.Center,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                 )
-            } else {
-                Spacer(Modifier.weight(1f))
             }
-            if (status.right.isNotEmpty()) {
-                Spacer(Modifier.width(8.dp))
+        } else {
+            Row(
+                Modifier
+                    .fillMaxWidth()
+                    .height(24.dp)
+                    .padding(horizontal = 10.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
                 Text(
-                    status.right.joinToString(" · "),
+                    promptAnnotated(status.left, promptColor),
                     style = MaterialTheme.typography.labelSmall,
-                    color = metaColor.copy(alpha = 0.65f),
+                    color = metaColor,
                     maxLines = 1,
                 )
+                Spacer(Modifier.width(8.dp))
+                if (status.items.isNotEmpty()) {
+                    Text(
+                        statusItemsAnnotated(status.items, liveColor),
+                        modifier = Modifier.weight(1f),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = metaColor,
+                        textAlign = TextAlign.Center,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                } else {
+                    Spacer(Modifier.weight(1f))
+                }
+                if (status.right.isNotEmpty()) {
+                    Spacer(Modifier.width(8.dp))
+                    Text(
+                        status.right.joinToString(" · "),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = metaColor.copy(alpha = 0.65f),
+                        maxLines = 1,
+                    )
+                }
             }
         }
     }
+}
+
+/** Compact shell mode keeps the status to one honest, truncated line. */
+internal fun shellCompactStatusLine(status: ShellStatus): String {
+    val parts = buildList {
+        status.left.trim().takeIf { it.isNotEmpty() }?.let { add(it) }
+        status.items.map { it.trim() }.filter { it.isNotEmpty() }.forEach { add(it) }
+        status.right.map { it.trim() }.filter { it.isNotEmpty() }.forEach { add(it) }
+    }
+    return parts.joinToString(" · ")
 }
 
 private fun promptAnnotated(text: String, promptColor: Color): AnnotatedString =
@@ -981,4 +1028,113 @@ fun CompactReconnectBar(
             maxLines = 1,
         )
     }
+}
+
+// ---------------------------------------------------------------------------
+// Shared bottom sheet + compact-home copy/filter helpers
+// ---------------------------------------------------------------------------
+
+/** Shared shell-style bottom sheet: 20dp top radius, drawer-toned surface, drag handle. */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun DshBottomSheet(
+    onDismiss: () -> Unit,
+    content: @Composable ColumnScope.() -> Unit,
+) {
+    ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        shape = RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp),
+        containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+        contentColor = MaterialTheme.colorScheme.onSurface,
+        dragHandle = {
+            Box(
+                Modifier
+                    .padding(top = 10.dp, bottom = 8.dp)
+                    .width(36.dp)
+                    .height(4.dp)
+                    .clip(CircleShape)
+                    .background(MaterialTheme.colorScheme.outline),
+            )
+        },
+    ) {
+        Column(
+            Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp)
+                .padding(bottom = 20.dp),
+            content = content,
+        )
+    }
+}
+
+internal const val HOME_FILTERS_LABEL: String = "Filters"
+internal const val HOME_FILTERS_RESET_LABEL: String = "Reset"
+internal const val HOME_FILTERS_DONE_LABEL: String = "Done"
+internal const val HOME_NEW_SESSION_LABEL: String = "New session"
+internal const val HOME_MORE_CONTENT_DESCRIPTION: String = "More"
+
+/** Compact Home overflow: secondary destinations that used to live in the Hero. */
+internal val HOME_MORE_MENU_ITEMS: List<String> = listOf(
+    "Goals",
+    "Schedules",
+    "Archived sessions",
+    "Search all sessions",
+    "Inbox",
+    "Usage",
+)
+
+internal const val CHAT_MORE_CONTENT_DESCRIPTION: String = "More actions"
+internal const val CHAT_OVERFLOW_SKILLS_LABEL: String = "Skills"
+internal const val CHAT_OVERFLOW_PLAN_LABEL: String = "Plan"
+internal const val CHAT_OVERFLOW_TEMPLATES_LABEL: String = "Prompt templates"
+internal const val CHAT_OVERFLOW_SESSION_INFO_LABEL: String = "Session info"
+internal const val CHAT_OVERFLOW_TOOL_ACTIVITY_LABEL: String = "Tool activity"
+
+/** Chat overflow keeps every former top-bar/deck action reachable. */
+internal val CHAT_MORE_MENU_ITEMS: List<String> = listOf(
+    CHAT_OVERFLOW_SKILLS_LABEL,
+    CHAT_OVERFLOW_PLAN_LABEL,
+    CHAT_OVERFLOW_TEMPLATES_LABEL,
+    CHAT_OVERFLOW_SESSION_INFO_LABEL,
+    CHAT_OVERFLOW_TOOL_ACTIVITY_LABEL,
+)
+
+/** "dsh@desk" terminal prompt; falls back to "dsh@local". */
+internal fun homeTerminalPrompt(hostLabel: String?): String {
+    val host = hostLabel?.trim()?.takeIf { it.isNotEmpty() } ?: "local"
+    return "dsh@$host"
+}
+
+/** Filters that differ from the home defaults (all workspaces / all statuses / activity). */
+internal fun homeActiveFilterCount(
+    workspaceId: String?,
+    statusFilter: String?,
+    sort: SessionSort,
+): Int =
+    (if (workspaceId != null) 1 else 0) +
+        (if (statusFilter != null) 1 else 0) +
+        (if (sort != SessionSort.ACTIVITY) 1 else 0)
+
+internal fun homeFilterActionLabel(activeCount: Int): String =
+    if (activeCount <= 0) HOME_FILTERS_LABEL else "$HOME_FILTERS_LABEL · $activeCount"
+
+/** One-line active-filter summary used inside the Filters sheet and compact header. */
+internal fun homeFilterSummary(
+    workspaceName: String?,
+    statusFilter: String?,
+    sort: SessionSort,
+): String {
+    val workspace = workspaceName?.trim()?.takeIf { it.isNotEmpty() } ?: "All workspaces"
+    val status = when (statusFilter?.trim()?.lowercase()) {
+        "working" -> "Working"
+        "idle" -> "Idle"
+        "unread" -> "Unread"
+        else -> "All statuses"
+    }
+    val sortLabel = when (sort) {
+        SessionSort.ACTIVITY -> "Activity"
+        SessionSort.TITLE -> "Title"
+        SessionSort.STATUS -> "Status"
+    }
+    return "$workspace · $status · $sortLabel"
 }
