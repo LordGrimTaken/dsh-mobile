@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<shortcuts xmlns:android="http://schemas.android.com/apk/res/android">
+    <shortcut
+        android:shortcutId="new_session"
+        android:enabled="true"
+        android:icon="@mipmap/ic_launcher"
+        android:shortcutShortLabel="@string/shortcut_new_session_short"
+        android:shortcutLongLabel="@string/shortcut_new_session_long">
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:data="dshmobile://new" />
+        <categories android:name="android.shortcut.conversation" />
+    </shortcut>
+    <shortcut
+        android:shortcutId="usage"
+        android:enabled="true"
+        android:icon="@mipmap/ic_launcher"
+        android:shortcutShortLabel="@string/shortcut_usage_short"
+        android:shortcutLongLabel="@string/shortcut_usage_long">
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:data="dshmobile://usage" />
+        <categories android:name="android.shortcut.conversation" />
+    </shortcut>
+    <shortcut
+        android:shortcutId="inbox"
+        android:enabled="true"
+        android:icon="@mipmap/ic_launcher"
+        android:shortcutShortLabel="@string/shortcut_inbox_short"
+        android:shortcutLongLabel="@string/shortcut_inbox_long">
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:data="dshmobile://inbox" />
+        <categories android:name="android.shortcut.conversation" />
+    </shortcut>
+    <!-- Crash-loop lockout recovery: launches SafeModeActivity directly, so a broken update can
+         never force the user to clear app data (and lose the host pairing). -->
+    <shortcut
+        android:shortcutId="safe_mode"
+        android:enabled="true"
+        android:icon="@mipmap/ic_launcher"
+        android:shortcutShortLabel="@string/shortcut_safe_mode_short"
+        android:shortcutLongLabel="@string/shortcut_safe_mode_long">
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:data="dshmobile://safe-mode"
+            android:targetPackage="dev.dsh.mobile"
+            android:targetClass="dev.dsh.mobile.SafeModeActivity" />
+        <categories android:name="android.shortcut.conversation" />
+    </shortcut>
+</shortcuts>

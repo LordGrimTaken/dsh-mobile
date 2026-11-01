@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">DSH Mobile</string>
+    <string name="shortcut_new_session_short">New session</string>
+    <string name="shortcut_new_session_long">Start a new DSH session</string>
+    <string name="shortcut_usage_short">Usage</string>
+    <string name="shortcut_usage_long">Open DeepSeek usage</string>
+    <string name="shortcut_inbox_short">Inbox</string>
+    <string name="shortcut_inbox_long">Review approvals and questions</string>
+    <string name="shortcut_safe_mode_short">Safe mode</string>
+    <string name="shortcut_safe_mode_long">Recover from a crash loop without losing pairing</string>
+    <string name="widget_description">Open DSH, start a session, or view usage</string>
+</resources>

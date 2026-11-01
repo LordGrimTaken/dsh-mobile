@@ -1,0 +1,12 @@
+# DSH Mobile API v1 host plugin.
+#
+# One Host row starts the loopback-only HTTP server that the Android app talks
+# to (published over TLS by Tailscale Serve). Configuration values are optional;
+# lib/config.js owns the defaults. Reinstall with:
+#   plugin_manager action=install_bundle target=<absolute path to this directory>
+- insert:
+    - id: mobile-api
+      name: dsh-mobile-host
+      config:
+        port: 3543
+        host: 127.0.0.1

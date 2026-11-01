@@ -1,0 +1,6 @@
+{
+  "meta": {
+    "title": "DSH Mobile 宿主",
+    "description": "为 DSH Mobile 安卓客户端提供的本机回环 HTTP API v1：设备配对、会话列表与详情、发送提示词、中断运行以及实时 SSE 事件。"
+  }
+}

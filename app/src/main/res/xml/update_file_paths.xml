@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    FileProvider roots:
+    - the normal DownloadManager destination (external app files: Download/updates/)
+    - the cache fallback used when external app storage is unavailable
+    - cacheDir/exports, where shared session transcripts are written
+-->
+<paths xmlns:android="http://schemas.android.com/apk/res/android">
+    <external-files-path name="updates_external" path="Download/updates/" />
+    <cache-path name="updates_cache" path="updates/" />
+    <cache-path name="exports" path="exports/" />
+    <cache-path name="camera" path="camera/" />
+    <!-- Cached historical message attachments opened via ACTION_VIEW. -->
+    <cache-path name="attachments" path="attachments/" />
+    <!-- Generated "share as image" PNG cards shared through the chooser. -->
+    <cache-path name="share_cards" path="share-cards/" />
+</paths>

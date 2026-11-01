@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <!-- Hadal Mint terminal prompt: mint chevron + cursor bar on ink. -->
+    <path
+        android:strokeColor="#4EE59B"
+        android:strokeWidth="7"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:fillColor="@android:color/transparent"
+        android:pathData="M38,36 L62,54 L38,72" />
+    <path
+        android:strokeColor="#4EE59B"
+        android:strokeWidth="7"
+        android:strokeLineCap="round"
+        android:fillColor="@android:color/transparent"
+        android:pathData="M70,72 L86,72" />
+    <path
+        android:fillColor="#7CF0B8"
+        android:fillAlpha="0.35"
+        android:pathData="M70,36 L86,36 L86,40 L70,40 Z" />
+</vector>

@@ -1,0 +1,7 @@
+# Fly/Docker build context for the DSH Mobile cloud host image.
+# The image only needs the host plugin bundle and the tools/fly assets.
+*
+!host-plugin/
+!host-plugin/**
+!tools/fly/
+!tools/fly/**

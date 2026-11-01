@@ -1,0 +1,6 @@
+{
+  "meta": {
+    "title": "DSH Mobile Host",
+    "description": "Loopback HTTP API v1 for the DSH Mobile Android app: pairing, session list/detail, prompts, interrupts, and live SSE events."
+  }
+}
