@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <!-- Google Play builds never download or install APKs themselves: the sideload updater and
+         its install-packages permission are removed from the release manifest. FileProvider stays
+         (share/export features use it), as does cleartext support for user-configured hosts. -->
+    <uses-permission
+        android:name="android.permission.REQUEST_INSTALL_PACKAGES"
+        tools:node="remove" />
+
+</manifest>
