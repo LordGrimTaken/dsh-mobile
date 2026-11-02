@@ -26,6 +26,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import dev.dsh.mobile.BuildConfig
 import dev.dsh.mobile.update.UpdateManager
 import dev.dsh.mobile.update.UpdateUiState
 import dev.dsh.mobile.ui.theme.Danger
@@ -35,6 +36,8 @@ import dev.dsh.mobile.ui.theme.Warning
 /** Sideload update dialog: notes, download progress, unknown-sources guidance, errors. */
 @Composable
 fun UpdateDialog(manager: UpdateManager) {
+    // Play builds have no in-app installer/feed at all.
+    if (BuildConfig.PLAY_BUILD) return
     if (!manager.showDialog) return
     val state = manager.state
 
@@ -118,6 +121,8 @@ fun UpdateDialog(manager: UpdateManager) {
 /** Settings row: current version, live check/download status, tap to check (or reopen dialog). */
 @Composable
 fun UpdateSettingsRow(manager: UpdateManager) {
+    // Play builds have no in-app installer/feed at all.
+    if (BuildConfig.PLAY_BUILD) return
     val state = manager.state
     val busy = state is UpdateUiState.Checking ||
         state is UpdateUiState.Downloading ||

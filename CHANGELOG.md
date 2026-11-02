@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.3.0 — Google Play release preparation
+- Added a signed Play release build targeting SDK 36 (versionCode 146) with Play App Signing upload-key support.
+- Play build removes the sideload APK installer permission and self-updater/feed; debug/sideload builds keep them.
+- Added privacy policy, Play listing copy, data-safety and reviewer-access notes, app icon and feature graphic.
+- Remote approval mockups/design reviewed separately; the Play build does not include any OS privilege escalation.
+
 ## 0.2.143-preview — terminal cockpit drawer
 - Drawer rebuilt as a cockpit: ❯ dsh + live status, compact New/Search/Refresh, data-driven navigation and live session rows with status/unread/current state.
 - Rich session rows open by id and show workspace/status/time; current session highlighted; 8 visible with overflow and view-all.

@@ -1213,7 +1213,9 @@ fun SettingsScreen(
                     )
                 }
             }
-            UpdateSettingsRow(manager = state.updates)
+            if (!BuildConfig.PLAY_BUILD) {
+                UpdateSettingsRow(manager = state.updates)
+            }
             SettingsGroup("diagnostics") {
                 Text(
                     "Connection diagnostics",

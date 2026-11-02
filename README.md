@@ -47,6 +47,14 @@ DSH Mobile talks to a small **host plugin** that runs inside the DeepSeek Harnes
 - The Android app is in [`app/`](app/). It has no analytics, no account system and no server-side component; your host is the only backend.
 - [`tools/fake-host/`](tools/fake-host/README.md) is an in-memory implementation of the same contract for UI development and tests.
 
+## Google Play (prepared, not yet listed)
+
+A Google Play build is prepared in this repository but has not been uploaded or listed yet. It targets Android SDK 36, uses the upload key described in `docs/play/release-checklist.md`, removes the sideload-only APK installer permission and updater, and keeps the same privacy model.
+
+- Play checklist: [`docs/play/release-checklist.md`](docs/play/release-checklist.md)
+- Store listing copy: [`docs/play/store-listing.md`](docs/play/store-listing.md)
+- Privacy policy: [`PRIVACY.md`](PRIVACY.md)
+- App access/reviewer notes: [`docs/play/app-access.md`](docs/play/app-access.md)
 ## Install the app
 
 1. On your phone, open the [latest release](https://github.com/LordGrimTaken/dsh-mobile/releases/latest) and download the `dsh-mobile-*-debug.apk` asset.

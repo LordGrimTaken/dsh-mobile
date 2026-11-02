@@ -11,3 +11,11 @@ captures/
 *.apk
 *.aab
 external/
+
+# Signing material must never be committed (keystore + credentials live in the main checkout).
+.signing/
+keystore.properties
+*.jks
+*.keystore
+
+/play-artifacts/

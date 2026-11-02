@@ -1,3 +1,6 @@
+import java.io.File
+import java.util.Properties
+
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
@@ -6,22 +9,76 @@ plugins {
     id("org.jetbrains.kotlin.plugin.serialization") version "2.1.0"
 }
 
+/**
+ * Play upload signing. Credentials are never committed: read `keystore.properties` from
+ * DSH_KEYSTORE_PROPERTIES, the project root, or the main checkout when building inside a
+ * `.agents/worktrees/<task>` worktree (`rootProject/../../..`).
+ */
+data class SigningCredentials(val properties: Properties, val propertiesFile: File)
+
+fun findSigningCredentials(): SigningCredentials? {
+    val candidates = buildList {
+        System.getenv("DSH_KEYSTORE_PROPERTIES")
+            ?.takeIf { it.isNotBlank() }
+            ?.let { add(File(it)) }
+        add(rootProject.file("keystore.properties"))
+        add(rootProject.file("../../..").resolve("keystore.properties"))
+    }
+    val propertiesFile = candidates.firstOrNull { it.isFile } ?: return null
+    val properties = Properties()
+    propertiesFile.inputStream().use { properties.load(it) }
+    return SigningCredentials(properties, propertiesFile)
+}
+
+val signingCredentials = findSigningCredentials()
+if (signingCredentials == null) {
+    logger.warn(
+        "Play signing credentials not found (DSH_KEYSTORE_PROPERTIES/keystore.properties); " +
+            "release bundle will be UNSIGNED.",
+    )
+}
+
 android {
     namespace = "dev.dsh.mobile"
-    compileSdk = 35
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "dev.dsh.mobile"
         minSdk = 26
-        targetSdk = 35
-        versionCode = 145
-        versionName = "0.2.143-preview"
+        targetSdk = 36
+        versionCode = 146
+        versionName = "0.3.0"
         vectorDrawables { useSupportLibrary = true }
     }
 
+    signingConfigs {
+        create("release") {
+            signingCredentials?.let { credentials ->
+                val rawStoreFile = credentials.properties.getProperty("storeFile").orEmpty()
+                val storeFileCandidate = File(rawStoreFile)
+                storeFile = if (storeFileCandidate.isAbsolute) {
+                    storeFileCandidate
+                } else {
+                    credentials.propertiesFile.parentFile.resolve(rawStoreFile)
+                }
+                storePassword = credentials.properties.getProperty("storePassword")
+                keyAlias = credentials.properties.getProperty("keyAlias")
+                keyPassword = credentials.properties.getProperty("keyPassword")
+            }
+        }
+    }
+
     buildTypes {
+        debug {
+            // Debug/sideload builds keep the update feed and APK installer.
+            buildConfigField("boolean", "PLAY_BUILD", "false")
+        }
         release {
             isMinifyEnabled = false
+            buildConfigField("boolean", "PLAY_BUILD", "true")
+            if (signingCredentials != null) {
+                signingConfig = signingConfigs.getByName("release")
+            }
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro",

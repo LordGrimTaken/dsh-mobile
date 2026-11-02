@@ -42,6 +42,7 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.LifecycleOwner
+import dev.dsh.mobile.BuildConfig
 import dev.dsh.mobile.CrashReporter
 import dev.dsh.mobile.SafeModeActivity
 import dev.dsh.mobile.data.StartupGuard
@@ -312,8 +313,9 @@ fun DshMobileApp(
     }
 
     // Sideload update check on launch, throttled to once per day by UpdateManager.
+    // Google Play builds (PLAY_BUILD) never contact the sideload feed; UpdateManager also no-ops.
     LaunchedEffect(Unit) {
-        state.updates.checkOnLaunch()
+        if (!BuildConfig.PLAY_BUILD) state.updates.checkOnLaunch()
     }
 
     // Kick a usage refresh so the once-per-day low-credit alert can fire without opening Usage.
@@ -561,7 +563,9 @@ fun DshMobileApp(
                 )
             }
 
-            UpdateDialog(manager = state.updates)
+            if (!BuildConfig.PLAY_BUILD) {
+                UpdateDialog(manager = state.updates)
+            }
 
             // Recovery flows are app-level: the deep link may arrive while any screen is open,
             // and the completion step must survive leaving Welcome after a successful restore.

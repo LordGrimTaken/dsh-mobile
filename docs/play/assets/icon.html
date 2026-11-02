@@ -1,0 +1,14 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><style>
+@font-face { font-family: JBMono; src: url("file:///C:/dev/dsh-mobile/app/src/main/res/font/jetbrains_mono_semibold.ttf") format("truetype"); font-weight: 600; }
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:512px;height:512px;overflow:hidden;background:#050a08}
+.icon{width:512px;height:512px;position:relative;background:radial-gradient(120% 120% at 70% 10%, #0d2a1c 0%, #07120d 45%, #030805 100%);display:flex;align-items:center;justify-content:center;font-family:JBMono,monospace}
+.glow{position:absolute;inset:0;background:radial-gradient(60% 60% at 50% 48%, rgba(78,229,155,.10), transparent 70%)}
+.frame{position:absolute;inset:58px;border:2px solid rgba(78,229,155,.28);border-radius:42px}
+.dots{position:absolute;top:84px;left:84px;display:flex;gap:9px}
+.dots i{width:11px;height:11px;border-radius:50%;background:rgba(78,229,155,.30)}
+.prompt{position:relative;font-size:210px;line-height:1;color:#4ee59b;text-shadow:0 0 40px rgba(78,229,155,.35);transform:translateY(-6px)}
+.cursor{display:inline-block;width:58px;height:20px;background:#7cf0b8;border-radius:3px;vertical-align:middle;margin-left:14px;box-shadow:0 0 24px rgba(124,240,184,.35)}
+.small{position:absolute;bottom:96px;left:0;right:0;text-align:center;color:#78a58f;font-family:JBMono,monospace;font-size:19px;letter-spacing:4px}
+</style></head><body><div class="icon"><div class="glow"></div><div class="frame"></div><div class="dots"><i></i><i></i><i></i></div><div class="prompt">❯<span class="cursor"></span></div><div class="small">DSH MOBILE</div></div></body></html>

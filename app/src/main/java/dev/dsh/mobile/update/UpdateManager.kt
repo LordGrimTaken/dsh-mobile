@@ -56,6 +56,8 @@ class UpdateManager(
 
     /** Launch-time check, throttled to once per [UpdateConfig.CHECK_INTERVAL_MS] (24h). */
     fun checkOnLaunch() {
+        // Play builds must never contact the sideload update feed.
+        if (BuildConfig.PLAY_BUILD) return
         if (System.currentTimeMillis() - lastCheckedAt < UpdateConfig.CHECK_INTERVAL_MS) return
         check(manual = false)
     }
@@ -65,6 +67,8 @@ class UpdateManager(
      * failure and only report a found update, per docs/updater.md.
      */
     fun check(manual: Boolean) {
+        // Play builds must never contact the sideload update feed.
+        if (BuildConfig.PLAY_BUILD) return
         if (state is UpdateUiState.Checking ||
             state is UpdateUiState.Downloading ||
             state is UpdateUiState.Verifying

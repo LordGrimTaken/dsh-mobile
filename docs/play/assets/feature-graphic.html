@@ -1,0 +1,26 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><style>
+@font-face { font-family: JBMono; src: url("file:///C:/dev/dsh-mobile/app/src/main/res/font/jetbrains_mono_regular.ttf") format("truetype"); font-weight: 400; }
+@font-face { font-family: JBMono; src: url("file:///C:/dev/dsh-mobile/app/src/main/res/font/jetbrains_mono_semibold.ttf") format("truetype"); font-weight: 600; }
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:1024px;height:500px;overflow:hidden;background:#050a08}
+.fg{width:1024px;height:500px;position:relative;background:radial-gradient(900px 500px at 82% 0%, #0e2e20 0%, #07130d 44%, #030805 100%);font-family:JBMono,monospace;overflow:hidden}
+.grid{position:absolute;inset:0;background-image:linear-gradient(rgba(78,229,155,.045) 1px,transparent 1px),linear-gradient(90deg,rgba(78,229,155,.045) 1px,transparent 1px);background-size:44px 44px;opacity:.35}
+.content{position:absolute;left:62px;top:74px}
+.prompt{font-size:26px;color:#4ee59b;letter-spacing:2px}
+.title{font-size:58px;line-height:1.04;color:#f1fff7;font-weight:600;letter-spacing:-1px;margin-top:18px;max-width:560px}
+.title span{color:#4ee59b}
+.sub{font-size:20px;line-height:1.5;color:#a9cbb8;margin-top:20px;max-width:540px}
+.tags{display:flex;gap:10px;margin-top:26px}
+.tag{font-size:13px;letter-spacing:.8px;color:#a9cbb8;border:1px solid #2b4d3b;border-radius:4px;padding:7px 10px;background:rgba(7,16,12,.7)}
+.tag.green{color:#4ee59b;border-color:rgba(78,229,155,.4);background:rgba(78,229,155,.06)}
+.phone{position:absolute;right:88px;top:44px;width:266px;height:430px;border:2px solid #3b6b53;border-radius:34px;background:#07110c;box-shadow:0 30px 80px rgba(0,0,0,.55);padding:18px 16px;transform:rotate(3deg)}
+.phone .bar{width:64px;height:5px;border-radius:3px;background:#3b6b53;margin:0 auto 16px}
+.line{height:12px;border-radius:3px;background:#163327;margin-bottom:12px}
+.line.mint{background:rgba(78,229,155,.35);width:72%}
+.line.short{width:48%}
+.msg{border:1px solid #1d3b2d;border-radius:7px;padding:13px;margin:2px 0 12px;color:#b8d7c6;font-family:JBMono,monospace;font-size:12px;line-height:1.5}
+.msg b{color:#4ee59b}
+.phone .bottom{position:absolute;bottom:22px;left:16px;right:16px;height:38px;border:1px solid #2b4d3b;border-radius:6px;color:#4ee59b;font-size:12px;display:flex;align-items:center;justify-content:center;background:#0a1a12}
+.brand{position:absolute;right:62px;bottom:32px;color:#6f9a83;font-size:12px;letter-spacing:1.5px}
+</style></head><body><div class="fg"><div class="grid"></div><div class="content"><div class="prompt">❯ dsh@desktop</div><div class="title">Your desktop agent,<br><span>in your pocket.</span></div><div class="sub">A terminal-first Android client for your self-hosted DeepSeek Harness. Live sessions, approvals, files and context — no cloud.</div><div class="tags"><span class="tag green">OPEN SOURCE</span><span class="tag">SELF-HOSTED</span><span class="tag">PRIVATE BY DESIGN</span></div></div><div class="phone"><div class="bar"></div><div class="line mint"></div><div class="line short"></div><div class="msg"><b>❯</b> status<br><span style="color:#78a58f">live · 12 sessions</span></div><div class="msg"><b>dsh</b> All checks passed.<br><span style="color:#78a58f">Ready when you are.</span></div><div class="bottom">❯ ask dsh…</div></div><div class="brand">DSH MOBILE · github.com/LordGrimTaken/dsh-mobile</div></div></body></html>

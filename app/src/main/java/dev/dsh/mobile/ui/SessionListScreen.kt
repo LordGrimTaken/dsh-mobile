@@ -318,14 +318,16 @@ fun SessionListScreen(
                 onOpenInbox = onOpenInbox,
                 onOpenUsage = onOpenUsage,
             )
-            (state.updates.state as? UpdateUiState.Available)?.let { update ->
-                HadalGhostButton(
-                    text = "Update ${update.update.versionName} available · view",
-                    onClick = state.updates::showUpdateDialog,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp),
-                )
+            if (!BuildConfig.PLAY_BUILD) {
+                (state.updates.state as? UpdateUiState.Available)?.let { update ->
+                    HadalGhostButton(
+                        text = "Update ${update.update.versionName} available · view",
+                        onClick = state.updates::showUpdateDialog,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp),
+                    )
+                }
             }
             Spacer(Modifier.height(8.dp))
             SearchField(
@@ -1722,8 +1724,13 @@ internal fun AboutDialog(
                 )
                 Spacer(Modifier.height(4.dp))
                 Text(
-                    "Paired builds stream sessions over HTTP + SSE and check the release " +
-                        "feed for sideload updates.",
+                    if (BuildConfig.PLAY_BUILD) {
+                        "Paired builds stream sessions over HTTP + SSE. Updates are delivered " +
+                            "through Google Play."
+                    } else {
+                        "Paired builds stream sessions over HTTP + SSE and check the release " +
+                            "feed for sideload updates."
+                    },
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.tertiary,
                 )
