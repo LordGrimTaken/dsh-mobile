@@ -4,7 +4,13 @@ A native Android client for a **DeepSeek Harness** host running on your own PC. 
 
 > **Status: preview.** The app is distributed as a **debug-signed APK** from GitHub Releases. It is usable for testing and personal use; expect rough edges and back up anything important. This is an independent community project, not an official DeepSeek product.
 
-[Download the latest APK](https://github.com/LordGrimTaken/dsh-mobile/releases/latest) · [Mobile API contract](docs/mobile-api-v1.md) · [Host plugin](host-plugin/README.md) · [Build from source](#build-from-source) · [Feature ideas](docs/mobile-feature-ideas.md)
+[Download the latest APK](https://github.com/LordGrimTaken/dsh-mobile/releases/latest)
+
+![Terminal cockpit drawer design example](docs/ui/terminal-drawer.png)
+
+*Design example of the terminal cockpit drawer: compact actions, one navigation section, live session rows with status/unread/current state.*
+
+ · [Mobile API contract](docs/mobile-api-v1.md) · [Host plugin](host-plugin/README.md) · [Build from source](#build-from-source) · [Feature ideas](docs/mobile-feature-ideas.md)
 
 ---
 

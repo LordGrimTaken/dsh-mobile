@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.2.143-preview — terminal cockpit drawer
+- Drawer rebuilt as a cockpit: ❯ dsh + live status, compact New/Search/Refresh, data-driven navigation and live session rows with status/unread/current state.
+- Rich session rows open by id and show workspace/status/time; current session highlighted; 8 visible with overflow and view-all.
+- Chat drawer About now opens the shared About dialog; all drawer actions wired on Home and Chat.
+
 ## 0.2.142-preview — terminal UI simplification
 - Compact terminal shell: Home and Chat hide the command strip/workspace deck and use a single-line status bar, reclaiming vertical space.
 - Home: simplified `dsh@<host>` header, New session, one-line filters summary, and a single Filters sheet (workspace/status/sort) instead of three chip rows.

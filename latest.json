@@ -1,14 +1,14 @@
 {
     "schemaVersion":  1,
-    "versionCode":  144,
-    "versionName":  "0.2.142-preview",
-    "tag":  "v0.2.142-preview",
-    "publishedAt":  "2026-11-01T16:23:00Z",
-    "apkUrl":  "https://github.com/LordGrimTaken/dsh-mobile/releases/download/v0.2.142-preview/dsh-mobile-0.2.142-preview-debug.apk",
-    "apkAssetName":  "dsh-mobile-0.2.142-preview-debug.apk",
-    "apkSizeBytes":  19397077,
-    "sha256":  "7b4d39fff9d4dbad1a451c51ebcb6ab56d97c6ee99faf4bd0467d3566ec5d94b",
+    "versionCode":  145,
+    "versionName":  "0.2.143-preview",
+    "tag":  "v0.2.143-preview",
+    "publishedAt":  "2026-11-01T20:26:00-05:00",
+    "apkUrl":  "https://github.com/LordGrimTaken/dsh-mobile/releases/download/v0.2.143-preview/dsh-mobile-0.2.143-preview-debug.apk",
+    "apkAssetName":  "dsh-mobile-0.2.143-preview-debug.apk",
+    "apkSizeBytes":  19429845,
+    "sha256":  "f5fbc61b09f206ef3d65c961b6e2a2b31ee6fa6edfa98924cfe3abe58e92bc8f",
     "minSdk":  26,
-    "notes":  "Terminal UI simplification: compact shell, simplified Home with one Filters sheet, chat More overflow (Skills/Plan/Templates/Session info/Tool activity), larger mono type and 48dp touch targets. No features removed.",
-    "releaseUrl":  "https://github.com/LordGrimTaken/dsh-mobile/releases/tag/v0.2.142-preview"
+    "notes":  "Terminal cockpit drawer redesign: compact header/actions, data-driven navigation, live session rows with status/unread/current, About fixed in Chat; all destinations reachable.",
+    "releaseUrl":  "https://github.com/LordGrimTaken/dsh-mobile/releases/tag/v0.2.143-preview"
 }

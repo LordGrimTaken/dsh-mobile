@@ -22,12 +22,14 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.GridView
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Info
@@ -60,6 +62,11 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.selected
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
@@ -70,6 +77,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import dev.dsh.mobile.data.SessionSort
+import dev.dsh.mobile.data.SessionStatus
 import kotlinx.coroutines.launch
 
 // ---------------------------------------------------------------------------
@@ -94,6 +102,114 @@ data class ShellStatus(
     val items: List<String>,                 // e.g. listOf("● Live", "12 msgs", "3 tools")
     val right: List<String> = emptyList(),   // e.g. listOf("MONO", "v0.2.1")
 )
+
+/** One destination row in the cockpit drawer's `[ navigate ]` section. */
+data class ShellDrawerAction(
+    val icon: ImageVector,
+    val label: String,
+    val badge: String? = null,
+    val onClick: () -> Unit,
+)
+
+/** One richer session row in the cockpit drawer's `[ sessions ]` section. */
+data class ShellDrawerSession(
+    val id: String,
+    val title: String,
+    val workspace: String,
+    val status: SessionStatus,
+    val unread: Boolean,
+    val updated: String,
+    val current: Boolean,
+)
+
+internal const val DRAWER_NAV_HEADING: String = "[ navigate ]"
+internal const val DRAWER_SESSIONS_HEADING: String = "[ sessions ]"
+internal const val DRAWER_NEW_SESSION_LABEL: String = "New session"
+internal const val DRAWER_SEARCH_LABEL: String = "Search"
+internal const val DRAWER_REFRESH_LABEL: String = "Refresh"
+internal const val DRAWER_SETTINGS_LABEL: String = "Settings"
+internal const val DRAWER_ABOUT_LABEL: String = "About"
+internal const val DRAWER_VIEW_ALL_LABEL: String = "view all"
+internal const val DRAWER_NO_SESSIONS_LABEL: String = "No sessions in this workspace yet."
+internal const val DRAWER_MAX_SESSION_ROWS: Int = 8
+
+/** Default cockpit order for Home/Chat navigation actions (badge lives on Inbox). */
+internal val DRAWER_NAV_LABELS: List<String> = listOf(
+    "Goals",
+    "Schedules",
+    "Archived sessions",
+    "Search all sessions",
+    "Inbox",
+    "Usage",
+)
+
+/** Normalized live/offline/demo chip text derived from the shell status line. */
+internal fun drawerStatusChipText(status: ShellStatus): String {
+    val haystack = (status.items + status.left).joinToString(" ").lowercase()
+    val state = when {
+        "offline" in haystack -> "offline"
+        "connecting" in haystack -> "connecting"
+        "demo" in haystack -> "demo"
+        "live" in haystack -> "live"
+        else -> "idle"
+    }
+    return "[ ● $state ]"
+}
+
+/** Second dim header line: host/sync from subtitle, otherwise the status items. */
+internal fun drawerHeaderMeta(subtitle: String?, status: ShellStatus): String {
+    val subtitleText = subtitle?.trim()?.takeIf { it.isNotEmpty() }
+    if (subtitleText != null) return subtitleText
+    return status.items.map { it.trim() }.filter { it.isNotEmpty() }.joinToString(" · ")
+        .ifBlank { status.left.trim() }
+}
+
+/** Footer sync/version text from the status' right-hand items (falls back to the meta line). */
+internal fun drawerFooterText(status: ShellStatus, subtitle: String?): String {
+    val right = status.right.map { it.trim() }.filter { it.isNotEmpty() }.joinToString(" · ")
+    if (right.isNotEmpty()) return right
+    return drawerHeaderMeta(subtitle, status)
+}
+
+internal fun drawerStatusLabel(status: SessionStatus): String = when (status) {
+    SessionStatus.Working -> "working"
+    SessionStatus.NeedsInput -> "needs input"
+    SessionStatus.Idle -> "idle"
+}
+
+/** One-line session meta: workspace · status · updated (blank pieces skipped). */
+internal fun drawerSessionMeta(workspace: String, status: SessionStatus, updated: String): String =
+    listOf(workspace.trim(), drawerStatusLabel(status), updated.trim())
+        .filter { it.isNotEmpty() }
+        .joinToString(" · ")
+
+/** Badge formatting: hidden at 0, capped at 99+. */
+internal fun drawerBadgeLabel(count: Int): String? = when {
+    count <= 0 -> null
+    count > 99 -> "99+"
+    else -> count.toString()
+}
+
+/** "Sessions (12)" header count; hidden when there are none. */
+/** TalkBack label for one cockpit session row. */
+internal fun drawerSessionA11y(session: ShellDrawerSession): String = buildString {
+    append(session.title.trim().ifBlank { "Untitled session" })
+    append(", ")
+    append(session.workspace.trim().ifBlank { "no workspace" })
+    append(", ")
+    append(drawerStatusLabel(session.status))
+    if (session.unread) append(", unread")
+    if (session.current) append(", current")
+}
+
+internal fun drawerSessionsHeading(total: Int): String =
+    if (total <= 0) DRAWER_SESSIONS_HEADING else "$DRAWER_SESSIONS_HEADING · $total"
+
+/** Overflow line when more sessions exist than the drawer lists. */
+internal fun drawerSessionsOverflow(total: Int, shown: Int = DRAWER_MAX_SESSION_ROWS): String? {
+    val hidden = total - shown
+    return if (hidden > 0) "+$hidden" else null
+}
 
 private data class ShellMenu(val label: String, val commands: List<ShellCommand>)
 
@@ -161,8 +277,16 @@ fun ShellFrame(
     showDeck: Boolean = true,
     /** Terminal-style compact shell: no command strip, no workspace deck, shorter bar, one-line status. */
     compact: Boolean = false,
-    drawerSessions: List<String>? = null,
-    onOpenSessionTitle: ((String) -> Unit)? = null,
+    /** Cockpit drawer content supplied by the host screen. */
+    drawerActions: List<ShellDrawerAction> = emptyList(),
+    drawerSessions: List<ShellDrawerSession> = emptyList(),
+    onOpenSession: ((String) -> Unit)? = null,
+    onViewAllSessions: (() -> Unit)? = null,
+    onNewSession: (() -> Unit)? = null,
+    onSearch: (() -> Unit)? = null,
+    onRefresh: (() -> Unit)? = null,
+    onOpenSettings: (() -> Unit)? = null,
+    onOpenAbout: (() -> Unit)? = null,
     trailing: (@Composable RowScope.() -> Unit)? = null,
     content: @Composable () -> Unit,
 ) {
@@ -189,10 +313,20 @@ fun ShellFrame(
         drawerState = drawerState,
         drawerContent = {
             ShellDrawerRail(
+                title = title,
+                subtitle = subtitle,
+                status = status,
+                actions = drawerActions,
+                sessions = drawerSessions,
                 onClose = { closeDrawer() },
                 onCommand = onCommand,
-                drawerSessions = drawerSessions,
-                onOpenSessionTitle = onOpenSessionTitle,
+                onOpenSession = onOpenSession,
+                onViewAllSessions = onViewAllSessions,
+                onNewSession = onNewSession,
+                onSearch = onSearch,
+                onRefresh = onRefresh,
+                onOpenSettings = onOpenSettings,
+                onOpenAbout = onOpenAbout,
             )
         },
     ) {
@@ -514,13 +648,25 @@ private fun statusItemsAnnotated(items: List<String>, liveColor: Color): Annotat
 
 @Composable
 private fun ShellDrawerRail(
+    title: String,
+    subtitle: String?,
+    status: ShellStatus,
+    actions: List<ShellDrawerAction>,
+    sessions: List<ShellDrawerSession>,
     onClose: () -> Unit,
     onCommand: (ShellCommand) -> Unit,
-    drawerSessions: List<String>?,
-    onOpenSessionTitle: ((String) -> Unit)?,
+    onOpenSession: ((String) -> Unit)?,
+    onViewAllSessions: (() -> Unit)?,
+    onNewSession: (() -> Unit)?,
+    onSearch: (() -> Unit)?,
+    onRefresh: (() -> Unit)?,
+    onOpenSettings: (() -> Unit)?,
+    onOpenAbout: (() -> Unit)?,
 ) {
     ModalDrawerSheet(
-        modifier = Modifier.width(302.dp),
+        modifier = Modifier
+            .fillMaxWidth(0.86f)
+            .widthIn(max = 340.dp),
         drawerShape = RoundedCornerShape(topEnd = 16.dp, bottomEnd = 16.dp),
         drawerContainerColor = MaterialTheme.colorScheme.surfaceContainerLow,
         drawerContentColor = MaterialTheme.colorScheme.onSurface,
@@ -528,56 +674,155 @@ private fun ShellDrawerRail(
         Column(
             Modifier
                 .fillMaxHeight()
+                .statusBarsPadding()
+                .navigationBarsPadding()
                 .verticalScroll(rememberScrollState())
                 .padding(horizontal = 14.dp),
         ) {
-            Spacer(Modifier.height(18.dp))
-            BrandRow()
-            Spacer(Modifier.height(18.dp))
-            HadalPrimaryButton(
-                text = "New Session",
-                onClick = {
-                    onClose()
-                    onCommand(ShellCommand.NewSession)
-                },
-                modifier = Modifier.fillMaxWidth(),
-            )
-            Spacer(Modifier.height(12.dp))
-            Box(
-                Modifier
-                    .fillMaxWidth()
-                    .height(1.dp)
-                    .background(MaterialTheme.colorScheme.outlineVariant),
-            )
-            Spacer(Modifier.height(8.dp))
-            DrawerRow(Icons.Filled.History, "Sessions") {
-                onClose()
-                onCommand(ShellCommand.Sessions)
-            }
-            DrawerRow(Icons.Filled.Search, "Search") {
-                onClose()
-                onCommand(ShellCommand.Search)
-            }
-            val sessionTitles = drawerSessions.orEmpty()
-            if (onOpenSessionTitle != null && sessionTitles.isNotEmpty()) {
-                Spacer(Modifier.height(12.dp))
-                HadalCaps("Sessions")
-                Spacer(Modifier.height(4.dp))
-                sessionTitles.take(6).forEach { sessionTitle ->
-                    DrawerSessionRow(sessionTitle) {
-                        onClose()
-                        onOpenSessionTitle(sessionTitle)
-                    }
+            Spacer(Modifier.height(10.dp))
+            // Header: brand + compact live chip + 48dp close.
+            Row(
+                Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text(
+                    "❯ dsh",
+                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
+                    color = MaterialTheme.colorScheme.primary,
+                    maxLines = 1,
+                )
+                Spacer(Modifier.width(8.dp))
+                Text(
+                    drawerStatusChipText(status),
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(4.dp))
+                        .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.09f))
+                        .padding(horizontal = 6.dp, vertical = 3.dp),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.primary,
+                    maxLines = 1,
+                )
+                Spacer(Modifier.weight(1f))
+                IconButton(
+                    onClick = onClose,
+                    modifier = Modifier.size(48.dp),
+                ) {
+                    Icon(
+                        Icons.Filled.Close,
+                        contentDescription = "Close menu",
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.size(20.dp),
+                    )
                 }
             }
-            Spacer(Modifier.height(8.dp))
-            DrawerRow(Icons.Filled.Settings, "Settings") {
-                onClose()
-                onCommand(ShellCommand.Settings)
+            Text(
+                drawerHeaderMeta(subtitle, status),
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f),
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+            )
+            Spacer(Modifier.height(12.dp))
+            // Compact primary actions (not a giant hero button).
+            Row(
+                Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                HadalPrimaryButton(
+                    text = DRAWER_NEW_SESSION_LABEL,
+                    onClick = {
+                        onClose()
+                        onNewSession?.invoke() ?: onCommand(ShellCommand.NewSession)
+                    },
+                    modifier = Modifier
+                        .weight(1.3f)
+                        .heightIn(min = 48.dp)
+                        .semantics { contentDescription = DRAWER_NEW_SESSION_LABEL },
+                )
+                HadalGhostButton(
+                    text = DRAWER_SEARCH_LABEL,
+                    onClick = {
+                        onClose()
+                        onSearch?.invoke() ?: onCommand(ShellCommand.Search)
+                    },
+                    modifier = Modifier
+                        .weight(1f)
+                        .heightIn(min = 48.dp)
+                        .semantics { contentDescription = DRAWER_SEARCH_LABEL },
+                )
+                HadalGhostButton(
+                    text = DRAWER_REFRESH_LABEL,
+                    onClick = {
+                        onClose()
+                        onRefresh?.invoke() ?: onCommand(ShellCommand.Refresh)
+                    },
+                    modifier = Modifier
+                        .weight(1f)
+                        .heightIn(min = 48.dp)
+                        .semantics { contentDescription = DRAWER_REFRESH_LABEL },
+                )
             }
-            DrawerRow(Icons.Filled.Info, "About") {
-                onClose()
-                onCommand(ShellCommand.About)
+            Spacer(Modifier.height(14.dp))
+            DrawerSectionHeading(DRAWER_NAV_HEADING)
+            if (actions.isEmpty()) {
+                DrawerActionRow(
+                    icon = Icons.Filled.History,
+                    label = "Sessions",
+                    badge = null,
+                    onClick = {
+                        onClose()
+                        onCommand(ShellCommand.Sessions)
+                    },
+                )
+            }
+            actions.forEach { action ->
+                DrawerActionRow(action) {
+                    onClose()
+                    action.onClick()
+                }
+            }
+            Spacer(Modifier.height(14.dp))
+            DrawerSectionHeading(
+                text = drawerSessionsHeading(sessions.size),
+                trailing = {
+                    drawerSessionsOverflow(sessions.size)?.let { overflow ->
+                        Text(
+                            overflow,
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.tertiary,
+                        )
+                        Spacer(Modifier.width(8.dp))
+                        Text(
+                            DRAWER_VIEW_ALL_LABEL,
+                            modifier = Modifier
+                                .heightIn(min = 48.dp)
+                                .clickable(role = Role.Button) {
+                                    onClose()
+                                    onViewAllSessions?.invoke()
+                                        ?: onCommand(ShellCommand.Sessions)
+                                }
+                                .semantics { contentDescription = DRAWER_VIEW_ALL_LABEL }
+                                .padding(horizontal = 4.dp),
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.primary,
+                        )
+                    }
+                },
+            )
+            if (sessions.isEmpty()) {
+                Text(
+                    DRAWER_NO_SESSIONS_LABEL,
+                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 10.dp),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.tertiary,
+                )
+            } else {
+                sessions.take(DRAWER_MAX_SESSION_ROWS).forEach { session ->
+                    DrawerSessionItem(session) {
+                        onClose()
+                        onOpenSession?.invoke(session.id)
+                    }
+                }
             }
             Spacer(Modifier.height(16.dp))
             Box(
@@ -587,81 +832,78 @@ private fun ShellDrawerRail(
                     .background(MaterialTheme.colorScheme.outlineVariant),
             )
             Spacer(Modifier.height(10.dp))
-            Row(
-                Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 6.dp),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Text(
-                    "❯ dsh",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.75f),
-                )
-                Spacer(Modifier.weight(1f))
-                Text(
-                    "hadal-mint",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
-                )
-            }
+            Text(
+                drawerFooterText(status, subtitle),
+                modifier = Modifier.padding(horizontal = 6.dp),
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.65f),
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+            )
+            Spacer(Modifier.height(6.dp))
+            DrawerActionRow(
+                icon = Icons.Filled.Settings,
+                label = DRAWER_SETTINGS_LABEL,
+                badge = null,
+                onClick = {
+                    onClose()
+                    onOpenSettings?.invoke() ?: onCommand(ShellCommand.Settings)
+                },
+            )
+            DrawerActionRow(
+                icon = Icons.Filled.Info,
+                label = DRAWER_ABOUT_LABEL,
+                badge = null,
+                onClick = {
+                    onClose()
+                    onOpenAbout?.invoke() ?: onCommand(ShellCommand.About)
+                },
+            )
             Spacer(Modifier.height(14.dp))
         }
     }
 }
 
 @Composable
-private fun BrandRow() {
+private fun DrawerSectionHeading(
+    text: String,
+    trailing: (@Composable () -> Unit)? = null,
+) {
     Row(
-        Modifier.fillMaxWidth(),
+        Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 6.dp, vertical = 4.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(
-            "❯",
-            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
-            color = MaterialTheme.colorScheme.primary,
-        )
-        Spacer(Modifier.width(7.dp))
-        Text(
-            "DEEPSEEK HARNESS",
+            text,
             modifier = Modifier.weight(1f),
-            style = MaterialTheme.typography.labelLarge.copy(
-                fontWeight = FontWeight.SemiBold,
-                letterSpacing = 0.88.sp,
-            ),
-            color = MaterialTheme.colorScheme.onSurface,
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.tertiary,
             maxLines = 1,
         )
-        Spacer(Modifier.width(6.dp))
-        Text(
-            "[ hadal-mint ]",
-            modifier = Modifier
-                .clip(RoundedCornerShape(4.dp))
-                .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.09f))
-                .padding(horizontal = 5.dp, vertical = 2.dp),
-            style = MaterialTheme.typography.labelSmall.copy(
-                fontSize = 8.sp,
-                fontWeight = FontWeight.Medium,
-                letterSpacing = 0.2.sp,
-            ),
-            color = MaterialTheme.colorScheme.primary,
-            maxLines = 1,
-        )
+        trailing?.invoke()
     }
 }
 
 @Composable
-private fun DrawerRow(
+private fun DrawerActionRow(
     icon: ImageVector,
     label: String,
+    badge: String?,
     onClick: () -> Unit,
 ) {
     Row(
         Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(8.dp))
-            .clickable(onClick = onClick)
-            .padding(horizontal = 10.dp, vertical = 11.dp),
+            .heightIn(min = 48.dp)
+            .clip(RoundedCornerShape(6.dp))
+            .clickable(role = Role.Button, onClick = onClick)
+            .semantics {
+                contentDescription = badge?.let { "$label, $it pending" } ?: label
+                role = Role.Button
+            }
+            .padding(horizontal = 8.dp, vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Icon(
@@ -670,45 +912,116 @@ private fun DrawerRow(
             tint = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.size(18.dp),
         )
-        Spacer(Modifier.width(12.dp))
+        Spacer(Modifier.width(10.dp))
         Text(
             label,
             modifier = Modifier.weight(1f),
-            style = MaterialTheme.typography.bodyMedium,
+            style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurface,
             maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
         )
+        badge?.let { value ->
+            Text(
+                value,
+                modifier = Modifier
+                    .clip(RoundedCornerShape(4.dp))
+                    .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.12f))
+                    .padding(horizontal = 6.dp, vertical = 2.dp),
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.primary,
+                maxLines = 1,
+            )
+            Spacer(Modifier.width(6.dp))
+        }
         Text(
             "›",
-            style = MaterialTheme.typography.bodyMedium,
+            style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.45f),
         )
     }
 }
 
 @Composable
-private fun DrawerSessionRow(title: String, onClick: () -> Unit) {
+private fun DrawerActionRow(action: ShellDrawerAction, onClick: () -> Unit) {
+    DrawerActionRow(
+        icon = action.icon,
+        label = action.label,
+        badge = action.badge,
+        onClick = onClick,
+    )
+}
+
+@Composable
+private fun DrawerSessionItem(session: ShellDrawerSession, onClick: () -> Unit) {
     Row(
         Modifier
             .fillMaxWidth()
+            .heightIn(min = 52.dp)
             .clip(RoundedCornerShape(6.dp))
-            .clickable(onClick = onClick)
-            .padding(horizontal = 10.dp, vertical = 7.dp),
-        verticalAlignment = Alignment.CenterVertically,
+            .background(
+                if (session.current) {
+                    MaterialTheme.colorScheme.primary.copy(alpha = 0.10f)
+                } else {
+                    Color.Transparent
+                },
+            )
+            .clickable(role = Role.Button, onClick = onClick)
+            .semantics {
+                contentDescription = drawerSessionA11y(session)
+                selected = session.current
+                role = Role.Button
+            },
     ) {
-        Text(
-            "·",
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.55f),
-        )
-        Spacer(Modifier.width(8.dp))
-        Text(
-            title,
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-        )
+        if (session.current) {
+            Box(
+                Modifier
+                    .width(3.dp)
+                    .fillMaxHeight()
+                    .background(MaterialTheme.colorScheme.primary),
+            )
+        }
+        Row(
+            Modifier
+                .weight(1f)
+                .padding(horizontal = 8.dp, vertical = 7.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            StatusDot(session.status, 7.dp)
+            Spacer(Modifier.width(8.dp))
+            Column(Modifier.weight(1f)) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    if (session.unread) {
+                        Box(
+                            Modifier
+                                .size(6.dp)
+                                .clip(CircleShape)
+                                .background(MaterialTheme.colorScheme.primary),
+                        )
+                        Spacer(Modifier.width(6.dp))
+                    }
+                    Text(
+                        session.title,
+                        modifier = Modifier.weight(1f),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = if (session.current) {
+                            MaterialTheme.colorScheme.onSurface
+                        } else {
+                            MaterialTheme.colorScheme.onSurfaceVariant
+                        },
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                }
+                Text(
+                    drawerSessionMeta(session.workspace, session.status, session.updated),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.tertiary,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
+        }
     }
 }
 

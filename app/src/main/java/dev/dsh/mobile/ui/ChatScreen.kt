@@ -78,11 +78,15 @@ import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.TextSnippet
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.material.icons.filled.Archive
 import androidx.compose.material.icons.filled.ErrorOutline
+import androidx.compose.material.icons.filled.Flag
 import androidx.compose.material.icons.filled.HelpOutline
+import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material.icons.filled.Send
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Stop
@@ -509,6 +513,7 @@ fun ChatScreen(state: AppState, session: Session) {
     var failedPrompt by remember(session.id) { mutableStateOf<FailedPrompt?>(null) }
     var sending by remember(session.id) { mutableStateOf(false) }
     var showSessionInfo by remember(session.id) { mutableStateOf(false) }
+    var showAbout by remember(session.id) { mutableStateOf(false) }
     var showToolActivity by remember(session.id) { mutableStateOf(false) }
     var exportingPdf by remember(session.id) { mutableStateOf(false) }
     var showTemplates by remember(session.id) { mutableStateOf(false) }
@@ -1050,12 +1055,58 @@ fun ChatScreen(state: AppState, session: Session) {
         deckCards = deckCards,
         onCommand = onCommand,
         onBack = state::closeSession,
-        drawerSessions = state.visibleSessions().map { item -> item.title },
-        onOpenSessionTitle = { title ->
-            state.visibleSessions().firstOrNull { item -> item.title == title }?.let { target ->
-                state.openSession(target.id)
-            }
+        drawerActions = listOf(
+            ShellDrawerAction(Icons.Filled.Flag, "Goals", onClick = state::openGoals),
+            ShellDrawerAction(Icons.Filled.Schedule, "Schedules", onClick = state::openSchedules),
+            ShellDrawerAction(
+                Icons.Filled.Archive,
+                "Archived sessions",
+                onClick = state::openArchivedSessions,
+            ),
+            ShellDrawerAction(
+                Icons.Filled.Search,
+                "Search all sessions",
+                onClick = state::openHostSearch,
+            ),
+            ShellDrawerAction(
+                Icons.Filled.History,
+                "Inbox",
+                badge = drawerBadgeLabel(state.pendingInputCount),
+                onClick = state::openInbox,
+            ),
+            ShellDrawerAction(Icons.Filled.Info, "Usage", onClick = state::openUsage),
+            ShellDrawerAction(
+                Icons.Filled.Info,
+                "Session info",
+                onClick = { showSessionInfo = true },
+            ),
+            ShellDrawerAction(
+                Icons.Filled.Terminal,
+                "Tool activity",
+                onClick = { showToolActivity = true },
+            ),
+        ),
+        drawerSessions = state.visibleSessions().map { item ->
+            ShellDrawerSession(
+                id = item.id,
+                title = state.displayTitle(item),
+                workspace = state.workspaceFor(item.workspaceId).name,
+                status = item.status,
+                unread = item.unread,
+                updated = item.updated,
+                current = item.id == session.id,
+            )
         },
+        onOpenSession = { id -> state.openSession(id) },
+        onViewAllSessions = { state.closeSession() },
+        onNewSession = state::openNewSession,
+        onSearch = {
+            findOpen = true
+            findQuery = ""
+        },
+        onRefresh = state::refreshNow,
+        onOpenSettings = state::openSettings,
+        onOpenAbout = { showAbout = true },
         compact = true,
         trailing = {
             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -1802,6 +1853,10 @@ fun ChatScreen(state: AppState, session: Session) {
                 )
             },
         )
+    }
+
+    if (showAbout) {
+        AboutDialog(state = state, onDismiss = { showAbout = false })
     }
 
     if (showSessionInfo) {

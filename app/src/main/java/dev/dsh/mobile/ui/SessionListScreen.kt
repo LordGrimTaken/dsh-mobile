@@ -39,6 +39,7 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Archive
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Flag
+import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Schedule
@@ -264,12 +265,45 @@ fun SessionListScreen(
                 else -> Unit
             }
         },
-        drawerSessions = state.visibleSessions().map { it.title },
-        onOpenSessionTitle = { title ->
-            state.visibleSessions().firstOrNull { it.title == title }?.let { session ->
-                onOpenSession(session.id)
-            }
+        drawerActions = listOf(
+            ShellDrawerAction(Icons.Filled.Flag, "Goals", onClick = onOpenGoals),
+            ShellDrawerAction(Icons.Filled.Schedule, "Schedules", onClick = onOpenSchedules),
+            ShellDrawerAction(
+                Icons.Filled.Archive,
+                "Archived sessions",
+                onClick = onOpenArchivedSessions,
+            ),
+            ShellDrawerAction(
+                Icons.Filled.Search,
+                "Search all sessions",
+                onClick = onOpenHostSearch,
+            ),
+            ShellDrawerAction(
+                Icons.Filled.History,
+                "Inbox",
+                badge = drawerBadgeLabel(state.pendingInputCount),
+                onClick = onOpenInbox,
+            ),
+            ShellDrawerAction(Icons.Filled.Info, "Usage", onClick = onOpenUsage),
+        ),
+        drawerSessions = state.visibleSessions().map { session ->
+            val workspaceName = state.workspaceFor(session.workspaceId).name
+            ShellDrawerSession(
+                id = session.id,
+                title = state.displayTitle(session),
+                workspace = workspaceName,
+                status = session.status,
+                unread = session.unread,
+                updated = session.updated,
+                current = false,
+            )
         },
+        onOpenSession = { id -> state.openSession(id) },
+        onNewSession = state::openNewSession,
+        onSearch = { focusSearchSignal += 1 },
+        onRefresh = state::refreshNow,
+        onOpenSettings = onOpenSettings,
+        onOpenAbout = { aboutOpen = true },
         compact = true,
     ) {
         Column(Modifier.fillMaxSize()) {
@@ -1655,7 +1689,7 @@ private fun ArchiveSessionDialog(
 }
 
 @Composable
-private fun AboutDialog(
+internal fun AboutDialog(
     state: AppState,
     onDismiss: () -> Unit,
 ) {
