@@ -26,3 +26,27 @@ designed to be loopback-only.
 - The app's data stays on the device and the user-configured host.
 - The Play build has no self-updater and no APK installation permission.
 - If a screen asks for a host, use demo mode to proceed.
+
+## Play Console App access form
+
+The app has **no account or login system**, but full self-hosted functionality requires a host
+pairing. Declare **some functionality as restricted** and give reviewers the demo path; do **not**
+answer "no restrictions" because the reviewer will try the host/Tailscale options and see an
+authentication screen.
+
+1. Play Console → **App content → App access** (the "Sign in details" item on the setup dashboard).
+2. Select **Some functionality is restricted** (or the equivalent "My app has restrictions" option).
+3. Restriction type: **Other** — not login credentials.
+4. Review instructions to paste:
+
+> No account, username, password, membership, location or payment is required. To review the app
+> without a private host: open DSH Mobile, scroll to the bottom of the welcome screen and tap
+> **Use demo data**. This loads sample sessions, messages, approvals, plans and all core screens.
+> Do not use **Sign in with Tailscale** or **Pair your desktop host**; those are optional
+> self-hosted connection methods. Live host features are unavailable in demo mode, but no
+> credentials are needed to review the interface and permissions.
+
+5. Save, then return to **Publishing overview** and **resubmit the release for review**.
+
+If Play requires a separate "login credentials" field, put "Not applicable — no account system;
+use the demo instructions above."
