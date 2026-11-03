@@ -62,3 +62,66 @@ placeholder. Website: `https://github.com/LordGrimTaken/dsh-mobile`.
 - No account/login; use demo mode to inspect the UI.
 - Remote hosting is user-provided; no public test host is provided.
 - No ads, analytics, purchases or developer cloud.
+
+## Play Console click-by-click answers
+
+### Set privacy policy
+Privacy policy URL: `https://github.com/LordGrimTaken/dsh-mobile/blob/main/PRIVACY.md`.
+The page is public and returns HTTP 200 (GitHub web page, not a PDF). If Play Console rejects
+GitHub blob URLs, use a GitHub Pages deployment of the same file.
+
+### Sign in details / App access
+- Does the app require users to sign in? **No.**
+- Is any functionality restricted? **No.** Reviewers can use **demo mode**.
+- Review instructions: "Open DSH Mobile. On the welcome screen choose **Use demo data**. This loads
+  sample sessions, messages and approvals without a host. No credentials are required."
+- Do not provide a public test host; the app is intentionally local/self-hosted.
+
+### Ads
+**No, my app does not contain ads.**
+
+### Content rating
+- Category: **Utility, Productivity, Communication, or Other**.
+- Violence, sexuality, nudity, profanity, controlled substances, gambling, horror/fear: **No**.
+- User-generated content/sharing with other users: **No public sharing**. The app displays prompts
+  and AI output from the user's own self-hosted agent; there is no social feed or public UGC.
+- Users can interact/communicate with other users: **No**.
+- Shares location: **No**.
+- Allows purchases: **No**.
+- Contains ads: **No**.
+- Unrestricted web access: **No** (links open in the system browser).
+- AI-generated content: the app is a client for a self-hosted AI agent; it does not generate or
+  moderate content itself. If the questionnaire asks, answer that it displays user-requested AI
+  output and has no public sharing/moderation surface.
+
+### Target audience
+- Age groups: **18 and over only**.
+- Is the app designed for children? **No.**
+- Appeals to children? **No.**
+
+### Data safety
+See `docs/play/data-safety.md`:
+- Does the app collect or share required user data? **No.**
+- No developer-operated backend, analytics, ads or tracking SDKs.
+- Data stays on the device and the user-configured host; uninstall/clear storage removes local data.
+
+### Government apps
+**No.**
+
+### Financial features
+**No.**
+
+### Health
+**No.**
+
+### Select app category and provide contact details
+- Category: **Tools**.
+- Website: `https://github.com/LordGrimTaken/dsh-mobile`
+- Contact email: **a monitored project email you control** (Play Console requires one; no placeholder).
+- Phone: optional.
+- Privacy policy: URL above.
+
+### Store listing
+Already populated via Play API: title **DSH Mobile Unofficial**, short/full description, icon,
+feature graphic and two 9:16 phone screenshots. Replace screenshots with real device captures when
+available.
