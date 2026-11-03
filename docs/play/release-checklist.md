@@ -6,10 +6,10 @@ Console. It is a working document; it does not grant permission to publish autom
 ## 1. Play Console account and app
 
 - [ ] Google Play Developer account (personal accounts may need identity verification).
-- [ ] Create app: name **DSH Mobile**, default language English (US), app/game **App**, free.
-- [ ] Package name **`com.dsh.unofficial.app`** (must match the AAB).
+- [x] Create app: Play title **DSH Mobile Unofficial**, default language English (US), app/game **App**, free. Package **`com.dsh.unofficial.app`**.
+- [x] Package name **`com.dsh.unofficial.app`** (matches the uploaded AAB).
 - [ ] Accept the Developer Program Policies and US export laws.
-- [ ] Complete **App content**:
+- [ ] Complete **App content** (still needs Play Console UI):
   - [ ] Privacy policy URL: `https://github.com/LordGrimTaken/dsh-mobile/blob/main/PRIVACY.md`
   - [ ] Ads: **No**
   - [ ] App access: see `docs/play/app-access.md` (demo/host access instructions)
@@ -75,9 +75,9 @@ Verify the signing certificate matches the upload key before uploading.
 - Website: `https://github.com/LordGrimTaken/dsh-mobile`
 - Privacy policy: the URL above.
 - Graphics:
-  - [ ] App icon **512×512 PNG** — `docs/play/assets/icon-512.png`
-  - [ ] Feature graphic **1024×500 PNG** — `docs/play/assets/feature-graphic-1024x500.png`
-  - [ ] At least 2 phone screenshots (JPEG/PNG, 320–3840px, 16:9–9:16). Do not use mockups that do
+  - [x] App icon **512×512 PNG** — uploaded to Play listing.
+  - [x] Feature graphic **1024×500 PNG** — uploaded to Play listing.
+  - [ ] At least 2 phone screenshots **missing — requires a real device/emulator** (JPEG/PNG, 320–3840px, 16:9–9:16). Do not use mockups that do
     not match the shipped UI; capture from the installed build.
   - [ ] Optional 7"/10" tablet screenshots.
 
