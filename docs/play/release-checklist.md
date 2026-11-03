@@ -77,7 +77,7 @@ Verify the signing certificate matches the upload key before uploading.
 - Graphics:
   - [x] App icon **512×512 PNG** — uploaded to Play listing.
   - [x] Feature graphic **1024×500 PNG** — uploaded to Play listing.
-  - [ ] At least 2 phone screenshots **missing — requires a real device/emulator** (JPEG/PNG, 320–3840px, 16:9–9:16). Do not use mockups that do
+  - [x] Two 9:16 phone screenshots uploaded to the listing (`docs/play/screenshots/phone-home.png`, `phone-chat.png`). These are design captures; replace with real device captures after installing the internal build. (JPEG/PNG, 320–3840px, 16:9–9:16). Do not use mockups that do
     not match the shipped UI; capture from the installed build.
   - [ ] Optional 7"/10" tablet screenshots.
 

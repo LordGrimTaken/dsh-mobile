@@ -52,4 +52,4 @@ Developer tools
 
 - Icon: `docs/play/assets/icon-512.png`
 - Feature graphic: `docs/play/assets/feature-graphic-1024x500.png`
-- Screenshots: capture from the release build; minimum 2 phone screenshots.
+- Screenshots: `docs/play/screenshots/phone-home.png` and `phone-chat.png` (9:16 design captures; replace with device captures when available).
