@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.3.1 — composer and bug-sweep fixes
+- Fixed sent text remaining in the composer; drafts clear optimistically and restore only on failure.
+- Composer text now uses the full width; attachments/send moved to their own row.
+- Enter/Send IME action sends; model picker moved into the chat More menu.
+- Fixed stale foreground flag suppressing background notifications; failed attachments block send; find offsets, upload/session binding and attachment-retention fixes.
+
 ## 0.3.0 — Google Play release preparation
 - Added a signed Play release build targeting SDK 36 (versionCode 146) with Play App Signing upload-key support.
 - Play build removes the sideload APK installer permission and self-updater/feed; debug/sideload builds keep them.

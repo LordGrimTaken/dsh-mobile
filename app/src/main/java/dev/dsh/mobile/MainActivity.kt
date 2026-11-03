@@ -25,7 +25,16 @@ import dev.dsh.mobile.ui.DshMobileApp
 class DshApplication : Application() {
     override fun onCreate() {
         super.onCreate()
-        // Trivial and defensive: a failure here must never prevent the shell from starting.
+
+        // A process killed while the UI was foreground leaves app_foreground=true behind. Without
+        // this reset, DshNotifications would suppress every background alert until the next
+        // foreground/background transition. A live Activity sets it true again on start.
+        runCatching {
+            getSharedPreferences("dsh-presentation", MODE_PRIVATE)
+                .edit()
+                .putBoolean("app_foreground", false)
+                .apply()
+        }        // Trivial and defensive: a failure here must never prevent the shell from starting.
         runCatching { StartupGuard.installCrashRecorder(this) }
     }
 }

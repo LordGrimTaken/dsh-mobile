@@ -3648,18 +3648,23 @@ class AppState(context: Context) {
      * Sends the composer content for the active session. Prompt text may be empty when at least
      * one attachment is included (contract v0.2.2). Throws so the composer can show inline errors.
      */
-    suspend fun sendMessage(raw: String, attachmentIds: List<String> = emptyList()) {
-        val sessionId = activeSessionId ?: return
+    suspend fun sendMessage(
+        raw: String,
+        attachmentIds: List<String> = emptyList(),
+        sessionId: String? = activeSessionId,
+    ) {
+        val targetSessionId = sessionId ?: return
         val text = raw.trim()
         val ids = AttachmentIds.normalize(attachmentIds)
         if (text.isEmpty() && ids.isEmpty()) return
         if (text.isNotEmpty()) promptHistory.add(text)
-        val wasWorking = activeSession()?.status == SessionStatus.Working
+        val wasWorking = repository.sessions.firstOrNull { it.id == targetSessionId }
+            ?.status == SessionStatus.Working
         if (wasWorking) {
             // Hold the message on the phone while a turn is running so the user can cancel it.
             // The host's own queue has no removal API, so sending immediately made the "IN QUEUE"
             // chip undeletable and could leave stale queued prompts behind.
-            queuedPrompts[sessionId] = queuedFor(sessionId) + QueuedPrompt(
+            queuedPrompts[targetSessionId] = queuedFor(targetSessionId) + QueuedPrompt(
                 id = System.nanoTime(),
                 text = text,
                 attachmentIds = ids,
@@ -3668,10 +3673,9 @@ class AppState(context: Context) {
             syncError = null
             return
         }
-        repository.sendPrompt(sessionId, text, ids)
+        repository.sendPrompt(targetSessionId, text, ids)
         syncError = null
     }
-
     /** Prompts held locally until the current turn finishes; they are cancelable here. */
     fun queuedFor(sessionId: String): List<QueuedPrompt> = queuedPrompts[sessionId].orEmpty()
 
@@ -3769,10 +3773,11 @@ class AppState(context: Context) {
         mimeType: String,
         bytes: ByteArray,
         onProgress: (Float) -> Unit = {},
+        sessionId: String? = null,
     ): UploadedAttachment {
-        val sessionId = activeSessionId
+        val targetSessionId = sessionId ?: activeSessionId
             ?: throw DshApiException.Protocol("Open a session before attaching files.")
-        return repository.uploadAttachment(sessionId, name, mimeType, bytes, onProgress)
+        return repository.uploadAttachment(targetSessionId, name, mimeType, bytes, onProgress)
     }
 
     /** True while this historical attachment is being downloaded for opening. */

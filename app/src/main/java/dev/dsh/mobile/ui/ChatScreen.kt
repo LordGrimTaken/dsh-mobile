@@ -57,6 +57,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.foundation.verticalScroll
@@ -137,6 +138,7 @@ import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -618,7 +620,7 @@ fun ChatScreen(state: AppState, session: Session) {
     LaunchedEffect(findMatches) {
         if (findMatches.isNotEmpty() && findOpen) {
             findIndex = 0
-            runCatching { listState.scrollToItem(findMatches[0]) }
+            runCatching { listState.scrollToItem(messageJumpScrollIndex(findMatches[0], hasOlderMessages || loadingOlderMessages)) }
         }
     }
 
@@ -626,24 +628,39 @@ fun ChatScreen(state: AppState, session: Session) {
         (it.state as? PendingAttachmentState.Uploaded)?.attachmentId
     }
     val uploading = pendingAttachments.any { it.state is PendingAttachmentState.Uploading }
-    val canSend = !sending && !uploading && (draft.isNotBlank() || uploadedIds.isNotEmpty())
+    val hasFailedAttachment = pendingAttachments.any {
+        it.state is PendingAttachmentState.Failed
+    }
+    // A failed attachment must never be silently dropped by sending only the text. The user has
+    // to retry or remove it before the send button/IME Send is enabled.
+    val canSend = !sending && !uploading && !hasFailedAttachment &&
+        (draft.isNotBlank() || uploadedIds.isNotEmpty())
 
     /** Shared send path for the composer and "retry": keeps the failed prompt for one tap. */
     val submitPrompt: (String, List<String>) -> Unit = submit@{ text, ids ->
         if (sending || uploading) return@submit
         sending = true
+        // Clear optimistically: a send can take seconds (network/stream start) and the old
+        // text must not sit in the composer while the message is already in flight.
+        if (draft == text) {
+            draft = ""
+            state.clearDraft(session.id)
+        }
         scope.launch {
             try {
-                state.sendMessage(text, ids)
-                if (draft == text) {
-                    draft = ""
-                    state.clearDraft(session.id)
+                state.sendMessage(text, ids, session.id)
+                pendingAttachments = pendingAttachments.filterNot { attachment ->
+                    (attachment.state as? PendingAttachmentState.Uploaded)?.attachmentId?.let { id -> id in ids } == true
                 }
-                pendingAttachments = emptyList()
                 composerError = null
                 sendError = null
                 failedPrompt = null
             } catch (error: Exception) {
+                // Restore the prompt only if the user has not started a new draft meanwhile.
+                if (draft.isBlank() && text.isNotBlank()) {
+                    draft = text
+                    state.saveDraft(session.id, text)
+                }
                 sendError = attachmentErrorMessage(state, error)
                 failedPrompt = FailedPrompt(text, ids)
             } finally {
@@ -651,7 +668,6 @@ fun ChatScreen(state: AppState, session: Session) {
             }
         }
     }
-
     /** Shared upload path: first pick and the Retry action on a failed chip both use it. */
     val uploadPicked: (String, PickedAttachment) -> Unit = { localId, picked ->
         pendingAttachments = pendingAttachments.map { attachment ->
@@ -666,6 +682,7 @@ fun ChatScreen(state: AppState, session: Session) {
         val job = scope.launch {
             try {
                 val uploaded = state.uploadAttachment(
+                    sessionId = session.id,
                     name = picked.name,
                     mimeType = picked.mimeType,
                     bytes = picked.bytes,
@@ -1110,21 +1127,6 @@ fun ChatScreen(state: AppState, session: Session) {
         compact = true,
         trailing = {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(
-                    modelChipLabel(state.modelCatalog, state.modelPreview?.selection),
-                    modifier = Modifier
-                        .widthIn(max = 96.dp)
-                        .clip(RoundedCornerShape(6.dp))
-                        .clickable {
-                            state.openModelPicker(session.id)
-                            showModelPicker = true
-                        }
-                        .padding(horizontal = 7.dp, vertical = 4.dp),
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.primary,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                )
                 val planHint = state.plan?.takeIf { it.supported }?.let { plan ->
                     planProgressHint(plan.counts)
                 }
@@ -1153,6 +1155,24 @@ fun ChatScreen(state: AppState, session: Session) {
                                 moreOpen = false
                                 showSkills = true
                                 state.openSkills(session.id)
+                            },
+                        )
+                        DropdownMenuItem(
+                            text = {
+                                Text(
+                                    "Model · " + modelChipLabel(
+                                        state.modelCatalog,
+                                        state.modelPreview?.selection,
+                                    ),
+                                )
+                            },
+                            modifier = Modifier.semantics {
+                                contentDescription = "Change model, current " + modelChipLabel(state.modelCatalog, state.modelPreview?.selection)
+                            },
+                            onClick = {
+                                moreOpen = false
+                                state.openModelPicker(session.id)
+                                showModelPicker = true
                             },
                         )
                         DropdownMenuItem(
@@ -1292,14 +1312,14 @@ fun ChatScreen(state: AppState, session: Session) {
                         if (findMatches.isNotEmpty()) {
                             findIndex = (findIndex - 1 + findMatches.size) % findMatches.size
                             val target = findMatches.getOrNull(findIndex)
-                            if (target != null) scope.launch { runCatching { listState.scrollToItem(target) } }
+                            if (target != null) scope.launch { runCatching { listState.scrollToItem(messageJumpScrollIndex(target, hasOlderMessages || loadingOlderMessages)) } }
                         }
                     },
                     onNext = {
                         if (findMatches.isNotEmpty()) {
                             findIndex = (findIndex + 1) % findMatches.size
                             val target = findMatches.getOrNull(findIndex)
-                            if (target != null) scope.launch { runCatching { listState.scrollToItem(target) } }
+                            if (target != null) scope.launch { runCatching { listState.scrollToItem(messageJumpScrollIndex(target, hasOlderMessages || loadingOlderMessages)) } }
                         }
                     },
                     onClose = {
@@ -4530,62 +4550,16 @@ private fun ChatComposer(
         shape = shape,
         border = BorderStroke(1.dp, borderColor),
     ) {
-        Row(
-            Modifier.padding(start = 2.dp, end = 6.dp, top = 4.dp, bottom = 4.dp),
-            verticalAlignment = Alignment.Bottom,
-        ) {
-            IconButton(
-                onClick = onVoice,
-                enabled = !voiceStarting,
-                modifier = Modifier.size(48.dp),
+        Column(Modifier.padding(horizontal = 6.dp, vertical = 4.dp)) {
+            // The text gets the full width; attachments live on their own row so a working
+            // Stop + Send pair can never squeeze the message into a one-letter column.
+            Row(
+                Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.Top,
             ) {
-                Icon(
-                    Icons.Filled.Mic,
-                    contentDescription = if (voiceListening) "Stop dictation" else "Dictate",
-                    tint = if (voiceListening) {
-                        Danger
-                    } else {
-                        MaterialTheme.colorScheme.onSurfaceVariant.copy(
-                            alpha = if (voiceStarting) 0.35f else 1f,
-                        )
-                    },
-                    modifier = Modifier.size(20.dp),
-                )
-            }
-            IconButton(
-                onClick = onCamera,
-                enabled = cameraEnabled,
-                modifier = Modifier.size(48.dp),
-            ) {
-                Icon(
-                    Icons.Filled.PhotoCamera,
-                    contentDescription = "Take photo",
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(
-                        alpha = if (cameraEnabled) 1f else 0.35f,
-                    ),
-                    modifier = Modifier.size(20.dp),
-                )
-            }
-            IconButton(
-                onClick = onAttach,
-                enabled = attachEnabled,
-                modifier = Modifier.size(48.dp),
-            ) {
-                Icon(
-                    Icons.Filled.AttachFile,
-                    contentDescription = "Attach",
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(
-                        alpha = if (attachEnabled) 1f else 0.35f,
-                    ),
-                    modifier = Modifier.size(20.dp),
-                )
-            }
-            Box(Modifier.weight(1f)) {
                 Text(
                     "❯",
-                    modifier = Modifier
-                        .align(Alignment.TopStart)
-                        .padding(start = 3.dp, top = 12.dp),
+                    modifier = Modifier.padding(start = 7.dp, top = 12.dp),
                     style = MaterialTheme.typography.bodyLarge,
                     color = MaterialTheme.colorScheme.primary,
                 )
@@ -4593,8 +4567,9 @@ private fun ChatComposer(
                     value = value,
                     onValueChange = onValueChange,
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(start = 21.dp, end = 2.dp, top = 12.dp, bottom = 12.dp)
+                        .weight(1f)
+                        .padding(start = 9.dp, end = 4.dp, top = 12.dp, bottom = 7.dp)
+                        .semantics { contentDescription = "Message DSH" }
                         .onFocusChanged { focusState -> focused = focusState.isFocused }
                         .then(
                             if (focusRequester != null) {
@@ -4608,12 +4583,16 @@ private fun ChatComposer(
                     ),
                     cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
                     maxLines = 5,
+                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Send),
+                    keyboardActions = KeyboardActions(
+                        onSend = { if (sendEnabled) onSend() },
+                    ),
                     decorationBox = { inner ->
                         Box {
                             if (value.isEmpty()) {
                                 Row(verticalAlignment = Alignment.CenterVertically) {
                                     Text(
-                                        "Message DSH…",
+                                        "Ask DSH…",
                                         style = MaterialTheme.typography.bodyLarge,
                                         color = MaterialTheme.colorScheme.onSurfaceVariant
                                             .copy(alpha = 0.7f),
@@ -4631,7 +4610,59 @@ private fun ChatComposer(
                     },
                 )
             }
-            Row(verticalAlignment = Alignment.CenterVertically) {
+            Row(
+                Modifier
+                    .fillMaxWidth()
+                    .padding(start = 2.dp, end = 0.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                IconButton(
+                    onClick = onVoice,
+                    enabled = !voiceStarting,
+                    modifier = Modifier.size(48.dp),
+                ) {
+                    Icon(
+                        Icons.Filled.Mic,
+                        contentDescription = if (voiceListening) "Stop dictation" else "Dictate",
+                        tint = if (voiceListening) {
+                            Danger
+                        } else {
+                            MaterialTheme.colorScheme.onSurfaceVariant.copy(
+                                alpha = if (voiceStarting) 0.35f else 1f,
+                            )
+                        },
+                        modifier = Modifier.size(20.dp),
+                    )
+                }
+                IconButton(
+                    onClick = onCamera,
+                    enabled = cameraEnabled,
+                    modifier = Modifier.size(48.dp),
+                ) {
+                    Icon(
+                        Icons.Filled.PhotoCamera,
+                        contentDescription = "Take photo",
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(
+                            alpha = if (cameraEnabled) 1f else 0.35f,
+                        ),
+                        modifier = Modifier.size(20.dp),
+                    )
+                }
+                IconButton(
+                    onClick = onAttach,
+                    enabled = attachEnabled,
+                    modifier = Modifier.size(48.dp),
+                ) {
+                    Icon(
+                        Icons.Filled.AttachFile,
+                        contentDescription = "Attach",
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(
+                            alpha = if (attachEnabled) 1f else 0.35f,
+                        ),
+                        modifier = Modifier.size(20.dp),
+                    )
+                }
+                Spacer(Modifier.weight(1f))
                 if (working) {
                     IconButton(
                         onClick = onStop,
@@ -4674,7 +4705,6 @@ private fun ChatComposer(
     }
 }
 
-// ---------------------------------------------------------------------------
 // Prompt templates
 // ---------------------------------------------------------------------------
 
