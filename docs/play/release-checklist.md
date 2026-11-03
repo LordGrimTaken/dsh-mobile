@@ -1,13 +1,13 @@
 # Google Play release checklist
 
-This file tracks everything needed to submit DSH Mobile (`dev.dsh.mobile`) to the Google Play
+This file tracks everything needed to submit DSH Mobile (`com.dsh.unofficial.app`) to the Google Play
 Console. It is a working document; it does not grant permission to publish automatically.
 
 ## 1. Play Console account and app
 
 - [ ] Google Play Developer account (personal accounts may need identity verification).
 - [ ] Create app: name **DSH Mobile**, default language English (US), app/game **App**, free.
-- [ ] Package name **`dev.dsh.mobile`** (must match the AAB).
+- [ ] Package name **`com.dsh.unofficial.app`** (must match the AAB).
 - [ ] Accept the Developer Program Policies and US export laws.
 - [ ] Complete **App content**:
   - [ ] Privacy policy URL: `https://github.com/LordGrimTaken/dsh-mobile/blob/main/PRIVACY.md`
@@ -44,6 +44,15 @@ Console. It is a working document; it does not grant permission to publish autom
 
 Expected output: `app/build/outputs/bundle/release/app-release.aab`.
 
+Build the Play variant with the Play application id:
+
+```powershell
+$env:ORG_GRADLE_PROJECT_playApplicationId = "com.dsh.unofficial.app"
+.\gradlew.bat :app:bundleRelease
+```
+
+The debug/sideload build keeps `dev.dsh.mobile`.
+
 The release build:
 
 - targets SDK 36, minSdk 26;
@@ -56,7 +65,7 @@ Verify the signing certificate matches the upload key before uploading.
 
 ## 4. Store listing
 
-- App name: **DSH Mobile**
+- App name: **DSH Mobile Unofficial**
 - Short description (≤80 chars): **Remote client for your self-hosted DeepSeek Harness sessions**
 - Full description: `docs/play/store-listing.md`
 - Category: **Developer tools** (or Productivity; choose one)

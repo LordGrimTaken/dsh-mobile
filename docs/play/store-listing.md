@@ -2,7 +2,7 @@
 
 ## App name
 
-DSH Mobile
+DSH Mobile Unofficial
 
 ## Short description (80 characters max)
 
@@ -10,7 +10,7 @@ Remote client for your self-hosted DeepSeek Harness sessions
 
 ## Full description
 
-DSH Mobile is a native Android client for a **DeepSeek Harness** agent running on your own computer. Pair once, then follow and drive your live sessions from your phone without syncing them to a third-party cloud.
+DSH Mobile Unofficial is a native Android client for a **DeepSeek Harness** agent running on your own computer. Pair once, then follow and drive your live sessions from your phone without syncing them to a third-party cloud.
 
 **Bring your own host**
 DSH Mobile is not a hosted AI service. It connects to a small host plugin running inside DeepSeek Harness on a PC you control. The host binds to loopback and is reached through a private network tunnel such as Tailscale, so session data stays between your phone and your machine.

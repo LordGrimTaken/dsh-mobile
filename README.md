@@ -49,7 +49,7 @@ DSH Mobile talks to a small **host plugin** that runs inside the DeepSeek Harnes
 
 ## Google Play (prepared, not yet listed)
 
-A Google Play build is prepared in this repository but has not been uploaded or listed yet. It targets Android SDK 36, uses the upload key described in `docs/play/release-checklist.md`, removes the sideload-only APK installer permission and updater, and keeps the same privacy model.
+A Google Play build (package `com.dsh.unofficial.app`, app title **DSH Mobile Unofficial**) has been built and uploaded to the internal testing track. It targets Android SDK 36, uses the upload key described in `docs/play/release-checklist.md`, removes the sideload-only APK installer permission and updater, and keeps the same privacy model.
 
 - Play checklist: [`docs/play/release-checklist.md`](docs/play/release-checklist.md)
 - Store listing copy: [`docs/play/store-listing.md`](docs/play/store-listing.md)

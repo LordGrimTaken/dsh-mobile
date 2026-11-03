@@ -42,8 +42,15 @@ android {
     namespace = "dev.dsh.mobile"
     compileSdk = 36
 
+    // Google Play builds pass -PplayApplicationId=com.dsh.unofficial.app. The default keeps the
+    // existing sideload/debug package so the public APK update path is unchanged.
+    val playApplicationId = providers.gradleProperty("playApplicationId").orNull
+        ?.trim()
+        ?.takeIf { it.isNotEmpty() }
+        ?: "dev.dsh.mobile"
+
     defaultConfig {
-        applicationId = "dev.dsh.mobile"
+        applicationId = playApplicationId
         minSdk = 26
         targetSdk = 36
         versionCode = 146

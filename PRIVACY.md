@@ -1,7 +1,7 @@
 # DSH Mobile privacy policy
 
 **Effective date:** 2026-11-02
-**App:** DSH Mobile (`dev.dsh.mobile`)
+**App:** DSH Mobile Unofficial (`com.dsh.unofficial.app` on Google Play; sideload builds use `dev.dsh.mobile`)
 **Project:** https://github.com/LordGrimTaken/dsh-mobile
 
 DSH Mobile is a client for a **DeepSeek Harness host that you run yourself**. It does not use a
