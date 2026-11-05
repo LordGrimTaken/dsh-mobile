@@ -48,16 +48,18 @@ The project publishes a release from a machine that can build the APK:
 # 2. Run tests, build and lint
 ./gradlew :app:testDebugUnitTest :app:assembleDebug :app:lintDebug
 
-# 3. Tag and create the release with the APK
+# 3. Tag and create the release with the APK and updated feed
 git tag v0.3.3-preview
-git push origin main v0.2.140-preview
+git push origin main v0.3.3-preview
 gh release create v0.3.3-preview \
   app/build/outputs/apk/debug/app-debug.apk \
+  latest.json \
   --title "DSH Android v0.3.3-preview" \
-  --notes-file RELEASE_NOTES.md
+  --notes-file RELEASE_NOTES.md \
+  --latest
 
-# 4. Update latest.json from the SHA/size of the uploaded asset
+# 4. Verify latest.json SHA/size against the asset
 sha256sum app/build/outputs/apk/debug/app-debug.apk
 ```
 
-The release tag must match `versionName`; the update checker rejects feeds whose `versionCode` is not newer than the installed build.
+Use a tag such as `v<versionName>-preview`; the update checker compares `versionCode`, not the tag.
