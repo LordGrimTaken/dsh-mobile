@@ -1,19 +1,19 @@
-# DSH Mobile — Google Play store listing
+# DSH Android — Google Play store listing
 
 ## App name
 
-DSH Mobile Unofficial
+DSH Android Unofficial Harness
 
 ## Short description (80 characters max)
 
-Remote client for your self-hosted DeepSeek Harness sessions
+Remote client for your self-hosted DeepSeek Harness
 
 ## Full description
 
-DSH Mobile Unofficial is a native Android client for a **DeepSeek Harness** agent running on your own computer. Pair once, then follow and drive your live sessions from your phone without syncing them to a third-party cloud.
+DSH Android Unofficial Harness is a native Android client for a **DeepSeek Harness** agent running on your own computer. Pair once, then follow and drive your live sessions from your phone without syncing them to a third-party cloud.
 
 **Bring your own host**
-DSH Mobile is not a hosted AI service. It connects to a small host plugin running inside DeepSeek Harness on a PC you control. The host binds to loopback and is reached through a private network tunnel such as Tailscale, so session data stays between your phone and your machine.
+DSH Android is not a hosted AI service. It connects to a small host plugin running inside DeepSeek Harness on a PC you control. The host binds to loopback and is reached through a private network tunnel such as Tailscale, so session data stays between your phone and your machine.
 
 **What you can do**
 - Follow live sessions and streaming replies.
@@ -34,9 +34,9 @@ DSH Mobile is not a hosted AI service. It connects to a small host plugin runnin
 - The Play build does not download or install APKs.
 
 **Requirements**
-You need a DeepSeek Harness desktop setup with the DSH Mobile host plugin. The app includes a demo mode so you can preview the interface without a host. Remote access is easiest with Tailscale Serve; see the project documentation.
+You need a DeepSeek Harness desktop setup with the DSH Android host plugin. The app includes a demo mode so you can preview the interface without a host. Remote access is easiest with Tailscale Serve; see the project documentation.
 
-DSH Mobile is an independent open-source community project, not an official DeepSeek product.
+DSH Android is an independent open-source community project, not an official DeepSeek product.
 
 ## Category
 
@@ -52,4 +52,4 @@ Developer tools
 
 - Icon: `docs/play/assets/icon-512.png`
 - Feature graphic: `docs/play/assets/feature-graphic-1024x500.png`
-- Screenshots: `docs/play/screenshots/phone-home.png` and `phone-chat.png` (9:16 design captures; replace with device captures when available).
+- Screenshots (6 total, 1080x1920 store cards built from actual 0.3.2 app captures): `store-guide.png`, `store-demo.png`, `store-chat.png`, `store-notify.png`, `store-sessions.png`, `store-settings.png`.

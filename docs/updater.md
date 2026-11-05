@@ -1,6 +1,6 @@
 # Update feed and releases
 
-DSH Mobile is distributed as a **debug-signed preview APK** from this repository's GitHub Releases. The source, the release feed and the APKs now live together in **`LordGrimTaken/dsh-mobile`**.
+DSH Android is distributed as a **debug-signed preview APK** from this repository's GitHub Releases. The source, the release feed and the APKs now live together in **`LordGrimTaken/dsh-mobile`**.
 
 | Thing | Value |
 | --- | --- |
@@ -53,7 +53,7 @@ git tag v0.2.141-preview
 git push origin main v0.2.140-preview
 gh release create v0.2.141-preview \
   app/build/outputs/apk/debug/app-debug.apk \
-  --title "DSH Mobile v0.2.141-preview" \
+  --title "DSH Android v0.2.141-preview" \
   --notes-file RELEASE_NOTES.md
 
 # 4. Update latest.json from the SHA/size of the uploaded asset

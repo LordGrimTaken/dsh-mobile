@@ -73,7 +73,7 @@ GitHub blob URLs, use a GitHub Pages deployment of the same file.
 ### Sign in details / App access
 - Does the app require users to sign in? **No.**
 - Is any functionality restricted? **No.** Reviewers can use **demo mode**.
-- Review instructions: "Open DSH Mobile. On the welcome screen choose **Use demo data**. This loads
+- Review instructions: "Open DSH Android. On the welcome screen choose **Use demo data**. This loads
   sample sessions, messages and approvals without a host. No credentials are required."
 - Do not provide a public test host; the app is intentionally local/self-hosted.
 
@@ -122,6 +122,6 @@ See `docs/play/data-safety.md`:
 - Privacy policy: URL above.
 
 ### Store listing
-Already populated via Play API: title **DSH Mobile Unofficial**, short/full description, icon,
+Already populated via Play API: title **DSH Android Unofficial Harness**, short/full description, icon,
 feature graphic and two 9:16 phone screenshots. Replace screenshots with real device captures when
 available.

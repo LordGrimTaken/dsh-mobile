@@ -1,6 +1,6 @@
 # Security policy
 
-DSH Mobile is a preview project that runs a local agent client. Please treat it as security-sensitive software.
+DSH Android is a preview project that runs a local agent client. Please treat it as security-sensitive software.
 
 ## Reporting a vulnerability
 

@@ -1,6 +1,6 @@
 # Third-party notices and inspiration
 
-DSH Mobile is an independent Android client for a local DeepSeek Harness host. It does not vendor,
+DSH Android is an independent Android client for a local DeepSeek Harness host. It does not vendor,
 link, or copy source code from the projects below; their features informed product ideas and
 behaviour only.
 

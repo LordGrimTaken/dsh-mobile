@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.3.3 — DSH Android rebrand
+- Renamed the Play listing and launcher label to **DSH Android**; the Play title is **DSH Android Unofficial Harness**.
+- Refreshed the app icon, feature graphic and six Play screenshots for the new brand.
+- Added the first-run setup guide covering desktop, cloud, Tailscale, recovery and demo mode.
+- Demo data is now the first option on the welcome screen; no host or account is required to explore.
+
+## 0.3.2 — first-run setup and demo-first onboarding
+- Added a guided setup screen that opens on first launch and remains available from the welcome screen.
+- Moved demo mode to the first position and made the no-host path explicit.
+- Added step-by-step instructions for desktop, cloud, Tailscale, recovery and demo users.
+
 ## 0.3.1 — composer and bug-sweep fixes
 - Fixed sent text remaining in the composer; drafts clear optimistically and restore only on failure.
 - Composer text now uses the full width; attachments/send moved to their own row.

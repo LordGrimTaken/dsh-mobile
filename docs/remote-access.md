@@ -1,6 +1,6 @@
 # Remote access: phone → desktop over Tailscale
 
-How to reach the desktop DSH Mobile host from a phone **without opening a LAN
+How to reach the desktop DSH Android host from a phone **without opening a LAN
 port or the public internet**, using Tailscale Serve for TLS and identity.
 
 > **Status: preview.** The Android client now has real networking: it
@@ -19,7 +19,7 @@ port or the public internet**, using Tailscale Serve for TLS and identity.
 
 ```text
 ┌─────────────┐   HTTPS 443        ┌──────────────────┐   HTTP 127.0.0.1:3543   ┌─────────────────┐
-│ Android app │ ─────────────────▶ │  Tailscale Serve │ ──────────────────────▶ │ DSH Mobile host │
+│ Android app │ ─────────────────▶ │  Tailscale Serve │ ──────────────────────▶ │ DSH Android host │
 │ (Tailscale) │  <pc>.<tailnet>    │  (TLS + proxy)   │   loopback only         │ plugin          │
 │             │     .ts.net        │  on the PC       │                         │                 │
 └─────────────┘                    └──────────────────┘                         └─────────────────┘

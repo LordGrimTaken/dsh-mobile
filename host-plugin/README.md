@@ -1,7 +1,7 @@
-# DSH Mobile Host (`dsh-mobile-host`)
+# DSH Android Host (`dsh-mobile-host`)
 
-DSH Host plugin that implements **DSH Mobile API v1** (`docs/mobile-api-v1.md`):
-a loopback-only HTTP + SSE server that lets the DSH Mobile Android app pair with
+DSH Host plugin that implements **DSH Android API v1** (`docs/mobile-api-v1.md`):
+a loopback-only HTTP + SSE server that lets the DSH Android Android app pair with
 this desktop, list sessions, read transcripts, upload attachments, send prompts,
 interrupt a running turn, and follow live events. Subagent/teammate ("internal")
 sessions are hidden from the phone by default, so the list only shows sessions

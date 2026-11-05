@@ -1,10 +1,10 @@
-# DSH Mobile privacy policy
+# DSH Android privacy policy
 
-**Effective date:** 2026-11-02
-**App:** DSH Mobile Unofficial (`com.dsh.unofficial.app` on Google Play; sideload builds use `dev.dsh.mobile`)
+**Effective date:** 2026-11-05
+**App:** DSH Android Unofficial Harness (`com.dsh.unofficial.app` on Google Play; sideload builds use `dev.dsh.mobile`)
 **Project:** https://github.com/LordGrimTaken/dsh-mobile
 
-DSH Mobile is a client for a **DeepSeek Harness host that you run yourself**. It does not use a
+DSH Android is a client for a **DeepSeek Harness host that you run yourself**. It does not use a
 developer-operated cloud service, account system, advertising network or analytics service.
 
 ## What the app does
@@ -56,7 +56,7 @@ development and private networks but is not recommended over untrusted networks.
 
 ## Children
 
-DSH Mobile is a developer tool and is not directed at children.
+DSH Android is a developer tool and is not directed at children.
 
 ## Changes
 

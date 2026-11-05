@@ -1,12 +1,12 @@
 # Google Play release checklist
 
-This file tracks everything needed to submit DSH Mobile (`com.dsh.unofficial.app`) to the Google Play
+This file tracks everything needed to submit DSH Android (`com.dsh.unofficial.app`) to the Google Play
 Console. It is a working document; it does not grant permission to publish automatically.
 
 ## 1. Play Console account and app
 
 - [ ] Google Play Developer account (personal accounts may need identity verification).
-- [x] Create app: Play title **DSH Mobile Unofficial**, default language English (US), app/game **App**, free. Package **`com.dsh.unofficial.app`**.
+- [x] Create app: Play title **DSH Android Unofficial Harness**, default language English (US), app/game **App**, free. Package **`com.dsh.unofficial.app`**.
 - [x] Package name **`com.dsh.unofficial.app`** (matches the uploaded AAB).
 - [ ] Accept the Developer Program Policies and US export laws.
 - [ ] Complete **App content** (still needs Play Console UI):
@@ -65,10 +65,10 @@ Verify the signing certificate matches the upload key before uploading.
 
 ## 4. Store listing
 
-- App name: **DSH Mobile Unofficial**
-- Short description (≤80 chars): **Remote client for your self-hosted DeepSeek Harness sessions**
+- App name: **DSH Android Unofficial Harness**
+- Short description (≤80 chars): **Remote client for your self-hosted DeepSeek Harness**
 - Full description: `docs/play/store-listing.md`
-- Category: **Developer tools** (or Productivity; choose one)
+- Category: **Tools**
 - Tags: developer tools, remote access, self-hosted, AI
 - Contact email: use a project contact address (GitHub issues URL is not an email; Play requires a
   monitored email address—set one in the Play Console).
@@ -77,8 +77,7 @@ Verify the signing certificate matches the upload key before uploading.
 - Graphics:
   - [x] App icon **512×512 PNG** — uploaded to Play listing.
   - [x] Feature graphic **1024×500 PNG** — uploaded to Play listing.
-  - [x] Two 9:16 phone screenshots uploaded to the listing (`docs/play/screenshots/phone-home.png`, `phone-chat.png`). These are design captures; replace with real device captures after installing the internal build. (JPEG/PNG, 320–3840px, 16:9–9:16). Do not use mockups that do
-    not match the shipped UI; capture from the installed build.
+  - [x] Six 9:16 phone screenshots uploaded to the listing (`docs/play/screenshots/store-*.png`). They are built from actual demo-mode captures; refresh them whenever the UI changes.
   - [ ] Optional 7"/10" tablet screenshots.
 
 ## 5. Testing tracks
@@ -104,7 +103,7 @@ Verify the signing certificate matches the upload key before uploading.
 ## 7. Release notes template
 
 ```
-First Google Play release of DSH Mobile.
+First Google Play release of DSH Android.
 
 - Connect to your own DeepSeek Harness host over a private network.
 - Live sessions, streaming chat, approvals, files, plans, teams, jobs and context usage.

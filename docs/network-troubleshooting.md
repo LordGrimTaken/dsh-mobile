@@ -1,4 +1,4 @@
-# DSH Mobile over Tailscale — connection troubleshooting
+# DSH Android over Tailscale — connection troubleshooting
 
 The mobile app talks to the DSH host plugin over the Tailscale interface. When the phone is
 locked, switches Wi-Fi/cellular, or Tailscale restarts its tunnel, the old TCP/SSE connection can
@@ -11,10 +11,10 @@ to keep the VPN alive in the background.
    Android Settings → Network & internet → VPN → gear next to Tailscale → enable **Always-on VPN**
    (and **Block connections without VPN** only if you understand the trade-off). This makes Android
    re-establish the tunnel after a network switch instead of leaving the app offline.
-2. **Unrestricted battery for Tailscale and DSH Mobile**
+2. **Unrestricted battery for Tailscale and DSH Android**
    Settings → Apps → Tailscale → App battery usage → **Unrestricted**.
-   Settings → Apps → DSH Mobile → App battery usage → **Unrestricted**.
-   Also disable “Pause app activity if unused” for DSH Mobile.
+   Settings → Apps → DSH Android → App battery usage → **Unrestricted**.
+   Also disable “Pause app activity if unused” for DSH Android.
 3. **Allow background data** for both apps (Mobile data / Wi-Fi data usage is not restricted).
 4. Keep the Tailscale status notification visible; swiping away the VPN notification can let Android
    stop the tunnel.
@@ -53,7 +53,7 @@ to keep the VPN alive in the background.
    - `healthy` means the phone can reach the host; the problem is the SSE/network path.
    - A timeout/DNS error means Tailscale or the host is unreachable.
 2. Check `tailscale status` and `tailscale ping <host>` from another Tailscale device.
-3. Toggle Tailscale off/on **once**, then reopen DSH Mobile; the app should reconnect on resume.
+3. Toggle Tailscale off/on **once**, then reopen DSH Android; the app should reconnect on resume.
    Prefer the in-app Reconnect button before rebooting the whole VPN.
 4. Check that the phone’s host URL still matches the current `tailscale serve status` URL.
 5. If only the app is stuck while other Tailscale traffic works, use Connection diagnostics →

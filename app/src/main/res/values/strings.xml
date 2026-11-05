@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">DSH Mobile</string>
+    <string name="app_name">DSH Android</string>
     <string name="shortcut_new_session_short">New session</string>
     <string name="shortcut_new_session_long">Start a new DSH session</string>
     <string name="shortcut_usage_short">Usage</string>

@@ -40,6 +40,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -68,6 +69,44 @@ fun WelcomeScreen(state: AppState) {
     var showRecoveryRestore by remember { mutableStateOf(false) }
     var showTailscaleSignIn by remember { mutableStateOf(false) }
     var tailscaleUrl by remember { mutableStateOf("") }
+
+    val setupContext = LocalContext.current
+    val setupPrefs = remember(setupContext) {
+        setupContext.getSharedPreferences("dsh-presentation", Context.MODE_PRIVATE)
+    }
+    var showSetupGuide by rememberSaveable {
+        mutableStateOf(!setupPrefs.getBoolean(SETUP_GUIDE_SEEN_KEY, false))
+    }
+    fun closeSetupGuide() {
+        showSetupGuide = false
+        setupPrefs.edit().putBoolean(SETUP_GUIDE_SEEN_KEY, true).apply()
+    }
+    if (showSetupGuide) {
+        SetupGuideScreen(
+            onClose = { closeSetupGuide() },
+            onPairDesktop = {
+                closeSetupGuide()
+                state.openPairing("Desktop")
+            },
+            onPairCloud = {
+                closeSetupGuide()
+                state.openPairing("Cloud")
+            },
+            onTailscale = {
+                closeSetupGuide()
+                showTailscaleSignIn = true
+            },
+            onRecovery = {
+                closeSetupGuide()
+                showRecoveryRestore = true
+            },
+            onDemo = {
+                closeSetupGuide()
+                state.chooseDemoData()
+            },
+        )
+        return
+    }
     Column(
         Modifier
             .fillMaxSize()
@@ -111,6 +150,15 @@ fun WelcomeScreen(state: AppState) {
         )
         Spacer(Modifier.height(8.dp))
 
+        SetupGuideEntryCard(onClick = { showSetupGuide = true })
+        Spacer(Modifier.height(2.dp))
+        WelcomeOption(
+            icon = Icons.Filled.PlayCircle,
+            title = "Use demo data - no host or login",
+            body = "Explore sample sessions, approvals and plans first. Pair a real host later in Settings.",
+            accent = true,
+            onClick = state::chooseDemoData,
+        )
         WelcomeOption(
             icon = Icons.Filled.Computer,
             title = "Pair your desktop host",
@@ -138,12 +186,7 @@ fun WelcomeScreen(state: AppState) {
                 "desktop pairing code needed.",
             onClick = { showRecoveryRestore = true },
         )
-        WelcomeOption(
-            icon = Icons.Filled.PlayCircle,
-            title = "Use demo data",
-            body = "Explore the app with mock sessions. Pair a host later in Settings.",
-            onClick = state::chooseDemoData,
-        )
+
 
         Spacer(Modifier.height(6.dp))
         Text(
@@ -592,3 +635,5 @@ private fun WelcomeOption(
         )
     }
 }
+
+private const val SETUP_GUIDE_SEEN_KEY = "setup_guide_seen"

@@ -1,93 +1,113 @@
-# DSH Mobile
+<p align="center">
+  <img src="docs/play/assets/icon-512.png" width="112" alt="DSH Android icon">
+</p>
 
-A native Android client for a **DeepSeek Harness** host running on your own PC. Pair once, then read and drive your live DSH sessions from your phone — chat, approvals, questions, files, plans, teams, jobs, schedules, usage and context — without syncing your sessions to a third-party cloud.
+<h1 align="center">DSH Android</h1>
 
-> **Status: preview.** The app is distributed as a **debug-signed APK** from GitHub Releases. It is usable for testing and personal use; expect rough edges and back up anything important. This is an independent community project, not an official DeepSeek product.
+<p align="center">
+  <strong>Unofficial Android client for your self-hosted <a href="https://github.com/deepseek-ai/DeepSeek-Harness">DeepSeek Harness</a>.</strong>
+</p>
 
-[Download the latest APK](https://github.com/LordGrimTaken/dsh-mobile/releases/latest)
+<p align="center">
+  <a href="https://github.com/LordGrimTaken/dsh-mobile/blob/main/LICENSE"><img alt="License: MIT" src="https://img.shields.io/badge/license-MIT-3ddc84"></a>
+  <a href="https://developer.android.com"><img alt="Android 8.0+" src="https://img.shields.io/badge/Android-8.0%2B-3ddc84"></a>
+  <a href="https://github.com/LordGrimTaken/dsh-mobile/releases"><img alt="Preview" src="https://img.shields.io/badge/status-preview-6b8f7e"></a>
+</p>
 
-![Terminal cockpit drawer design example](docs/ui/terminal-drawer.png)
+<p align="center">
+  <img src="docs/screenshots/setup.png" width="260" alt="Guided setup">
+  <img src="docs/screenshots/demo.png" width="260" alt="Demo mode">
+  <img src="docs/screenshots/chat.png" width="260" alt="Terminal chat">
+</p>
 
-*Design example of the terminal cockpit drawer: compact actions, one navigation section, live session rows with status/unread/current state.*
+DSH Android is a native Android client for a **DeepSeek Harness host that you run yourself**.
+Pair once, then follow and drive live sessions from your phone: streaming replies, approvals,
+structured questions, files, plans, teams, jobs, schedules, token usage and context pressure.
+There is no account system, no developer cloud and no analytics.
 
- · [Mobile API contract](docs/mobile-api-v1.md) · [Host plugin](host-plugin/README.md) · [Build from source](#build-from-source) · [Feature ideas](docs/mobile-feature-ideas.md)
+> **Independent community project.** DSH Android is not an official DeepSeek product. It is a
+> preview-quality tool for people who already run DeepSeek Harness on their own computer.
 
----
+## What you can do
 
-## What it does
-
-DSH Mobile talks to a small **host plugin** that runs inside the DeepSeek Harness desktop profile. The plugin binds only to loopback and exposes a bearer-token Mobile API; the phone reaches it through Tailscale (recommended), another private tunnel, or the local network during development.
-
-| Area | Capabilities |
+| | |
 | --- | --- |
-| **Sessions** | Live session list, unread/working states, search and filters, rename, archive/hide, grouped workspaces |
-| **Chat** | Streaming replies, Markdown/code, attachments and images, PDF export, tool-output viewer, queued prompts, stop/interrupt |
-| **Approvals & questions** | Live approval policy, approve/deny, structured questions with answers |
-| **Files** | Read-only workspace browser, previews, external open, **Mention in prompt** |
-| **Oversight** | Plan/todos, team board, trajectory journal, background jobs, lineage/delegation, skills |
-| **Usage & context** | Host-fed token usage and API balance, context-window pressure with warnings |
-| **Automation** | Schedules, goals, recovery pairing, push notification preferences |
-| **Presentation** | Terminal-first UI with compact shell and single-line status; dark/light/AMOLED, six accent themes, adaptive two-pane layout on tablets/foldables, share-message-as-image cards, configurable text size |
-| **Resilience** | SSE reconnect diagnostics, snapshot cache, startup-recovery screen, crash reports |
+| **Live sessions** | Follow streaming replies, tool output and session state in real time. |
+| **Approvals & questions** | Approve or deny agent actions, answer structured questions, and stay in control of queued prompts. |
+| **Terminal-first chat** | A focused, keyboard-friendly interface with full-width composer, Markdown, code blocks and quick actions. |
+| **Workspace files** | Browse read-only workspace files, preview them, and mention files directly in a prompt. |
+| **Plans & teams** | Review plans/todos, Agent Teams, trajectory journals, delegation and background jobs. |
+| **Usage & context** | Host-fed token usage, API balance and context-window pressure warnings. |
+| **Your setup** | Dark, light and AMOLED themes, accent palettes, adaptive two-pane layout on tablets and foldables. |
+| **Private by design** | Device tokens stay encrypted on your phone; session data stays between the phone and your host. |
+
+## Try it without a host
+
+The app includes **demo mode**, which loads a complete sample workspace on the phone:
+
+1. Install the app.
+2. On first launch, tap **Try demo data**.
+3. Browse sessions, chat, approvals, settings and the rest of the UI — no account, host or Tailscale
+   connection required.
+
+Demo mode is the fastest way to evaluate the app or review its interface. Pair a real host later from
+**Settings → Hosts**.
+
+## Connect your own host
+
+DSH Android talks to the **`host-plugin/`** directory in this repository. The plugin runs inside your
+DeepSeek Harness desktop profile, binds to `127.0.0.1:3543` only, and exposes a bearer-token Mobile API.
+
+1. Install the host plugin in your DeepSeek Harness profile and restart the desktop app.
+2. Make the host reachable from the phone. **Tailscale Serve** is the recommended path; local LAN works
+   during development.
+3. Create a one-time pairing code on the desktop and enter it in the app, or use the Tailscale/recovery
+   flow if your host is configured for it.
+
+Full instructions, including cloud hosts and recovery, are in **[Setting up DSH Android](docs/setup.md)**.
 
 ## Architecture
 
 ```text
-┌──────────────────────┐        HTTPS (Tailscale Serve)        ┌────────────────────────────┐
-│ Android app          │ ───────────────────────────────────▶ │ DSH Mobile host plugin     │
-│ Kotlin + Jetpack     │       127.0.0.1:3543 (loopback)       │ inside DeepSeek Harness    │
-│ Compose, no cloud    │ ◀────────── SSE + REST ───────────── │ Node.js / Cordis           │
-└──────────────────────┘                                       └────────────────────────────┘
-                                                                         │
+┌─────────────────────┐       HTTPS / private tailnet       ┌──────────────────────────┐
+│ Android app         │ ──────────────────────────────────▶ │ DSH Android host plugin  │
+│ Kotlin + Compose    │        REST + SSE                   │ inside DeepSeek Harness  │
+│ no cloud, no account│ ◀────────────────────────────────── │ Node.js / Cordis         │
+└─────────────────────┘                                      └──────────────────────────┘
+                                                                          │
                                                               DSH session controller,
-                                                              query, attachments, files
+                                                              files, jobs and query APIs
 ```
 
-- The host plugin is in [`host-plugin/`](host-plugin/README.md). It owns the Mobile API, pairing codes, device tokens, event fan-out and redaction.
-- The Android app is in [`app/`](app/). It has no analytics, no account system and no server-side component; your host is the only backend.
-- [`tools/fake-host/`](tools/fake-host/README.md) is an in-memory implementation of the same contract for UI development and tests.
+- **`app/`** — Kotlin/Jetpack Compose Android client. Release builds for Google Play live in the same
+  module with a different `applicationId`.
+- **`host-plugin/`** — the Mobile API adapter for DeepSeek Harness. Authentication, pairing, event
+  fan-out and redaction live here.
+- **`tools/fake-host/`** — an in-memory host implementation used by tests and UI development.
+- **`docs/mobile-api-v1.md`** — the stable contract between the app and the host.
 
-## Google Play (prepared, not yet listed)
+Read more in **[Architecture](docs/architecture.md)**.
 
-A Google Play build (package `com.dsh.unofficial.app`, app title **DSH Mobile Unofficial**) has been built and uploaded to the internal testing track. It targets Android SDK 36, uses the upload key described in `docs/play/release-checklist.md`, removes the sideload-only APK installer permission and updater, and keeps the same privacy model.
+## Install
 
-- Play checklist: [`docs/play/release-checklist.md`](docs/play/release-checklist.md)
-- Store listing copy: [`docs/play/store-listing.md`](docs/play/store-listing.md)
-- Privacy policy: [`PRIVACY.md`](PRIVACY.md)
-- App access/reviewer notes: [`docs/play/app-access.md`](docs/play/app-access.md)
-## Install the app
+### Google Play
 
-1. On your phone, open the [latest release](https://github.com/LordGrimTaken/dsh-mobile/releases/latest) and download the `dsh-mobile-*-debug.apk` asset.
-2. Allow installs from your browser/file manager when prompted.
-3. Open DSH Mobile. The first screen lets you pair with a host.
+The Play package is **`com.dsh.unofficial.app`** under the title **DSH Android Unofficial Harness**.
+It is currently in the review/publishing flow. The Play build removes the sideload-only installer
+permission and self-updater.
 
-The APK is **debug-signed**. In-app updates only install when the new APK has the same signature; the release feed and update checker are documented in [`docs/updater.md`](docs/updater.md). Uninstall/reinstall may be required if you mix builds signed with different keys.
+### Sideload preview
 
-## Install the host plugin
+The preview APK is distributed through **[GitHub Releases](https://github.com/LordGrimTaken/dsh-mobile/releases)**.
+Preview APKs are debug-signed and intended for testing and personal use; back up anything important.
+The in-app update checker is disabled in the Play build.
 
-The host plugin runs inside the DeepSeek Harness desktop profile. Copy or install [`host-plugin/`](host-plugin/README.md) as a DSH profile bundle, enable it, and restart the desktop app. It listens on `127.0.0.1:3543` only; do not expose that port directly to the internet.
-
-For remote access, the recommended setup is **Tailscale Serve**, which provides TLS and tailnet-only reachability without opening a port:
-
-- [Remote access guide](docs/remote-access.md)
-- [Network troubleshooting](docs/network-troubleshooting.md)
-
-To pair: in the desktop host, create a pairing code (or use Tailscale/recovery pairing according to the host plugin configuration), then enter it in the app. The app stores the issued device token in Android Keystore-backed encrypted storage.
-
-## Security and privacy
-
-- **Loopback only:** the host API binds to `127.0.0.1`; remote exposure is via Tailscale Serve, not a public port.
-- **Device bearer tokens:** each phone gets its own token through a one-time code. Tokens are stored hashed on the host.
-- **Hidden internal sessions:** subagent/teammate sessions are not exposed to the phone by default.
-- **Redaction:** transcripts, trajectory, jobs and share cards redact credential-like values and absolute host paths before leaving the host or being rendered.
-- **No cloud sync:** session content lives on your host and phone only. The app contacts your host plus the GitHub release feed when checking for updates.
-- **Debug signing:** preview builds are not production-signed; do not distribute them as a trusted production app.
-
-See [`SECURITY.md`](SECURITY.md) for reporting and limitations.
+> Source on `main` may be ahead of the last GitHub release. Build from source for the latest changes.
 
 ## Build from source
 
-Requirements: JDK 17+, Android SDK with build-tools, and the Gradle wrapper (included).
+Requirements: JDK 17+, Android SDK with build-tools, and the included Gradle wrapper.
+Node.js is only needed for the host plugin tests.
 
 ```powershell
 # Windows
@@ -97,9 +117,19 @@ Requirements: JDK 17+, Android SDK with build-tools, and the Gradle wrapper (inc
 ./gradlew :app:testDebugUnitTest :app:assembleDebug :app:lintDebug
 ```
 
-APK output: `app/build/outputs/apk/debug/app-debug.apk`.
+The debug APK is written to:
 
-Host plugin tests use Node.js (no dependencies):
+```text
+app/build/outputs/apk/debug/app-debug.apk
+```
+
+Build the Play bundle with the Play application ID:
+
+```powershell
+.\gradlew.bat :app:bundleRelease -PplayApplicationId=com.dsh.unofficial.app
+```
+
+Host plugin and fake-host tests:
 
 ```bash
 node --test --test-force-exit 'host-plugin/test/*.test.mjs'
@@ -108,16 +138,57 @@ node --test --test-force-exit 'tools/fake-host/*-test.mjs'
 
 ## Repository layout
 
-| Path | Contents |
-| --- | --- |
-| `app/` | Android app (Kotlin, Jetpack Compose) |
-| `host-plugin/` | DSH host plugin implementing Mobile API v1 |
-| `tools/fake-host/` | Contract-compatible fake host for development/tests |
-| `docs/mobile-api-v1.md` | Stable Mobile API contract |
-| `docs/mobile-feature-ideas.md` | 200 researched feature ideas with priority/API tags |
-| `docs/updater.md` | Release feed and update-checker details |
-| `NOTICE.md` | Third-party inspiration and licensing notes |
+```text
+app/                    Android app (Kotlin, Jetpack Compose)
+host-plugin/            DeepSeek Harness host plugin and Mobile API
+tools/fake-host/        In-memory host used by tests and UI development
+docs/                   Setup, API, architecture, release and project documentation
+  setup.md              Pairing, desktop, cloud, Tailscale and recovery guide
+  architecture.md       Component and data-flow overview
+  mobile-api-v1.md      Stable Mobile API v1 contract
+  screenshots/          Store screenshots used in this README
+  play/                 Google Play release notes and listing preparation
+gradle/                 Gradle wrapper and version catalog
+```
+
+## Documentation
+
+- **Users**
+  - [Setting up DSH Android](docs/setup.md)
+  - [Remote access with Tailscale](docs/remote-access.md)
+  - [Network troubleshooting](docs/network-troubleshooting.md)
+  - [FAQ](docs/faq.md)
+- **Developers**
+  - [Documentation index](docs/README.md)
+  - [Architecture](docs/architecture.md)
+  - [Mobile API v1](docs/mobile-api-v1.md)
+  - [Update feed and releases](docs/updater.md)
+  - [Contributing](CONTRIBUTING.md)
+- **Maintainers**
+  - [Google Play release checklist](docs/play/release-checklist.md)
+  - [Store listing copy](docs/play/store-listing.md)
+
+## Security and privacy
+
+- The host binds to **loopback only**; remote access is through a private tunnel such as Tailscale Serve,
+  not a public port.
+- Pairing codes are short-lived and one-time. Device tokens are stored hashed on the host and encrypted
+  on the phone.
+- Hidden/internal subagent and teammate sessions are not exposed to the phone by default.
+- Credential-like values and host paths are redacted from mobile transcripts, jobs and share cards.
+- There is **no developer cloud**, analytics SDK or advertising SDK. The sideload build checks GitHub
+  Releases for updates; the Play build has no updater.
+
+Read the [privacy policy](PRIVACY.md) and [security policy](SECURITY.md) before deploying this on a
+network you do not fully control.
+
+## Contributing
+
+Small, focused pull requests are welcome. Please read [CONTRIBUTING.md](CONTRIBUTING.md), keep the
+[`docs/mobile-api-v1.md`](docs/mobile-api-v1.md) contract in sync for protocol changes, and never commit
+tokens, pairing codes, private keys or real session logs.
 
 ## License
 
-MIT — see [`LICENSE`](LICENSE). Third-party inspiration is credited in [`NOTICE.md`](NOTICE.md); no third-party source code is vendored.
+MIT — see [LICENSE](LICENSE). Third-party inspiration is credited in [NOTICE.md](NOTICE.md); no
+third-party source code is vendored.

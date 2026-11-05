@@ -1,10 +1,10 @@
-﻿# Foreground service dataSync declaration
+# Foreground service dataSync declaration
 
-**App:** DSH Mobile Unofficial (com.dsh.unofficial.app)
+**App:** DSH Android Unofficial Harness (com.dsh.unofficial.app)
 **Build shown:** 0.3.1 (versionCode 147)
 **Permission:** FOREGROUND_SERVICE_DATA_SYNC
 **Service type:** dataSync
-**Video:** [dsh-background-sync-demo.mp4](dsh-background-sync-demo.mp4)
+**Video:** [dsh-background-sync-demo.mp4](assets/dsh-background-sync-demo.mp4)
 **SHA-256:** $sha
 
 ## Play Console answers
@@ -17,7 +17,7 @@ Do not select backup/restore, media transcoding, importing/exporting, or the oth
 
 Paste this description:
 
-> DSH Mobile Unofficial is a remote client for a self-hosted DeepSeek Harness host. Its optional
+> DSH Android Unofficial Harness is a remote client for a self-hosted DeepSeek Harness host. Its optional
 > background sync service is off by default and starts only after the user enables
 > **Settings → Notifications → Background sync**. It runs a foreground service with the persistent
 > notification “DSH background sync — Watching for turns, approvals, and questions” and polls only

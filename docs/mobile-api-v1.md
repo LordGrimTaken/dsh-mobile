@@ -1,4 +1,4 @@
-# DSH Mobile API v1
+# DSH Android API v1
 
 Status: **draft, v0.2 target**. Owner: Lead. Consumers: Android client (`app/`), host plugin (`host-plugin/`), fake host (`tools/fake-host/`).
 

@@ -4,13 +4,13 @@ Reviewers need a way to inspect the app without a private DeepSeek Harness host.
 
 ## Demo mode
 
-1. Install and open DSH Mobile.
+1. Install and open DSH Android.
 2. On the welcome screen choose the **demo** option (or continue without pairing).
 3. The app loads in-memory sample sessions, messages and approvals; all core screens are reachable.
 
 ## Host pairing (if the reviewer wants the real flow)
 
-A host is a PC running DeepSeek Harness with the DSH Mobile host plugin on loopback, exposed through
+A host is a PC running DeepSeek Harness with the DSH Android host plugin on loopback, exposed through
 a private tunnel. The app pairs with a short-lived code:
 1. On the desktop host, create a pairing code.
 2. In the app, enter the host base URL and the code.
@@ -39,12 +39,13 @@ authentication screen.
 3. Restriction type: **Other** — not login credentials.
 4. Review instructions to paste:
 
-> No account, username, password, membership, location or payment is required. To review the app
-> without a private host: open DSH Mobile, scroll to the bottom of the welcome screen and tap
-> **Use demo data**. This loads sample sessions, messages, approvals, plans and all core screens.
-> Do not use **Sign in with Tailscale** or **Pair your desktop host**; those are optional
-> self-hosted connection methods. Live host features are unavailable in demo mode, but no
-> credentials are needed to review the interface and permissions.
+> No account, username, password, membership, location or payment is required. On first launch a
+> setup guide opens automatically; tap **Try demo data** at the top. If the guide is closed, the
+> first option on the welcome screen is **Use demo data - no host or login**. This loads sample
+> sessions, messages, approvals, plans and all core screens. Do not use **Sign in with Tailscale** or
+> **Pair your desktop host**; those are optional self-hosted connection methods. Live host
+> features are unavailable in demo mode, but no credentials are needed to review the interface
+> and permissions.
 
 5. Save, then return to **Publishing overview** and **resubmit the release for review**.
 

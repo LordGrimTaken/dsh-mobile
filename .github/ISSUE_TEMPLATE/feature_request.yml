@@ -1,0 +1,52 @@
+name: Feature request
+description: Suggest an improvement or a new capability
+title: "[feature] "
+labels: ["enhancement", "needs-triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Before opening a request, check whether the idea already exists in
+        `docs/mobile-feature-ideas.md` or an open issue. Keep requests focused on the user problem.
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem are you trying to solve?
+      placeholder: "As a user who ..., I want to ... so that ..."
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - Sessions and chat
+        - Approvals and questions
+        - Files and attachments
+        - Plans, teams, jobs and schedules
+        - Usage and context
+        - Appearance and accessibility
+        - Host plugin / Mobile API
+        - Documentation
+        - Other
+    validations:
+      required: true
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Checklist
+      options:
+        - label: I searched existing issues and the feature-ideas catalogue.
+          required: true
+        - label: I did not include private host or session data.
+          required: true

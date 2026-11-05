@@ -1,0 +1,77 @@
+name: Bug report
+description: Report a reproducible problem with DSH Android
+title: "[bug] "
+labels: ["bug", "needs-triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for helping improve DSH Android. Remove host URLs, device tokens, pairing codes and
+        private session data before submitting.
+  - type: input
+    id: app-version
+    attributes:
+      label: App version
+      description: Shown in Settings → About, or the APK file name.
+      placeholder: "0.3.3 (149)"
+    validations:
+      required: true
+  - type: dropdown
+    id: build
+    attributes:
+      label: Build
+      options:
+        - Google Play
+        - GitHub preview APK
+        - Local debug build
+    validations:
+      required: true
+  - type: input
+    id: android
+    attributes:
+      label: Android version and device
+      placeholder: "Android 14, Pixel 8"
+    validations:
+      required: true
+  - type: input
+    id: host
+    attributes:
+      label: Host plugin version and platform
+      placeholder: "0.3.13, Windows 11"
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Pair a host
+        2. Open ...
+        3. Tap ...
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs or screenshots
+      description: Optional, but remove all secrets and private session content first.
+      render: shell
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Checklist
+      options:
+        - label: I removed tokens, host URLs, pairing codes and private session content.
+          required: true
+        - label: I searched existing issues for a duplicate.
+          required: true
