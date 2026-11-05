@@ -1,14 +1,14 @@
 {
     "schemaVersion":  1,
-    "versionCode":  145,
-    "versionName":  "0.2.143-preview",
-    "tag":  "v0.2.143-preview",
-    "publishedAt":  "2026-11-01T20:26:00-05:00",
-    "apkUrl":  "https://github.com/LordGrimTaken/dsh-mobile/releases/download/v0.2.143-preview/dsh-mobile-0.2.143-preview-debug.apk",
-    "apkAssetName":  "dsh-mobile-0.2.143-preview-debug.apk",
-    "apkSizeBytes":  19429845,
-    "sha256":  "f5fbc61b09f206ef3d65c961b6e2a2b31ee6fa6edfa98924cfe3abe58e92bc8f",
+    "versionCode":  149,
+    "versionName":  "0.3.3",
+    "tag":  "v0.3.3-preview",
+    "publishedAt":  "2026-11-05T12:27:30-05:00",
+    "apkUrl":  "https://github.com/LordGrimTaken/dsh-mobile/releases/download/v0.3.3-preview/dsh-android-0.3.3-preview-debug.apk",
+    "apkAssetName":  "dsh-android-0.3.3-preview-debug.apk",
+    "apkSizeBytes":  19446221,
+    "sha256":  "dd7c69d13c796376236b2399d18c50aab41e7fa8b73ff0e6a1b2d6da27aa9e3f",
     "minSdk":  26,
-    "notes":  "Terminal cockpit drawer redesign: compact header/actions, data-driven navigation, live session rows with status/unread/current, About fixed in Chat; all destinations reachable.",
-    "releaseUrl":  "https://github.com/LordGrimTaken/dsh-mobile/releases/tag/v0.2.143-preview"
+    "notes":  "DSH Android preview: guided first-run setup, demo-first onboarding, full-width composer, background notifications, six refreshed store cards and the new DSH Android branding.",
+    "releaseUrl":  "https://github.com/LordGrimTaken/dsh-mobile/releases/tag/v0.3.3-preview"
 }

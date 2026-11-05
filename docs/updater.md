@@ -7,7 +7,7 @@ DSH Android is distributed as a **debug-signed preview APK** from this repositor
 | Repository | `LordGrimTaken/dsh-mobile` |
 | Update feed | `https://github.com/LordGrimTaken/dsh-mobile/releases/latest/download/latest.json` |
 | Release pages | `https://github.com/LordGrimTaken/dsh-mobile/releases` |
-| APK asset naming | `dsh-mobile-<versionName>-debug.apk` |
+| APK asset naming | `dsh-android-<versionName>-preview-debug.apk` |
 
 ## Feed schema
 
@@ -49,11 +49,11 @@ The project publishes a release from a machine that can build the APK:
 ./gradlew :app:testDebugUnitTest :app:assembleDebug :app:lintDebug
 
 # 3. Tag and create the release with the APK
-git tag v0.2.141-preview
+git tag v0.3.3-preview
 git push origin main v0.2.140-preview
-gh release create v0.2.141-preview \
+gh release create v0.3.3-preview \
   app/build/outputs/apk/debug/app-debug.apk \
-  --title "DSH Android v0.2.141-preview" \
+  --title "DSH Android v0.3.3-preview" \
   --notes-file RELEASE_NOTES.md
 
 # 4. Update latest.json from the SHA/size of the uploaded asset
