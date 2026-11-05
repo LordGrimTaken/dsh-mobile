@@ -3,10 +3,10 @@
 How to reach the desktop DSH Android host from a phone **without opening a LAN
 port or the public internet**, using Tailscale Serve for TLS and identity.
 
-> **Status: preview.** The Android client now has real networking: it
+> **Status: community build.** The Android client now has real networking: it
 > pairs with a host over the mobile API and follows sessions over SSE (including
 > approvals and questions). The repo also ships the host plugin
-> ([`host-plugin/`](../host-plugin/README.md), preview), but it is **not installed
+> ([`host-plugin/`](../host-plugin/README.md)), but it is **not installed
 > into the desktop DSH profile by default** — activating it is a separate step,
 > and the desktop app must be restarted afterwards.
 >
@@ -77,7 +77,7 @@ one of the tailnet owners/admins.
 ## 4. Run the host plugin on loopback
 
 The host plugin ships in this repo at [`host-plugin/`](../host-plugin/README.md)
-(preview), but it is **not installed into the desktop DSH profile by default**.
+, but it is **not installed into the desktop DSH profile by default**.
 Install it with `plugin_manager` `install_bundle` rather than copying files (see
 the plugin README's "Install later" section), then restart the desktop app so
 the `mobile-api` row is loaded. Once running, it must listen on
@@ -92,7 +92,7 @@ curl.exe -s http://127.0.0.1:3543/mobile/v1/health
 
 The fake host implements the same contract without installing the plugin, and it
 is the quickest way to exercise the whole phone → host path. For a **LAN
-rehearsal** (the preview app has real networking), leave the fake host on
+rehearsal** (the app has real networking), leave the fake host on
 its default `0.0.0.0` bind and point the app at `http://<pc-lan-ip>:3543`
 (emulator: `http://10.0.2.2:3543`). For a **Tailscale rehearsal**, bind it
 loopback-only so it matches the real plugin:

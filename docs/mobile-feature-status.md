@@ -1,6 +1,6 @@
 # DSH Android — feature status
 
-**Last updated:** 2026-11-01 · **Current release:** `0.2.139-preview` (versionCode 141)
+**Last updated:** 2026-11-01 · **Current release:** `0.3.3` (versionCode 149)
 
 ## Shipped in 0.2.117 (this round)
 

@@ -11,7 +11,7 @@
 <p align="center">
   <a href="https://github.com/LordGrimTaken/dsh-mobile/blob/main/LICENSE"><img alt="License: MIT" src="https://img.shields.io/badge/license-MIT-3ddc84"></a>
   <a href="https://developer.android.com"><img alt="Android 8.0+" src="https://img.shields.io/badge/Android-8.0%2B-3ddc84"></a>
-  <a href="https://github.com/LordGrimTaken/dsh-mobile/releases"><img alt="Preview" src="https://img.shields.io/badge/status-preview-6b8f7e"></a>
+  <a href="https://github.com/LordGrimTaken/dsh-mobile/releases"><img alt="Community build" src="https://img.shields.io/badge/status-community%20build-6b8f7e"></a>
 </p>
 
 <p align="center">
@@ -26,7 +26,7 @@ structured questions, files, plans, teams, jobs, schedules, token usage and cont
 There is no account system, no developer cloud and no analytics.
 
 > **Independent community project.** DSH Android is not an official DeepSeek product. It is a
-> preview-quality tool for people who already run DeepSeek Harness on their own computer.
+> community tool for people who already run DeepSeek Harness on their own computer.
 
 ## What you can do
 
@@ -96,10 +96,10 @@ The Play package is **`com.dsh.unofficial.app`** under the title **DSH Android U
 It is currently in the review/publishing flow. The Play build removes the sideload-only installer
 permission and self-updater.
 
-### Sideload preview
+### GitHub build
 
-The preview APK is distributed through **[GitHub Releases](https://github.com/LordGrimTaken/dsh-mobile/releases)**.
-Preview APKs are debug-signed and intended for testing and personal use; back up anything important.
+The GitHub APK is distributed through **[GitHub Releases](https://github.com/LordGrimTaken/dsh-mobile/releases)**.
+GitHub APKs are debug-signed and intended for testing and personal use; back up anything important.
 The in-app update checker is disabled in the Play build.
 
 > Source on `main` may be ahead of the last GitHub release. Build from source for the latest changes.

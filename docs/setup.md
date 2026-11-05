@@ -14,10 +14,10 @@ If you only want to look at the interface, start with **Demo mode** — no host 
 The Play package is `com.dsh.unofficial.app`, listed as **DSH Android Unofficial Harness**. The Play
 build removes the sideload APK installer permission and the in-app self-updater.
 
-### Sideload preview
+### GitHub build
 
-Download the latest preview APK from **[GitHub Releases](https://github.com/LordGrimTaken/dsh-mobile/releases)**.
-Preview builds are debug-signed, so an in-app update only works when the new build uses the same signing
+Download the latest GitHub APK from **[GitHub Releases](https://github.com/LordGrimTaken/dsh-mobile/releases)**.
+GitHub builds are debug-signed, so an in-app update only works when the new build uses the same signing
 certificate. If you switch between locally built and published debug APKs, uninstall once and reinstall.
 
 ---

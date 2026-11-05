@@ -1,12 +1,12 @@
 # Security policy
 
-DSH Android is a preview project that runs a local agent client. Please treat it as security-sensitive software.
+DSH Android is a community project that runs a local agent client. Please treat it as security-sensitive software.
 
 ## Reporting a vulnerability
 
 Open a **private GitHub security advisory** on this repository rather than a public issue for anything that could expose a host, a device token, session content, or a way to bypass pairing. Include the app version, host-plugin version, Android version and reproduction steps. Do not include real device tokens, pairing codes, API keys or private session content in the report.
 
-There is no bug-bounty or guaranteed response time; this is a volunteer preview project.
+There is no bug-bounty or guaranteed response time; this is a volunteer project.
 
 ## What is in scope
 
@@ -27,5 +27,5 @@ There is no bug-bounty or guaranteed response time; this is a volunteer preview 
 - Pairing codes are short-lived and one-time; device tokens are issued per device and stored hashed on the host.
 - Subagent/internal sessions are hidden from the mobile list by default.
 - Redaction is defence-in-depth, not a guarantee: agent-authored text can contain sensitive material that patterns do not catch. Do not paste secrets into prompts.
-- The preview APK is debug-signed. It is suitable for testing, not for distributing as a trusted production application.
+- The GitHub APK is debug-signed. It is suitable for testing, not for distributing as a trusted production application.
 - Session content is stored on your host and phone. Local backups and crash reports may contain session text; treat them as sensitive.

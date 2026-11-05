@@ -65,7 +65,7 @@ Android battery optimization may still delay checks; exclude DSH Android if need
 ## How do I update?
 
 - **Play build:** updates come through Google Play.
-- **GitHub preview:** download the latest preview APK from Releases; updates must be signed with the
+- **GitHub build:** download the latest GitHub APK from Releases; updates must be signed with the
   same key. Play and GitHub builds are not interchangeable.
 
 ## How do I report a bug or security issue?

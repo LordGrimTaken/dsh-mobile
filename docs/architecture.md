@@ -55,7 +55,7 @@ Tailscale Serve, which provides TLS and tailnet identity.
 
 - **Google Play:** package `com.dsh.unofficial.app`, Play App Signing, no APK installer permission and
   no self-updater.
-- **GitHub preview:** debug-signed APK with an optional in-app update checker and release feed.
+- **GitHub build:** debug-signed APK with an optional in-app update checker and release feed.
 - **Local debug:** package `dev.dsh.mobile`, built from source with the included Gradle wrapper.
 
 ## Related documents

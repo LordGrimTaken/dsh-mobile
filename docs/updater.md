@@ -1,13 +1,13 @@
 # Update feed and releases
 
-DSH Android is distributed as a **debug-signed preview APK** from this repository's GitHub Releases. The source, the release feed and the APKs now live together in **`LordGrimTaken/dsh-mobile`**.
+DSH Android is distributed as a **debug-signed APK** from this repository's GitHub Releases. The source, the release feed and the APKs now live together in **`LordGrimTaken/dsh-mobile`**.
 
 | Thing | Value |
 | --- | --- |
 | Repository | `LordGrimTaken/dsh-mobile` |
 | Update feed | `https://github.com/LordGrimTaken/dsh-mobile/releases/latest/download/latest.json` |
 | Release pages | `https://github.com/LordGrimTaken/dsh-mobile/releases` |
-| APK asset naming | `dsh-android-<versionName>-preview-debug.apk` |
+| APK asset naming | `dsh-android-<versionName>-debug.apk` |
 
 ## Feed schema
 
@@ -17,7 +17,7 @@ DSH Android is distributed as a **debug-signed preview APK** from this repositor
 | --- | --- | --- |
 | `schemaVersion` | integer | Feed format version. Currently `1`. |
 | `versionCode` | integer | Android `versionCode` of the published APK (monotonic). |
-| `versionName` | string | Android `versionName`, e.g. `0.2.141-preview`. |
+| `versionName` | string | Android `versionName`, e.g. `0.3.3`. |
 | `tag` | string | Release tag, `v<versionName>`. |
 | `publishedAt` | string | ISO-8601 UTC timestamp. |
 | `apkUrl` | string | Direct HTTPS download URL for the APK asset. |
@@ -34,7 +34,7 @@ The app checks the feed at most once a day and verifies the downloaded APK's SHA
 
 An in-app update only installs when the new APK has the **same signing certificate** as the installed app.
 
-- The preview APK in Releases is debug-signed with the publisher's debug keystore.
+- The GitHub APK in Releases is debug-signed with the publisher's debug keystore.
 - A locally built debug APK is signed with *your* debug keystore and will not update over the published build (and vice versa).
 - If you mix builds from different machines, uninstall/reinstall once.
 - For a serious distribution, switch to a real release signing key and publish builds signed with it.
@@ -49,12 +49,12 @@ The project publishes a release from a machine that can build the APK:
 ./gradlew :app:testDebugUnitTest :app:assembleDebug :app:lintDebug
 
 # 3. Tag and create the release with the APK and updated feed
-git tag v0.3.3-preview
-git push origin main v0.3.3-preview
-gh release create v0.3.3-preview \
+git tag v0.3.3
+git push origin main v0.3.3
+gh release create v0.3.3 \
   app/build/outputs/apk/debug/app-debug.apk \
   latest.json \
-  --title "DSH Android v0.3.3-preview" \
+  --title "DSH Android v0.3.3" \
   --notes-file RELEASE_NOTES.md \
   --latest
 
@@ -62,4 +62,4 @@ gh release create v0.3.3-preview \
 sha256sum app/build/outputs/apk/debug/app-debug.apk
 ```
 
-Use a tag such as `v<versionName>-preview`; the update checker compares `versionCode`, not the tag.
+Use a tag such as `v<versionName>`; the update checker compares `versionCode`, not the tag.
