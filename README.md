@@ -11,7 +11,7 @@
 <p align="center">
   <a href="https://github.com/LordGrimTaken/dsh-mobile/blob/main/LICENSE"><img alt="License: MIT" src="https://img.shields.io/badge/license-MIT-3ddc84"></a>
   <a href="https://developer.android.com"><img alt="Android 8.0+" src="https://img.shields.io/badge/Android-8.0%2B-3ddc84"></a>
-  <a href="https://github.com/LordGrimTaken/dsh-mobile/releases"><img alt="Community build" src="https://img.shields.io/badge/status-community%20build-3ddc84"></a>
+  <a href="https://github.com/LordGrimTaken/dsh-mobile/releases"><img alt="Community build" src="https://img.shields.io/badge/status-Community%20Build-3ddc84"></a>
 </p>
 
 <p align="center">
