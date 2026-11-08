@@ -10,6 +10,7 @@ import { decodeBase64Attachment, kindForMimeType } from './attachments.js';
 import { ApiError, errorResponse, toApiError } from './errors.js';
 import { buildPromptContent, isoTime } from './mappers.js';
 import { normalizeModelSelection } from './models.js';
+import { PAIR_APP_JS, PAIR_PAGE_HTML, pairPageHeaders, qrLibrarySource } from './pair-page.js';
 import { emptyPushSuppression, publicPushSuppression } from './push.js';
 import { normalizeQueueAction } from './queue.js';
 import { parseScheduleCreateBody, parseScheduleUpdateBody } from './schedules.js';
@@ -101,6 +102,20 @@ export function buildQrPayload(config, code) {
 /** @param {number} status @param {unknown} body */
 function json(status, body) {
   return { status, body };
+}
+
+/**
+ * Static page/script response. The carrier writes `raw` bytes verbatim, so HTML is never
+ * JSON-encoded; headers override the JSON defaults.
+ * @param {Record<string, string>} headers
+ * @param {string} body
+ */
+function page(headers, body) {
+  return {
+    status: 200,
+    headers: { ...pairPageHeaders(), ...headers },
+    raw: new TextEncoder().encode(body),
+  };
 }
 
 /** @param {unknown} body @param {boolean} required */
@@ -246,6 +261,21 @@ export function createRouter({ config, pairing, adapter, attachments = null, hid
           apiVersion: config.apiVersion,
           paired: pairing.hasDevices(),
         });
+      }
+
+      // ---- "Connect a phone" pairing page (loopback-served) ------------
+      // The page itself is static. It mints codes by calling POST /pair/new from the browser on
+      // the host, which keeps the endpoint's loopback + anti-proxy guard meaningful.
+      if (method === 'GET' && (path === '/pair' || path === '/pair/')) {
+        return page({}, PAIR_PAGE_HTML);
+      }
+
+      if (method === 'GET' && path === '/pair/app.js') {
+        return page({ 'Content-Type': 'application/javascript; charset=utf-8' }, PAIR_APP_JS);
+      }
+
+      if (method === 'GET' && path === '/pair/qrcode-generator.js') {
+        return page({ 'Content-Type': 'application/javascript; charset=utf-8' }, qrLibrarySource());
       }
 
       if (method === 'POST' && path === '/pair/new') {

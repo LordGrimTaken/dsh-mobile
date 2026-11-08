@@ -17,6 +17,9 @@ The plugin never exposes DSH's own web server or launch token. It has its own de
 
 - `Authorization: Bearer <deviceToken>` on every endpoint **except** `GET /health`, `GET /pair/methods`, `POST /pair/complete`, `POST /pair/recovery` and `POST /pair/tailscale`.
 - `POST /pair/new` is additionally restricted to loopback peer addresses (the desktop calls it).
+- `GET /pair` (plus `/pair/app.js` and `/pair/qrcode-generator.js`) serves the loopback-only
+  "Connect a phone" page. It is static and mints codes only through the same guarded
+  `POST /pair/new`, so exposing the page cannot mint codes for a proxied caller.
 - Device tokens are random 32-byte base64url values. The host stores only a SHA-256 hash plus device metadata.
 - Failed pairing attempts are rate limited (5/minute per IP, code valid 5 minutes, one use).
 
@@ -28,7 +31,9 @@ equally and can revoke any other; there is no admin role, re-auth, or audit log.
 
 ## Pairing flow
 
-1. Desktop (a helper script, later a settings panel) calls the loopback endpoint:
+1. Desktop calls the loopback endpoint. The bundled pairing page does this for
+   you: open `http://127.0.0.1:3543/pair` on the host to see the QR code and the
+   6-digit fallback code. Scripted equivalent:
 
    `POST /mobile/v1/pair/new` → `200`
    ```json
@@ -39,7 +44,9 @@ equally and can revoke any other; there is no admin role, re-auth, or audit log.
    }
    ```
 
-2. Phone (manual entry first, QR scanner later) calls:
+2. Phone: scan the QR code (in-app CameraX/ML Kit scanner) or scan a
+   `dshmobile://pair?...` deep link; either path prefills the manual form. Manual
+   entry remains the fallback. The app then calls:
 
    `POST /mobile/v1/pair/complete`
    ```json

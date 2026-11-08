@@ -8,6 +8,11 @@
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <!-- Voice dictation: the in-app continuous SpeechRecognizer listens only while the mic is active. -->
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
+    <!-- QR pairing: the scanner reads the host's pairing QR. The camera is optional: pairing still
+         works by entering the host URL + 6-digit code, so devices without a camera stay installable. -->
+    <uses-permission android:name="android.permission.CAMERA" />
+    <uses-feature android:name="android.hardware.camera" android:required="false" />
+    <uses-feature android:name="android.hardware.camera.autofocus" android:required="false" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
 

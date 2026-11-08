@@ -145,8 +145,11 @@ can reach the host.
 The pairing endpoint is **loopback-only on the real host** (anti-abuse: only the
 desktop may create a pairing code). Run the helper **on the PC**, not the phone:
 
-```powershell
-curl.exe -s -X POST http://127.0.0.1:3543/mobile/v1/pair/new
+```bash
+# friendly path: open this in a browser on the host
+#   http://127.0.0.1:3543/pair
+# headless equivalent:
+curl -s -X POST http://127.0.0.1:3543/mobile/v1/pair/new
 ```
 
 The host also rejects pair requests that look proxied — anything carrying
@@ -159,16 +162,19 @@ fake host intentionally skips both checks so it can pair from the emulator.)
 
 `{"code":"482913","expiresAt":"...","qrPayload":"dshmobile://pair?base=..."}`
 
-1. Read `code`, open **Pair device** in the app, and enter the host URL
-   `https://<pc>.<tailnet>.ts.net`, the 6-digit code, and the device name. v0.2
-   has manual pairing only; the QR scanner is planned for v0.3.
+1. Open **DSH Android → Pair a host → Scan QR code** and scan the code from the
+   host's pairing page (`http://127.0.0.1:3543/pair`). Scanning prefills the host
+   URL, the 6-digit code and the host label, then connects. Manual entry still
+   works: open **Pair device** and type the host URL
+   `https://<pc>.<tailnet>.ts.net`, the 6-digit code, and the device name. A
+   `dshmobile://pair?base=...&code=...&host=...` link opened on the phone
+   prefills the same form without pairing silently.
 2. The app calls `POST /mobile/v1/pair/complete` and persists
    `{baseUrl, token, deviceId}` in app-private storage. You can unpair in the
    app's settings and fall back to demo data at any time.
-3. The code is valid for **5 minutes and one use**; re-run the `pair/new`
-   command if it expires. The `qrPayload` already contains the base URL and host
-   name for the v0.3 QR scanner, so it can be turned into a QR code without
-   changing the pairing flow.
+3. The code is valid for **5 minutes and one use**; tap **New code** on the
+   pairing page (or re-run `pair/new`) if it expires. The QR encodes the same
+   `qrPayload` the manual flow uses, so both paths share one pairing contract.
 
 For the fake host, create the code with the same helper command (its `/pair/new`
 deliberately accepts any peer); the code is `482913` and the token is

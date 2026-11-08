@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import os from 'node:os';
 import path from 'node:path';
 import { readFile, rm, utimes, writeFile } from 'node:fs/promises';
 
@@ -22,15 +23,18 @@ function isApiError(code) {
 }
 
 test('config: hidden-session defaults and overrides', () => {
-  const config = resolveConfig({ stateFile: 'C:\\tmp\\state\\host-state.json' });
+  const stateDir = path.join(os.tmpdir(), 'dsh-hidden-config-state');
+  const stateFile = path.join(stateDir, 'host-state.json');
+  const config = resolveConfig({ stateFile });
   assert.equal(config.sessions.hideBlankAfterMs, 3_600_000);
-  assert.equal(config.sessions.hiddenFile, path.join('C:\\tmp\\state', 'hidden-sessions.json'));
+  assert.equal(config.sessions.hiddenFile, path.join(stateDir, 'hidden-sessions.json'));
 
+  const curated = path.join(os.tmpdir(), 'dsh-hidden-config-curated', 'hidden.json');
   const custom = resolveConfig({
-    stateFile: 'C:\\tmp\\state\\host-state.json',
-    sessions: { hiddenFile: 'C:\\curated\\hidden.json', hideBlankAfterMs: 0 },
+    stateFile,
+    sessions: { hiddenFile: curated, hideBlankAfterMs: 0 },
   });
-  assert.equal(custom.sessions.hiddenFile, 'C:\\curated\\hidden.json');
+  assert.equal(custom.sessions.hiddenFile, curated);
   assert.equal(custom.sessions.hideBlankAfterMs, 0, '0 disables auto-hiding');
 
   // Invalid values fall back to the safe defaults.

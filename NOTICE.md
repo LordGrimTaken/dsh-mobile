@@ -14,3 +14,12 @@ behaviour only.
 
 This project is released under the MIT licence; see [`LICENSE`](LICENSE). All third-party names and
 trademarks belong to their respective owners.
+
+## Vendored components
+
+- **qrcode-generator** (MIT, © 2009 Kazuhiko Arase) — a single-file QR code encoder
+  (<https://github.com/kazuhikoarase/qrcode-generator>) vendored at
+  [`host-plugin/lib/vendor/qrcode-generator.js`](host-plugin/lib/vendor/qrcode-generator.js)
+  so the host's "Connect a phone" page can render a pairing QR without loading
+  anything from a CDN or phoning home. The upstream MIT licence header is kept in
+  the file; no other third-party source code is vendored in this repository.

@@ -42,7 +42,8 @@ desktop profile.
 1. Copy or install `host-plugin/` as a DSH profile bundle.
 2. Enable the plugin and restart the DeepSeek Harness desktop app.
 3. The plugin listens on `127.0.0.1:3543` only. Do **not** expose that port directly to the internet.
-4. Open the host helper to create a pairing code when you are ready to connect the phone.
+4. Open `http://127.0.0.1:3543/pair` on the host when you are ready to connect the phone: it shows a
+   scannable QR code and the six-digit fallback code.
 
 The host plugin owns pairing codes, device tokens, event fan-out and redaction. It does not expose the
 DeepSeek Harness web server or its launch token.
@@ -54,9 +55,10 @@ DeepSeek Harness web server or its launch token.
 1. Make sure the desktop host is running and the phone can reach it:
    - same Wi-Fi/LAN during development, or
    - a private tailnet such as Tailscale (recommended for remote access).
-2. On the desktop, open the DSH Android host helper and choose **Pair a phone**. A six-digit code is
-   shown; it expires after five minutes and can be used once.
-3. In the app, tap **Pair your desktop host**.
+2. On the host, open `http://127.0.0.1:3543/pair` (**Connect a phone**). A QR code and a six-digit
+   code are shown; both expire after five minutes and can be used once.
+3. In the app, tap **Pair your desktop host**, then **Scan QR code** — or keep the manual form and
+   type the code.
 4. Enter:
    - **Host URL** — for example `http://192.168.1.20:3543` on a LAN, or the HTTPS URL from
      Tailscale Serve.
@@ -75,8 +77,8 @@ A cloud host is useful when the computer that runs DeepSeek Harness is not alway
 1. Run DeepSeek Harness with the host plugin on a server you control.
 2. Put an HTTPS reverse proxy in front of the host, or use Tailscale Funnel/Serve. Use a real
    certificate; the app needs an `https://` base URL.
-3. Create a pairing code from the server's host helper or admin flow.
-4. In the app, tap **Connect to a cloud host**.
+3. Open the host's `http://127.0.0.1:3543/pair` page (create the code on the server itself).
+4. In the app, tap **Connect to a cloud host** and scan the QR, or enter the URL + code manually.
 5. Enter the HTTPS base URL and the six-digit code. Use **Test host URL** if needed, then pair.
 6. The host is saved as **Cloud** and behaves like a desktop host.
 

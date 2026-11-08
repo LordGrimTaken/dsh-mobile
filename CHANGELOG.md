@@ -1,5 +1,19 @@
 # Changelog
 
+## Unreleased — mobile ecosystem batch 1
+
+- **QR pairing (P0).** The host plugin serves a loopback "Connect a phone" page at
+  `http://127.0.0.1:3543/pair`: it mints a one-use code, renders the `qrPayload` as a QR (vendored
+  MIT `qrcode-generator`, no CDN), shows the six-digit fallback and an expiry countdown, under a
+  strict CSP. `/pair/new` keeps its loopback + anti-proxy guard.
+- **App scanner.** Pairing screen now has **Scan QR code**; a CameraX + ML Kit (bundled model)
+  scanner reads the host QR and pairs from the payload, with a permission/fallback UI and the
+  manual six-digit path unchanged.
+- **Pairing deep link.** `dshmobile://pair?base=...&code=...&host=...` opens the pairing screen
+  prefilled (never pairs silently); the parser rejects malformed payloads with a clear message and
+  is covered by JVM unit tests.
+- Toolchain: `gradlew` is executable for Linux checkouts.
+
 ## 0.3.4 — faster session sync
 - Session lists now fetch host metadata, sessions, approvals and questions concurrently.
 - Session switching reuses a fresh transcript for 20 seconds and loads a smaller 60-message first page.

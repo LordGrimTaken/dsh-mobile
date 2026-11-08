@@ -32,6 +32,7 @@ There is no account system, no developer cloud and no analytics.
 
 | | |
 | --- | --- |
+| **QR pairing** | Scan the host's **Connect a phone** QR (or open a `dshmobile://pair` link) and connect in one tap; the 6-digit code stays as the fallback. |
 | **Live sessions** | Follow streaming replies, tool output and session state in real time. |
 | **Approvals & questions** | Approve or deny agent actions, answer structured questions, and stay in control of queued prompts. |
 | **Terminal-first chat** | A focused, keyboard-friendly interface with full-width composer, Markdown, code blocks and quick actions. |
@@ -61,8 +62,8 @@ DeepSeek Harness desktop profile, binds to `127.0.0.1:3543` only, and exposes a 
 1. Install the host plugin in your DeepSeek Harness profile and restart the desktop app.
 2. Make the host reachable from the phone. **Tailscale Serve** is the recommended path; local LAN works
    during development.
-3. Create a one-time pairing code on the desktop and enter it in the app, or use the Tailscale/recovery
-   flow if your host is configured for it.
+3. Open `http://127.0.0.1:3543/pair` on the host and scan the QR with the app, or enter the one-time
+   6-digit code manually — or use the Tailscale/recovery flow if your host is configured for it.
 
 Full instructions, including cloud hosts and recovery, are in **[Setting up DSH Android](docs/setup.md)**.
 

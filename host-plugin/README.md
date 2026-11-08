@@ -40,6 +40,7 @@ Android app ── HTTPS ──> Tailscale Serve ──> 127.0.0.1:3543 (this pl
 | `lib/search.js` | Pure message-search query/limit validation, bounded event scan and snippet shaping |
 | `lib/models.js` | Pure model-catalog capping/sanitization and durable selection folding |
 | `lib/queue.js` | Pure live-inbox queue mapping and PATCH action validation |
+| `lib/pair-page.js` | "Connect a phone" pairing page (HTML/JS) plus the vendored MIT QR encoder route |
 | `lib/push.js` | Optional ntfy push: config validation/persistence, SSRF checks, event mapping, bounded publisher with dedupe/backoff |
 | `lib/config.js` | Defaults + validation (loopback bind is enforced, not just defaulted) |
 | `lib/store.js` | Atomic JSON state store for device-token hashes |
@@ -53,6 +54,8 @@ Fully implemented:
 | Method | Path | Notes |
 |---|---|---|
 | GET | `/mobile/v1/health` | public; `{ok, version, apiVersion, paired}`, no secrets |
+| GET | `/pair` | loopback-served "Connect a phone" page: renders a QR from a freshly minted code |
+| GET | `/pair/app.js`, `/pair/qrcode-generator.js` | page controller + vendored MIT QR encoder (CSP: own scripts only) |
 | POST | `/mobile/v1/pair/new` | loopback **and** not reverse-proxied; returns code/expiresAt/qrPayload |
 | POST | `/mobile/v1/pair/complete` | public; code → token, deviceId, host info, workspaces |
 | GET | `/mobile/v1/pair/methods` | public; `{desktopCode:true, recovery:true, tailscaleAutoPair, tailscaleLoginRequired}` |
@@ -1654,18 +1657,27 @@ by an already-running module instance.
 
 ## Generate a pairing code locally
 
-The pairing code is only issued by the loopback endpoint, so run it on the
-desktop. Directly (not through Tailscale, which is rejected on purpose):
+The pairing code is only issued by the loopback endpoint, so create it on the
+host itself. The friendly path is the built-in pairing page:
 
-```powershell
-Invoke-RestMethod -Method Post http://127.0.0.1:3543/mobile/v1/pair/new
-# code       : 482913
-# expiresAt  : 2026-10-30T10:05:00Z
-# qrPayload  : dshmobile://pair?base=https%3A%2F%2Fpc.tailnet.ts.net&code=482913&host=pc
+```
+http://127.0.0.1:3543/pair
 ```
 
-Enter the 6-digit code on the phone (`POST /mobile/v1/pair/complete`) or scan the
-QR payload once the app has a scanner. Codes are one-time and expire in 5 minutes.
+Open it in a browser on the host. The page mints a one-use code, renders the
+`qrPayload` as a QR code, and shows the six-digit fallback code. Scan the QR in
+**DSH Android → Pair a host → Scan QR code**. Codes are one-time and expire in 5
+minutes; the page's **New code** button mints a fresh one.
+
+Headless / scripted alternative (same loopback rule — never through a proxy):
+
+```bash
+curl -s -X POST http://127.0.0.1:3543/mobile/v1/pair/new
+# {"code":"482913","expiresAt":"...","qrPayload":"dshmobile://pair?base=..."}
+```
+
+Other pairing paths stay available: enter the URL + six-digit code manually, use
+Tailscale one-tap pairing, or restore with a recovery code.
 
 ## Configuration (`cordis.patch.yml` row `config:`)
 

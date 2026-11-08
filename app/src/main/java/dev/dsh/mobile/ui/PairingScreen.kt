@@ -20,6 +20,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Link
+import androidx.compose.material.icons.filled.QrCodeScanner
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
@@ -50,11 +51,18 @@ import kotlinx.coroutines.launch
  */
 @Composable
 fun PairingScreen(state: AppState) {
-    var label by remember(state.pairingLabelDefault) {
-        mutableStateOf(state.pairingLabelDefault)
+    val qrPrefill = state.pairingQrPrefill
+    var label by remember(state.pairingQrRevision) {
+        mutableStateOf(
+            qrPrefill?.hostLabel?.takeIf { it.isNotBlank() } ?: state.pairingLabelDefault,
+        )
     }
-    var baseUrl by remember { mutableStateOf("https://") }
-    var code by remember { mutableStateOf("") }
+    var baseUrl by remember(state.pairingQrRevision) {
+        mutableStateOf(qrPrefill?.baseUrl ?: "https://")
+    }
+    var code by remember(state.pairingQrRevision) {
+        mutableStateOf(qrPrefill?.code.orEmpty())
+    }
     var deviceName by remember { mutableStateOf(Build.MODEL.orEmpty()) }
     var testing by remember { mutableStateOf(false) }
     var testMessage by remember { mutableStateOf<String?>(null) }
@@ -116,6 +124,55 @@ fun PairingScreen(state: AppState) {
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
+
+            Button(
+                onClick = state::openQrScanner,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(52.dp),
+                enabled = !busy,
+                shape = RoundedCornerShape(16.dp),
+            ) {
+                Icon(
+                    Icons.Filled.QrCodeScanner,
+                    contentDescription = null,
+                    modifier = Modifier.size(20.dp),
+                )
+                Spacer(Modifier.width(10.dp))
+                Text("Scan QR code")
+            }
+            Text(
+                "Scan the code on the host's “Connect a phone” page, or enter the details below. " +
+                    "The manual code path always works if the camera is unavailable.",
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+
+            if (qrPrefill != null) {
+                Row(
+                    Modifier
+                        .fillMaxWidth()
+                        .background(
+                            MaterialTheme.colorScheme.primaryContainer,
+                            RoundedCornerShape(14.dp),
+                        )
+                        .padding(horizontal = 14.dp, vertical = 10.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Icon(
+                        Icons.Filled.QrCodeScanner,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(18.dp),
+                    )
+                    Spacer(Modifier.width(10.dp))
+                    Text(
+                        if (busy) "QR scanned — connecting…" else "QR scanned — details filled in below.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onPrimaryContainer,
+                    )
+                }
+            }
 
             OutlinedTextField(
                 value = label,

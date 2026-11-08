@@ -178,6 +178,18 @@ class AppState(context: Context) {
     var pairingError: String? by mutableStateOf(null)
         private set
 
+    /** In-app QR scanner overlay (opened from the pairing screen). */
+    var showQrScanner: Boolean by mutableStateOf(false)
+        private set
+
+    /** Payload from a scanned QR code / pairing deep link; the pairing screen prefills from it. */
+    var pairingQrPrefill: PairQrPayload? by mutableStateOf(null)
+        private set
+
+    /** Bumped whenever the pairing form must reset (manual open or a new QR payload). */
+    var pairingQrRevision: Int by mutableIntStateOf(0)
+        private set
+
     /** Version reported by the active host's `GET /health` (null until reachable). */
     var activeHostVersion: String? by mutableStateOf(null)
         private set
@@ -3411,6 +3423,8 @@ class AppState(context: Context) {
      */
     fun openPairing(labelDefault: String? = null) {
         pairingLabelDefault = labelDefault.orEmpty()
+        pairingQrPrefill = null
+        pairingQrRevision += 1
         pairingError = null
         showPairing = true
     }
@@ -3418,6 +3432,62 @@ class AppState(context: Context) {
     fun closePairing() {
         showPairing = false
         pairingError = null
+    }
+
+    /** Opens the in-app camera QR scanner from the pairing screen. */
+    fun openQrScanner() {
+        if (pairingBusy) return
+        pairingError = null
+        showQrScanner = true
+    }
+
+    fun closeQrScanner() {
+        showQrScanner = false
+    }
+
+    /**
+     * Applies a scanned or linked pairing payload: closes the scanner, opens the pairing screen
+     * with the host URL/code/label prefilled, and pairs immediately when the payload came from
+     * the in-app scanner. A deep link only prefills, so a clicked link can never pair silently.
+     */
+    fun handlePairQrPayload(payload: PairQrPayload, autoPair: Boolean) {
+        pairingQrPrefill = payload
+        pairingQrRevision += 1
+        pairingLabelDefault = payload.hostLabel
+        pairingError = null
+        showQrScanner = false
+        showPairing = true
+        if (autoPair) {
+            pair(
+                baseUrlInput = payload.baseUrl,
+                codeInput = payload.code,
+                deviceNameInput = Build.MODEL.orEmpty(),
+                labelInput = payload.hostLabel,
+            )
+        }
+    }
+
+    /** Handles `dshmobile://pair?...` links. Returns true when the link belongs to this flow. */
+    fun handlePairDeepLink(rawLink: String): Boolean {
+        return when (val result = PairQrPayloadParser.parse(rawLink)) {
+            is PairQrParseResult.Valid -> {
+                closeSettings()
+                closeUsage()
+                closeInbox()
+                closeSession()
+                handlePairQrPayload(result.payload, autoPair = false)
+                true
+            }
+
+            is PairQrParseResult.Invalid -> {
+                pairingError = result.message
+                pairingQrPrefill = null
+                pairingQrRevision += 1
+                showQrScanner = false
+                showPairing = true
+                true
+            }
+        }
     }
 
     fun clearSyncError() {

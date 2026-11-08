@@ -56,8 +56,11 @@ test('attachment config defaults match the v0.3.13 contract', () => {
 test('artifacts.roots normalize to unique absolute directories and reject unsafe values', () => {
   const first = path.join(os.tmpdir(), 'dsh-artifacts-a');
   const second = path.join(os.tmpdir(), 'dsh-artifacts-b');
+  // Windows filesystems are case-insensitive; POSIX ones are not, so only exercise the
+  // case-collapse behaviour where the platform actually collapses it.
+  const duplicate = process.platform === 'win32' ? first.toUpperCase() : first;
   const roots = resolveConfig({
-    artifacts: { roots: [`  ${first}  `, first.toUpperCase(), ` ${second} `, ''] },
+    artifacts: { roots: [`  ${first}  `, duplicate, ` ${second} `, ''] },
   }).artifacts.roots;
   assert.equal(roots.length, 2);
   assert.equal(roots[0], path.normalize(first));
@@ -66,7 +69,10 @@ test('artifacts.roots normalize to unique absolute directories and reject unsafe
   for (const bad of ['relative/dir', [42], 42, { roots: 'C:\\foo' }]) {
     assert.throws(() => resolveConfig({ artifacts: { roots: bad } }), /artifacts\.roots/u);
   }
-  for (const bad of ['\\\\server\\share', '//host/share', '\\\\?\\C:\\device']) {
+  const uncValues = process.platform === 'win32'
+    ? ['\\\\server\\share', '//host/share', '\\\\?\\C:\\device']
+    : ['//host/share', '///server/share', '//?/device'];
+  for (const bad of uncValues) {
     assert.throws(() => resolveConfig({ artifacts: { roots: [bad] } }), /UNC\/device/u);
   }
 });

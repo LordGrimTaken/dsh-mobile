@@ -134,6 +134,12 @@ fun DshMobileApp(
             else -> {
                 val link = deepLink.orEmpty()
                 when {
+                    link.startsWith("dshmobile://pair") -> {
+                        // dshmobile://pair?base=...&code=...&host=... prefills pairing; it never
+                        // pairs silently from a clicked link.
+                        state.handlePairDeepLink(link)
+                    }
+
                     link.startsWith(RECOVERY_LINK_PREFIX) -> {
                         // dshmobile://recover?base=...&code=... opens the prefilled restore dialog.
                         if (state.handleRecoveryDeepLink(link)) {
@@ -414,7 +420,7 @@ fun DshMobileApp(
             // composition even on wide windows. Modal surfaces (new-session sheet, update/recovery
             // dialogs, crash dialog) are intentionally NOT part of this gate: they are full-window
             // overlays rendered below, so the new-session sheet still covers the two-pane layout.
-            val overlayShowing = state.showPairing || state.showHosts || state.showWelcome ||
+            val overlayShowing = state.showQrScanner || state.showPairing || state.showHosts || state.showWelcome ||
                 state.showSettings || state.showUsage || state.showConnectionDiagnostics ||
                 state.showGoals || state.showSchedules || state.showInbox ||
                 state.showHiddenSessions || state.showArchivedSessions || state.showHostSearch
@@ -424,6 +430,7 @@ fun DshMobileApp(
                 hasOverlay = overlayShowing,
             )
             val currentScreen = when {
+                state.showQrScanner -> "qr-scanner"
                 state.showPairing -> "pairing"
                 state.showHosts -> "hosts"
                 state.showWelcome -> "welcome"
@@ -442,7 +449,7 @@ fun DshMobileApp(
             SideEffect { CrashReporter.enterScreen(currentScreen) }
 
             BackHandler(
-                enabled = state.showPairing || state.showHosts || state.showSettings ||
+                enabled = state.showQrScanner || state.showPairing || state.showHosts || state.showSettings ||
                     state.showUsage || state.showInbox || state.showGoals ||
                     state.showSchedules ||
                     state.showHiddenSessions || state.showArchivedSessions ||
@@ -451,6 +458,7 @@ fun DshMobileApp(
                     session != null,
             ) {
                 when {
+                    state.showQrScanner -> state.closeQrScanner()
                     state.showPairing -> state.closePairing()
                     state.showHosts -> state.closeHosts()
                     state.showSettings -> state.closeSettings()
@@ -494,6 +502,7 @@ fun DshMobileApp(
                 }
             } else {
             when {
+                state.showQrScanner -> QrScanScreen(state = state)
                 state.showPairing -> PairingScreen(state = state)
                 state.showHosts -> HostsScreen(state = state)
 
