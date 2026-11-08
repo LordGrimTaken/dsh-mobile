@@ -81,6 +81,7 @@ fun QrScanScreen(state: AppState) {
     var askedOnce by remember { mutableStateOf(granted) }
     var denied by remember { mutableStateOf(false) }
     var scanError by remember { mutableStateOf<String?>(null) }
+    var cameraError by remember { mutableStateOf(false) }
     var handled by remember { mutableStateOf(false) }
     val permissionLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestPermission(),
@@ -100,6 +101,7 @@ fun QrScanScreen(state: AppState) {
     ) {
         if (granted) {
             CameraPreview(
+                onCameraError = { cameraError = true },
                 onBarcode = { raw ->
                     if (handled) return@CameraPreview
                     when (val result = PairQrPayloadParser.parse(raw)) {
@@ -154,8 +156,13 @@ fun QrScanScreen(state: AppState) {
         ) {
             Text(
                 scanError
-                    ?: "Point the camera at the QR code on the host's “Connect a phone” page. " +
-                    "Codes are single use and expire after 5 minutes.",
+                    ?: if (cameraError) {
+                        "Camera unavailable on this device — go back and enter the host URL and " +
+                            "6-digit code manually."
+                    } else {
+                        "Point the camera at the QR code on the host's “Connect a phone” page. " +
+                            "Codes are single use and expire after 5 minutes."
+                    },
                 style = MaterialTheme.typography.bodyMedium,
                 color = if (scanError != null) Color(0xFFFFB4AB) else Color.White,
                 textAlign = TextAlign.Center,
@@ -238,7 +245,7 @@ private fun CameraPermissionBody(denied: Boolean, onRequest: () -> Unit) {
 }
 
 @Composable
-private fun CameraPreview(onBarcode: (String) -> Unit) {
+private fun CameraPreview(onCameraError: () -> Unit, onBarcode: (String) -> Unit) {
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
     val previewView = remember {
@@ -256,7 +263,7 @@ private fun CameraPreview(onBarcode: (String) -> Unit) {
         val mainExecutor = ContextCompat.getMainExecutor(context)
         providerFuture.addListener(
             {
-                runCatching {
+                val bound = runCatching {
                     val provider = providerFuture.get()
                     val preview = Preview.Builder().build().also {
                         it.setSurfaceProvider(previewView.surfaceProvider)
@@ -273,6 +280,7 @@ private fun CameraPreview(onBarcode: (String) -> Unit) {
                         analysis,
                     )
                 }
+                if (bound.isFailure) onCameraError()
             },
             mainExecutor,
         )
