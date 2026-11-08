@@ -4016,6 +4016,7 @@ class AppState(context: Context) {
         val wasTransport = networkTransport
         networkAvailable = connectivityMonitor.available
         networkTransport = connectivityMonitor.transport
+        remoteRepository?.setNetworkState(networkAvailable, networkTransport)
         if (wasAvailable != networkAvailable || wasTransport != networkTransport) {
             recordConnectionEvent(
                 if (networkAvailable) "Network: $networkTransport available" else "Network: offline",
@@ -4512,7 +4513,16 @@ class AppState(context: Context) {
 
     /** `GET /health` against any saved profile (used by Settings → Hosts → Test connection). */
     suspend fun testConnection(profile: HostProfile): Result<HealthDto> =
-        runCatching { DshApiClient(profile.baseUrl, profile.token).health() }
+        runCatching {
+            // Reuse the live repository's connection pool for the active host; constructing a
+            // new client here forces a fresh DNS/TCP/TLS setup and inflates the diagnostics time.
+            if (profile.id == activeHostId) {
+                remoteRepository?.health()
+                    ?: DshApiClient(profile.baseUrl, profile.token).health()
+            } else {
+                DshApiClient(profile.baseUrl, profile.token).health()
+            }
+        }
             .onSuccess { health ->
                 if (activeHostId == profile.id) {
                     activeHostVersion = health.version.takeIf { it.isNotBlank() }
@@ -4565,6 +4575,7 @@ class AppState(context: Context) {
             transcriptCache = HostTranscriptCache(appContext, profile.baseUrl),
         )
         remoteRepository = repository
+        repository.setNetworkState(connectivityMonitor.available, connectivityMonitor.transport)
         goalEventsJob = scope.launch {
             repository.goalChanges.collect { change ->
                 lastGoalChange = change
@@ -4587,7 +4598,10 @@ class AppState(context: Context) {
     private fun fetchActiveHostHealth() {
         val profile = activeProfile ?: return
         scope.launch {
-            runCatching { DshApiClient(profile.baseUrl, profile.token).health() }
+            runCatching {
+                remoteRepository?.health()
+                    ?: DshApiClient(profile.baseUrl, profile.token).health()
+            }
                 .onSuccess { health ->
                     if (activeHostId == profile.id) {
                         activeHostVersion = health.version.takeIf { it.isNotBlank() }

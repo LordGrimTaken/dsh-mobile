@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.3.4 — faster session sync
+- Session lists now fetch host metadata, sessions, approvals and questions concurrently.
+- Session switching reuses a fresh transcript for 20 seconds and loads a smaller 60-message first page.
+- Optional skills, plan, team, jobs and context metadata load only when opened.
+- Chat requests the transcript before model/queue metadata to reduce host contention.
+- Background sync reuses its HTTP pool and pauses polling while the app is foregrounded.
+- Tailnet DNS outages and offline periods use bounded backoff instead of rapid retry.
 ## 0.3.3 — DSH Android rebrand
 - Renamed the Play listing and launcher label to **DSH Android**; the Play title is **DSH Android Unofficial Harness**.
 - Refreshed the app icon, feature graphic and six Play screenshots for the new brand.

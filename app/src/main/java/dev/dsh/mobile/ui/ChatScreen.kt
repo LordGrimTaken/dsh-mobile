@@ -553,20 +553,17 @@ fun ChatScreen(state: AppState, session: Session) {
     var showCompleteGoalDialog by remember(session.id) { mutableStateOf(false) }
     var showModelPicker by remember(session.id) { mutableStateOf(false) }
     var showHostQueueDialog by remember(session.id) { mutableStateOf(false) }
-    // Chat-top chip needs the session model; the dialog loads the catalog on open.
-    LaunchedEffect(session.id) { state.loadModelPreview(session.id) }
-    // Host queue loads on chat open (lightweight; the strip only shows when items wait).
-    LaunchedEffect(session.id) { state.loadHostQueue(session.id) }
-    // Skills are cached per session; failure leaves the chat fully usable.
-    LaunchedEffect(session.id) { state.loadSessionSkills(session.id) }
-    // Plan/todos: 30s cache; opening the chat warms it (failures are silent).
-    LaunchedEffect(session.id) { state.loadSessionPlan(session.id) }
-    // Team board: 30s cache; opening the chat warms it (failures are silent).
-    LaunchedEffect(session.id) { state.loadSessionTeam(session.id) }
-    // Background jobs: 30s cache; opening the chat warms it (failures are silent).
-    LaunchedEffect(session.id) { state.loadSessionJobs(session.id) }
-    // Context-window meter: 30s cache, silent on failure; Session Info refreshes it when opened.
-    LaunchedEffect(session.id) { state.loadSessionContext(session.id) }
+    // Let the first transcript page own the connection first. The model chip and host queue are
+    // useful but not required to render history, and firing them during the transcript fetch
+    // competes for the host's single event loop on a busy desktop.
+    LaunchedEffect(session.id, transcriptLoading) {
+        if (transcriptLoading) return@LaunchedEffect
+        state.loadModelPreview(session.id)
+        state.loadHostQueue(session.id)
+    }
+    // Skills, plan, team, jobs and context load lazily when their sheet/dialog opens. Prefetching
+    // all of them on every session switch made the first transcript page compete with 5 extra
+    // round trips on a slow tailnet.
     LaunchedEffect(showSessionInfo) {
         if (showSessionInfo) state.loadSessionContext(session.id)
     }
@@ -1133,7 +1130,12 @@ fun ChatScreen(state: AppState, session: Session) {
                 var moreOpen by remember { mutableStateOf(false) }
                 Box {
                     IconButton(
-                        onClick = { moreOpen = true },
+                        onClick = {
+                            moreOpen = true
+                            // Only fetch the plan hint when the overflow is opened; it is not
+                            // needed for the transcript's first paint.
+                            state.loadSessionPlan(session.id)
+                        },
                         modifier = Modifier.size(48.dp),
                     ) {
                         Icon(

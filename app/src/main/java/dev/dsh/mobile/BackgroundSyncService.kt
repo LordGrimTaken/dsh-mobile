@@ -17,7 +17,9 @@ import dev.dsh.mobile.net.DshApiException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.async
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
@@ -67,17 +69,38 @@ class BackgroundSyncService : Service() {
         var previousApprovals: Set<String> = emptySet()
         var previousQuestions: Set<String> = emptySet()
         var ready = false
+        var cachedProfileKey: Pair<String, String?>? = null
+        var cachedApi: DshApiClient? = null
 
         while (currentCoroutineContext().isActive) {
+            val prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE)
+            // The open app already owns the SSE stream and posts foreground notifications. Polling
+            // behind its back adds three HTTP requests to the host event loop for no user benefit.
+            if (prefs.getBoolean("app_foreground", false)) {
+                delay(minOf(pollIntervalMs(), 5_000L))
+                continue
+            }
             val snapshot = runCatching { hostStore.load() }.getOrNull()
             val profile = snapshot?.activeId?.let { id -> snapshot.profiles.firstOrNull { it.id == id } }
             if (profile == null) {
                 stopSelf()
                 return
             }
-            val api = DshApiClient(profile.baseUrl, profile.token)
+            // Reuse the OkHttp pool across polls. Creating a client every 20 s throws away DNS,
+            // TCP and TLS state and was a major source of background-sync latency.
+            val profileKey = profile.baseUrl to profile.token
+            if (cachedProfileKey != profileKey) {
+                cachedApi = DshApiClient(profile.baseUrl, profile.token)
+                cachedProfileKey = profileKey
+            }
+            val api = cachedApi ?: continue
             try {
-                val sessions = api.sessions()
+                val (sessions, approvalsResponse, questions) = coroutineScope {
+                    val sessionsRequest = async { api.sessions() }
+                    val approvalsRequest = async { runCatching { api.approvalsResponse() }.getOrNull() }
+                    val questionsRequest = async { runCatching { api.questions() }.getOrDefault(emptyList()) }
+                    Triple(sessionsRequest.await(), approvalsRequest.await(), questionsRequest.await())
+                }
                 val statuses = sessions.associate { it.id to it.status }
                 if (ready) {
                     statuses.forEach { (sessionId, status) ->
@@ -89,10 +112,8 @@ class BackgroundSyncService : Service() {
                 }
                 previousStatuses = statuses
 
-                val approvalsResponse = runCatching { api.approvalsResponse() }.getOrNull()
                 val approvals = approvalsResponse?.approvals.orEmpty()
                 val approvalsReadOnly = approvalsResponse?.readOnly == true
-                val questions = runCatching { api.questions() }.getOrDefault(emptyList())
                 if (ready) {
                     (approvals.map { it.id }.toSet() - previousApprovals).forEach { id ->
                         val approval = approvals.firstOrNull { it.id == id } ?: return@forEach

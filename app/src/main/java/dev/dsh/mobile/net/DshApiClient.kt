@@ -62,6 +62,11 @@ class DshApiClient(
 
     private val apiRoot: String = normalizeApiRoot(baseUrl)
 
+    /** True for Tailscale MagicDNS / Serve hostnames, where DNS only works while the VPN is up. */
+    internal val isTailnetHost: Boolean = runCatching {
+        apiRoot.toHttpUrl().host.lowercase().endsWith(".ts.net")
+    }.getOrDefault(false)
+
     // region endpoints
 
     suspend fun health(): HealthDto = decode(execute(request("GET", "/health")), HealthDto.serializer())

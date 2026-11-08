@@ -39,6 +39,8 @@ import dev.dsh.mobile.net.SessionDetailResponse
 import dev.dsh.mobile.net.SseEvent
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
 import java.time.Instant
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -54,6 +56,7 @@ import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.decodeFromJsonElement
 import java.io.File
+import java.net.UnknownHostException
 import java.security.MessageDigest
 
 /**
@@ -136,6 +139,15 @@ class RemoteRepository(
     private var loopGeneration = 0
     private var backoffMillis = INITIAL_BACKOFF_MILLIS
 
+    /**
+     * Latest default-network state supplied by [AppState]. A Tailscale hostname cannot resolve
+     * while the VPN is down, so a DNS outage with no VPN should back off instead of burning a
+     * reconnect every few seconds.
+     */
+    @Volatile private var networkAvailable = true
+    @Volatile private var networkTransport = "None"
+    private var networkWaitLogged = false
+
     /** Set from the activity lifecycle; the stale-socket watchdog only runs in the foreground. */
     private var foreground = true
 
@@ -143,6 +155,7 @@ class RemoteRepository(
     private var streamingGeneration = -1
     private var streamStartedAt = 0L
     private val loadedSessions = mutableSetOf<String>()
+    private val transcriptLoadedAt = mutableMapOf<String, Long>()
     /** Message id before which the next older page starts, per session with more history. */
     private val nextCursors = mutableMapOf<String, String>()
     private val olderLoading = mutableSetOf<String>()
@@ -160,6 +173,13 @@ class RemoteRepository(
         scope.launch { runCatching { refresh() } }
         restartEventLoop()
         startWatchdog()
+    }
+
+    /** Keeps the stream loop in sync with the default network without restarting it. */
+    fun setNetworkState(available: Boolean, transport: String) {
+        if (networkAvailable != available) networkWaitLogged = false
+        networkAvailable = available
+        networkTransport = transport
     }
 
     /** Paint the last known list immediately; the network refresh replaces it moments later. */
@@ -235,7 +255,7 @@ class RemoteRepository(
         // A cursor gap makes the host resnapshot summaries; transcripts need their own refetch.
         loadedSessions.toList().forEach { sessionId ->
             if (!isStarted) return@forEach
-            runCatching { loadMessages(sessionId) }
+            runCatching { loadMessages(sessionId, force = true) }
         }
     }
 
@@ -286,6 +306,7 @@ class RemoteRepository(
         reconnectAttempts = 0
         lastReconnectAt = null
         loadedSessions.clear()
+        transcriptLoadedAt.clear()
         nextCursors.clear()
         olderLoading.clear()
         uploadedAttachments.clear()
@@ -303,36 +324,66 @@ class RemoteRepository(
 
     override suspend fun refresh() {
         try {
-            val host = api.host()
+            // Host metadata and the session list are independent; fetch them together so a
+            // cold start does not pay two full round trips on a slow tailnet.
+            val (host, summaries) = coroutineScope {
+                val hostRequest = async { api.host() }
+                val sessionsRequest = async { api.sessions() }
+                hostRequest.await() to sessionsRequest.await()
+            }
             workspaceState.clear()
             workspaceState.addAll(host.workspaces.map { it.toUi() })
-            val summaries = api.sessions()
             upsertSummaries(summaries)
             cache?.save(summaries, host.workspaces)
-            try {
-                val approvalsResponse = api.approvalsResponse()
-                approvalState.clear()
-                approvalState.addAll(approvalsResponse.approvals.map { it.toUi() })
-                approvalsSupported = approvalsResponse.supported
-                // SSE approval events keep this flag as-is until the next fetch.
-                approvalsReadOnly = approvalsResponse.readOnly
-            } catch (unsupported: DshApiException.Unsupported) {
-                approvalsSupported = false
-                approvalsReadOnly = false
-                approvalState.clear()
+
+            // Approvals and questions are independent browser feeds; fetch them concurrently.
+            // Unsupported is a normal old-host answer, not a network failure.
+            val (approvalsOutcome, questionsOutcome) = coroutineScope {
+                val approvalsRequest = async {
+                    try {
+                        Result.success(api.approvalsResponse())
+                    } catch (unsupported: DshApiException.Unsupported) {
+                        Result.failure(unsupported)
+                    }
+                }
+                val questionsRequest = async {
+                    try {
+                        Result.success(api.questionsResponse())
+                    } catch (unsupported: DshApiException.Unsupported) {
+                        Result.failure(unsupported)
+                    }
+                }
+                approvalsRequest.await() to questionsRequest.await()
             }
-            try {
-                val questionsResponse = api.questionsResponse()
-                questionState.clear()
-                questionState.addAll(questionsResponse.questions.map { it.toUi() })
-                questionsSupported = questionsResponse.supported
-                // SSE question events keep this flag as-is until the next fetch.
-                questionsReadOnly = questionsResponse.readOnly
-            } catch (unsupported: DshApiException.Unsupported) {
-                questionsSupported = false
-                questionsReadOnly = false
-                questionState.clear()
-            }
+
+            approvalsOutcome.fold(
+                onSuccess = { approvalsResponse ->
+                    approvalState.clear()
+                    approvalState.addAll(approvalsResponse.approvals.map { it.toUi() })
+                    approvalsSupported = approvalsResponse.supported
+                    // SSE approval events keep this flag as-is until the next fetch.
+                    approvalsReadOnly = approvalsResponse.readOnly
+                },
+                onFailure = { _ ->
+                    approvalsSupported = false
+                    approvalsReadOnly = false
+                    approvalState.clear()
+                },
+            )
+            questionsOutcome.fold(
+                onSuccess = { questionsResponse ->
+                    questionState.clear()
+                    questionState.addAll(questionsResponse.questions.map { it.toUi() })
+                    questionsSupported = questionsResponse.supported
+                    // SSE question events keep this flag as-is until the next fetch.
+                    questionsReadOnly = questionsResponse.readOnly
+                },
+                onFailure = { _ ->
+                    questionsSupported = false
+                    questionsReadOnly = false
+                    questionState.clear()
+                },
+            )
             if (connectionState == ConnectionStatus.Connecting) {
                 connectionState = ConnectionStatus.Live
             }
@@ -345,19 +396,32 @@ class RemoteRepository(
         }
     }
 
-    override suspend fun loadMessages(sessionId: String): Boolean {
+    override suspend fun loadMessages(sessionId: String): Boolean = loadMessages(sessionId, force = false)
+
+    private suspend fun loadMessages(sessionId: String, force: Boolean): Boolean {
+        // Switching back to a session that was just loaded should be instant. SSE keeps the
+        // in-memory transcript current; a short TTL avoids a redundant full-detail round trip.
+        val now = System.currentTimeMillis()
+        val current = sessionState.firstOrNull { it.id == sessionId }
+        val lastLoadedAt = transcriptLoadedAt[sessionId]
+        if (!force && current?.messages?.isNotEmpty() == true && lastLoadedAt != null &&
+            now - lastLoadedAt < TRANSCRIPT_FRESH_MILLIS
+        ) {
+            return true
+        }
         // Cache-first: paint the last-known transcript before the network call so an offline
         // open still shows the conversation. An existing transcript is never replaced by older
         // cached data - the successful network result below always wins.
-        if (sessionState.firstOrNull { it.id == sessionId }?.messages.isNullOrEmpty()) {
+        if (current?.messages.isNullOrEmpty()) {
             seedTranscriptFromCache(sessionId)
         }
-        val detail = api.session(sessionId)
+        val detail = api.session(sessionId, limit = TRANSCRIPT_PAGE_SIZE)
         detail.session?.let { upsertSummary(it, preserveGoalWhenMissing = true) }
         detail.messages.forEach { it.recordSeq() }
         val messages = detail.messages.map { it.toUi() }
         updateSession(sessionId) { it.copy(messages = messages) }
         loadedSessions += sessionId
+        transcriptLoadedAt[sessionId] = System.currentTimeMillis()
         detail.nextCursor?.takeIf { it.isNotBlank() }?.let { nextCursors[sessionId] = it }
             ?: nextCursors.remove(sessionId)
         withContext(Dispatchers.IO) { transcriptCache?.save(sessionId, detail) }
@@ -370,7 +434,7 @@ class RemoteRepository(
         val cursor = nextCursors[sessionId] ?: return false
         if (!olderLoading.add(sessionId)) return false
         return try {
-            val detail = api.session(sessionId, before = cursor)
+            val detail = api.session(sessionId, limit = TRANSCRIPT_PAGE_SIZE, before = cursor)
             detail.messages.forEach { it.recordSeq() }
             val older = detail.messages.map { it.toUi() }
             updateSession(sessionId) { session ->
@@ -415,6 +479,9 @@ class RemoteRepository(
     }
 
     override suspend fun usage(): HostUsage = api.usage().toUi()
+
+    /** Reuses this host's OkHttp pool for the diagnostics health probe. */
+    suspend fun health(): dev.dsh.mobile.net.HealthDto = api.health()
 
     override suspend fun hiddenSessions(): Set<String> = api.hiddenSessions().ids.toSet()
 
@@ -1418,6 +1485,16 @@ class RemoteRepository(
 
     private suspend fun eventLoop(generation: Int) {
         while (currentCoroutineContext().isActive && generation == loopGeneration) {
+            if (!networkAvailable) {
+                connectionState = ConnectionStatus.Offline
+                if (!networkWaitLogged) {
+                    noteEvent("Network offline — waiting for connectivity")
+                    networkWaitLogged = true
+                }
+                delay(MAX_RECONNECT_BACKOFF_MILLIS)
+                continue
+            }
+            networkWaitLogged = false
             if (lastEventId == null) {
                 connectionState = ConnectionStatus.Connecting
             }
@@ -1450,11 +1527,16 @@ class RemoteRepository(
             } catch (error: Exception) {
                 connectionState = ConnectionStatus.Offline
                 noteEvent("Stream error: " + errorLabel(error))
+                if (isTailnetDnsFailure(error, api.isTailnetHost, networkTransport)) {
+                    // MagicDNS is only available while the Tailscale VPN is up. The network
+                    // callback forces an immediate reconnect when the VPN comes back.
+                    backoffMillis = MAX_RECONNECT_BACKOFF_MILLIS
+                }
             }
             if (!currentCoroutineContext().isActive || generation != loopGeneration) break
             noteReconnectAttempt()
             delay(backoffMillis)
-            backoffMillis = (backoffMillis * 2).coerceAtMost(MAX_BACKOFF_MILLIS)
+            backoffMillis = nextReconnectBackoff(backoffMillis)
             if (!currentCoroutineContext().isActive || generation != loopGeneration) break
             catchUpAfterReconnect()
         }
@@ -1531,7 +1613,7 @@ class RemoteRepository(
                 // Deltas arrive under a transient stream id; the durable transcript only exists
                 // after a detail refetch. Reconcile once the run completes.
                 if (completed.sessionId in loadedSessions) {
-                    scope.launch { runCatching { loadMessages(completed.sessionId) } }
+                    scope.launch { runCatching { loadMessages(completed.sessionId, force = true) } }
                 }
             }
 
@@ -1704,8 +1786,23 @@ class RemoteRepository(
     private companion object {
         const val LOCAL_PREFIX = "local-"
         const val INITIAL_BACKOFF_MILLIS = 1_000L
-        const val MAX_BACKOFF_MILLIS = 15_000L
         const val WATCHDOG_TICK_MILLIS = 15_000L
         const val STALE_STREAM_MILLIS = 75_000L
+        const val TRANSCRIPT_PAGE_SIZE = 60
+        const val TRANSCRIPT_FRESH_MILLIS = 20_000L
     }
 }
+
+/** Upper bound for stream reconnect delays after repeated failures. */
+internal const val MAX_RECONNECT_BACKOFF_MILLIS = 60_000L
+
+/** A DNS failure for a MagicDNS host is usually a disconnected Tailscale VPN, not a dead host. */
+internal fun isTailnetDnsFailure(
+    error: Throwable,
+    isTailnetHost: Boolean,
+    networkTransport: String,
+): Boolean = error is UnknownHostException && isTailnetHost && networkTransport != "VPN"
+
+/** Doubles the current delay up to [MAX_RECONNECT_BACKOFF_MILLIS]. */
+internal fun nextReconnectBackoff(currentMillis: Long): Long =
+    (currentMillis * 2).coerceAtMost(MAX_RECONNECT_BACKOFF_MILLIS)

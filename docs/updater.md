@@ -17,7 +17,7 @@ DSH Android is distributed as a **debug-signed APK** from this repository's GitH
 | --- | --- | --- |
 | `schemaVersion` | integer | Feed format version. Currently `1`. |
 | `versionCode` | integer | Android `versionCode` of the published APK (monotonic). |
-| `versionName` | string | Android `versionName`, e.g. `0.3.3`. |
+| `versionName` | string | Android `versionName`, e.g. `0.3.4`. |
 | `tag` | string | Release tag, `v<versionName>`. |
 | `publishedAt` | string | ISO-8601 UTC timestamp. |
 | `apkUrl` | string | Direct HTTPS download URL for the APK asset. |
@@ -49,12 +49,12 @@ The project publishes a release from a machine that can build the APK:
 ./gradlew :app:testDebugUnitTest :app:assembleDebug :app:lintDebug
 
 # 3. Tag and create the release with the APK and updated feed
-git tag v0.3.3
-git push origin main v0.3.3
-gh release create v0.3.3 \
+git tag v0.3.4
+git push origin main v0.3.4
+gh release create v0.3.4 \
   app/build/outputs/apk/debug/app-debug.apk \
   latest.json \
-  --title "DSH Android v0.3.3" \
+  --title "DSH Android v0.3.4" \
   --notes-file RELEASE_NOTES.md \
   --latest
 

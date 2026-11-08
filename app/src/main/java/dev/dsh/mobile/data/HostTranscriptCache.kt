@@ -35,7 +35,7 @@ data class OfflineCacheStats(
  *
  * `cacheDir/transcripts/<sha256(baseUrl)>/<sha256(sessionId)>.json`
  *
- * The whole [SessionDetailResponse] returned by `GET /sessions/{id}` (100-message detail payload)
+ * The whole [SessionDetailResponse] returned by `GET /sessions/{id}` (transcript page payload)
  * is persisted as JSON with [DshJson], so an offline open can paint the last-known conversation
  * instantly while the network fetch runs. Only the most recent [maxSessions] transcripts per host
  * are kept (oldest by file mtime pruned); everything is wrapped in runCatching so a missing,
