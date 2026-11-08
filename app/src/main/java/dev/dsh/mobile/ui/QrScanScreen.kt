@@ -13,6 +13,8 @@ import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -123,6 +125,29 @@ fun QrScanScreen(state: AppState) {
                 onRequest = { permissionLauncher.launch(Manifest.permission.CAMERA) },
             )
         }
+
+        // Scrims keep the white chrome legible over a bright camera scene.
+        Box(
+            Modifier
+                .fillMaxWidth()
+                .fillMaxHeight(0.22f)
+                .background(
+                    Brush.verticalGradient(
+                        listOf(Color.Black.copy(alpha = 0.72f), Color.Transparent),
+                    ),
+                ),
+        )
+        Box(
+            Modifier
+                .fillMaxWidth()
+                .fillMaxHeight(0.32f)
+                .align(Alignment.BottomCenter)
+                .background(
+                    Brush.verticalGradient(
+                        listOf(Color.Transparent, Color.Black.copy(alpha = 0.78f)),
+                    ),
+                ),
+        )
 
         Row(
             Modifier

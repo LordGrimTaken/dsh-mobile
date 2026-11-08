@@ -18,6 +18,7 @@
   <img src="docs/screenshots/setup.png" width="260" alt="Guided setup">
   <img src="docs/screenshots/demo.png" width="260" alt="Demo mode">
   <img src="docs/screenshots/chat.png" width="260" alt="Terminal chat">
+  <img src="docs/screenshots/qr-pairing.png" width="260" alt="QR pairing">
 </p>
 
 DSH Android is a native Android client for a **DeepSeek Harness host that you run yourself**.
