@@ -176,6 +176,8 @@ fake host intentionally skips both checks so it can pair from the emulator.)
    pairing page (or re-run `pair/new`) if it expires. The QR encodes the same
    `qrPayload` the manual flow uses, so both paths share one pairing contract.
 
+![The host's Connect a phone page, showing a pairing QR and the six-digit fallback code](screenshots/pair-page.png)
+
 For the fake host, create the code with the same helper command (its `/pair/new`
 deliberately accepts any peer); the code is `482913` and the token is
 `dev-token` (see the [fake host README](../tools/fake-host/README.md)).
