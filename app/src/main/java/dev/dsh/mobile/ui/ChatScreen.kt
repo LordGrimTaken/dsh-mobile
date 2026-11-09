@@ -4011,7 +4011,7 @@ private fun ChatInputBar(
             ComposerErrorRow(message = message, onDismiss = state::clearSyncError)
         }
         if (state.isLive && state.connection != ConnectionStatus.Live && working) {
-            ChatRetryBanner(state = state)
+            ChatStreamStalledCard(state = state)
         }
         if (state.isLive) {
             ChatConnectionStrip(state = state, working = working)
@@ -4298,7 +4298,7 @@ private fun SchedulePromptDialog(
 
 /** While a reply is in flight and the stream is down: say what is being retried and from where. */
 @Composable
-private fun ChatRetryBanner(state: AppState) {
+private fun ChatStreamStalledCard(state: AppState) {
     val route = state.activeProfile?.ensureRoutes()?.activeRoute
     Row(
         Modifier
@@ -4315,7 +4315,7 @@ private fun ChatRetryBanner(state: AppState) {
             color = MaterialTheme.colorScheme.primary,
         )
         Text(
-            "stream busy · retrying" + (route?.let { " via ${it.label}" } ?: "") + "…",
+            "stream stalled · retrying" + (route?.let { " via ${it.label}" } ?: "") + "…",
             modifier = Modifier.weight(1f),
             style = MaterialTheme.typography.labelSmall,
             color = MaterialTheme.colorScheme.tertiary,
@@ -4323,7 +4323,7 @@ private fun ChatRetryBanner(state: AppState) {
             overflow = TextOverflow.Ellipsis,
         )
         Text(
-            "Retry",
+            "Retry now",
             modifier = Modifier
                 .clip(RoundedCornerShape(8.dp))
                 .clickable { state.reconnect() }
@@ -4332,7 +4332,7 @@ private fun ChatRetryBanner(state: AppState) {
             color = MaterialTheme.colorScheme.primary,
         )
         Text(
-            "Fastest",
+            "Switch route",
             modifier = Modifier
                 .clip(RoundedCornerShape(8.dp))
                 .clickable { state.useFastestRoute() }

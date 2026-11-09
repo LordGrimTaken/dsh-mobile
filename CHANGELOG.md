@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.10.0 — Connection speed test, signal bars, chat stalled-stream card
+
+- **Run speed test** on the Connection page: three rounds per route, real **p50/p90** shown under
+  each route (plus the route probes update so the active route can be compared fairly).
+- **Signal bars** on every route row (green/amber/red by measured latency; grey when unreachable).
+- **Chat stalled-stream card**: while a reply is in flight and the stream is down, the banner now
+  reads "stream stalled · retrying via <route>…" with **Retry now** and **Switch route** actions.
+- Docs: `docs/ui-refresh-batches.md` maps each mockup element to its shipped release.
+
+SSE resume was already implemented (`events?since=<lastEventId>` + host replay); noted in the docs.
+
 ## 0.9.0 — Settings hub with per-section pages, larger home tabs
 
 - **Every settings section is now its own page**: the overview is a hub of mint icon rows

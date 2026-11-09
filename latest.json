@@ -1,14 +1,14 @@
 {
   "schemaVersion": 1,
-  "versionCode": 156,
-  "versionName": "0.9.0",
-  "tag": "v0.9.0",
-  "publishedAt": "2026-11-09T13:11:49Z",
-  "apkUrl": "https://github.com/LordGrimTaken/dsh-mobile/releases/download/v0.9.0/dsh-android-0.9.0-debug.apk",
-  "apkAssetName": "dsh-android-0.9.0-debug.apk",
+  "versionCode": 157,
+  "versionName": "0.10.0",
+  "tag": "v0.10.0",
+  "publishedAt": "2026-11-09T13:30:32Z",
+  "apkUrl": "https://github.com/LordGrimTaken/dsh-mobile/releases/download/v0.10.0/dsh-android-0.10.0-debug.apk",
+  "apkAssetName": "dsh-android-0.10.0-debug.apk",
   "apkSizeBytes": 44093664,
-  "sha256": "00881ab55d9dead945ff50c82abff29230a0830fac6628eee1908c8b23796009",
+  "sha256": "975dbde235c94a3835181fd5e7e172a121ea7e779285218bda1387e33b394876",
   "minSdk": 26,
-  "notes": "DSH Android 0.9.0: Settings is a hub where every section (data source, sessions, recovery, notifications, voice, advanced) opens its own page like host/connection/appearance; Home bottom tabs are larger boxed buttons and the old bottom status strip is removed.",
-  "releaseUrl": "https://github.com/LordGrimTaken/dsh-mobile/releases/tag/v0.9.0"
+  "notes": "DSH Android 0.10.0: Connection page Run speed test with real p50/p90 per route plus signal bars, and a chat stalled-stream card with Retry now / Switch route. Docs map every mockup element to its release.",
+  "releaseUrl": "https://github.com/LordGrimTaken/dsh-mobile/releases/tag/v0.10.0"
 }

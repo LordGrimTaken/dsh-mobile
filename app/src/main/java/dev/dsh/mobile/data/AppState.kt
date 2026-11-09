@@ -203,6 +203,8 @@ class AppState(context: Context) {
      * The connection manager fills this on demand and before a failover decision.
      */
     var routeProbes: Map<String, RouteProbe> by mutableStateOf(emptyMap())
+    var lastSpeedTest: Map<String, SpeedTestResult> by mutableStateOf(emptyMap())
+    var speedTestingHostId: String? by mutableStateOf(null)
         private set
 
     /** Host id whose routes are being probed right now, or null. */
@@ -4642,6 +4644,49 @@ class AppState(context: Context) {
                 }
             } finally {
                 routeProbingHostId = null
+            }
+        }
+    }
+
+    /**
+     * Three-round latency test per route: stores median/p90 and updates the route probes so the
+     * Connection page can show real numbers before/after switching.
+     */
+    fun runSpeedTest(hostId: String? = activeHostId) {
+        val profile = profiles.firstOrNull { it.id == hostId } ?: return
+        if (speedTestingHostId == profile.id) return
+        speedTestingHostId = profile.id
+        scope.launch {
+            try {
+                val routes = profile.ensureRoutes().routes
+                val samples = routes.associate { it.id to mutableListOf<Long>() }
+                repeat(3) {
+                    probeAll(routes).forEach { probe ->
+                        if (probe.reachable) probe.latencyMs?.let { samples[probe.routeId]?.add(it) }
+                    }
+                }
+                val results = routes.associate { route ->
+                    val values = samples[route.id].orEmpty().sorted()
+                    val p50 = values.getOrNull((values.size - 1).coerceAtLeast(0))
+                    val p90 = values.getOrNull(((values.size * 9) / 10).coerceAtMost((values.size - 1).coerceAtLeast(0)))
+                    route.id to SpeedTestResult(
+                        routeId = route.id,
+                        reachable = values.isNotEmpty(),
+                        p50Ms = p50,
+                        p90Ms = p90,
+                        rounds = 3,
+                    )
+                }
+                lastSpeedTest = results
+                routeProbes = routeProbes + results.mapValues { (routeId, result) ->
+                    RouteProbe(
+                        routeId = routeId,
+                        reachable = result.reachable,
+                        latencyMs = result.p50Ms,
+                    )
+                }
+            } finally {
+                speedTestingHostId = null
             }
         }
     }

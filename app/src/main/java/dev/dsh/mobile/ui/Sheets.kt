@@ -2301,6 +2301,33 @@ private fun SettingsIconRow(
     }
 }
 
+/** Tiny three-bar signal indicator for route rows (mockup Connection page). */
+@Composable
+private fun RouteSignalBars(reachable: Boolean, latencyMs: Long?) {
+    val heights = listOf(5.dp, 9.dp, 13.dp)
+    val color = when {
+        !reachable -> MaterialTheme.colorScheme.tertiary.copy(alpha = 0.35f)
+        latencyMs == null -> MaterialTheme.colorScheme.primary
+        latencyMs <= 1500 -> MaterialTheme.colorScheme.primary
+        latencyMs <= 3000 -> MaterialTheme.colorScheme.tertiary
+        else -> Danger
+    }
+    Row(
+        verticalAlignment = Alignment.Bottom,
+        horizontalArrangement = Arrangement.spacedBy(2.dp),
+    ) {
+        heights.forEach { height ->
+            Box(
+                Modifier
+                    .width(3.dp)
+                    .height(height)
+                    .clip(RoundedCornerShape(1.dp))
+                    .background(color),
+            )
+        }
+    }
+}
+
 @Composable
 private fun SettingsPill(text: String) {
     Text(
@@ -2632,12 +2659,12 @@ private fun ConnectionSettingsPage(
                 }
                 Spacer(Modifier.height(10.dp))
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    HadalGhostButton(
-                        text = "Probe all",
-                        onClick = { state.probeRoutes(profile.id, autoSelect = true) },
+                    HadalPrimaryButton(
+                        text = if (state.speedTestingHostId == profile.id) "Testing…" else "Run speed test",
+                        onClick = { state.runSpeedTest(profile.id) },
                         modifier = Modifier.weight(1f),
                     )
-                    HadalPrimaryButton(
+                    HadalGhostButton(
                         text = "Use fastest",
                         onClick = { state.useFastestRoute(profile.id) },
                         modifier = Modifier.weight(1f),
@@ -2696,16 +2723,22 @@ private fun ConnectionSettingsPage(
                             )
                         }
                     }
-                    Text(
-                        routeProbe?.summary() ?: "not probed",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = if (routeProbe?.reachable == true) {
-                            MaterialTheme.colorScheme.primary
-                        } else {
-                            MaterialTheme.colorScheme.tertiary
-                        },
-                        maxLines = 1,
-                    )
+                    Column(horizontalAlignment = Alignment.End, verticalArrangement = Arrangement.spacedBy(3.dp)) {
+                        RouteSignalBars(
+                            reachable = routeProbe?.reachable == true,
+                            latencyMs = state.lastSpeedTest[route.id]?.p50Ms ?: routeProbe?.latencyMs,
+                        )
+                        Text(
+                            state.lastSpeedTest[route.id]?.summary() ?: (routeProbe?.summary() ?: "not probed"),
+                            style = MaterialTheme.typography.labelSmall,
+                            color = if (routeProbe?.reachable == true) {
+                                MaterialTheme.colorScheme.primary
+                            } else {
+                                MaterialTheme.colorScheme.tertiary
+                            },
+                            maxLines = 1,
+                        )
+                    }
                 }
                 Hairline()
             }

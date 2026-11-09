@@ -53,6 +53,22 @@ data class HostRoute(
 }
 
 /** One probe outcome for a route (produced by the connection manager, rendered by the UI). */
+/** Three-round median/p90 latency samples from the Connection page's "Run speed test". */
+data class SpeedTestResult(
+    val routeId: String,
+    val reachable: Boolean,
+    val p50Ms: Long? = null,
+    val p90Ms: Long? = null,
+    val rounds: Int = 0,
+) {
+    fun summary(): String = when {
+        !reachable -> "unreachable"
+        p50Ms != null && p90Ms != null -> "p50 $p50Ms ms · p90 $p90Ms ms"
+        p50Ms != null -> "p50 $p50Ms ms"
+        else -> "reachable"
+    }
+}
+
 data class RouteProbe(
     val routeId: String,
     val reachable: Boolean,
