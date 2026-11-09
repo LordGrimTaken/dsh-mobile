@@ -407,6 +407,39 @@ class AppState(context: Context) {
     /** Host preset roster; null until the new-session sheet first loads it. */
     var presetRoster: PresetRoster? by mutableStateOf(null)
         private set
+
+    /** Preset preselected in the New Session sheet (null = roster/host default). */
+    var defaultSessionPresetId: String? by mutableStateOf(
+        presentationPrefs.getString("default_session_preset", null),
+    )
+
+    /** Optional model applied to newly created sessions (null = host default). */
+    var defaultSessionModel: ModelSelection? by mutableStateOf(
+        presentationPrefs.getString("default_model_provider", null)?.let { provider ->
+            presentationPrefs.getString("default_model_model", null)?.let { model ->
+                ModelSelection(
+                    provider = provider,
+                    model = model,
+                    reasoningEffort = presentationPrefs.getString("default_model_effort", null),
+                )
+            }
+        },
+    )
+
+    fun updateDefaultSessionPreset(presetId: String?) {
+        defaultSessionPresetId = presetId?.takeIf { it.isNotBlank() }
+        presentationPrefs.edit().putString("default_session_preset", defaultSessionPresetId).apply()
+    }
+
+    fun updateDefaultSessionModel(selection: ModelSelection?) {
+        defaultSessionModel = selection
+        presentationPrefs.edit()
+            .putString("default_model_provider", selection?.provider)
+            .putString("default_model_model", selection?.model)
+            .putString("default_model_effort", selection?.reasoningEffort)
+            .apply()
+    }
+
     var presetsLoading: Boolean by mutableStateOf(false)
         private set
 
@@ -3753,6 +3786,19 @@ class AppState(context: Context) {
         scope.launch {
             try {
                 val session = repository.createSession(workspaceId, preset)
+                defaultSessionModel
+                    ?.takeIf { it.provider.isNotBlank() && it.model.isNotBlank() }
+                    ?.let { selection ->
+                        // Best effort: a host without the model service must not fail session creation.
+                        runCatching {
+                            repository.updateSessionModel(
+                                sessionId = session.id,
+                                provider = selection.provider,
+                                model = selection.model,
+                                reasoningEffort = selection.reasoningEffort,
+                            )
+                        }
+                    }
                 showNewSession = false
                 openSession(session.id)
                 syncError = null

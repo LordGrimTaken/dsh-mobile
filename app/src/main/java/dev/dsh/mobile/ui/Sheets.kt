@@ -84,6 +84,7 @@ import dev.dsh.mobile.data.ConnectionStatus
 import dev.dsh.mobile.data.LocalBackupData
 import dev.dsh.mobile.data.LocalBackupDecodeResult
 import dev.dsh.mobile.data.LOCAL_BACKUP_MAX_FILE_BYTES
+import dev.dsh.mobile.data.ModelSelection
 import dev.dsh.mobile.data.PairedDevice
 import dev.dsh.mobile.data.ThemeAccent
 import dev.dsh.mobile.data.activeRoute
@@ -136,8 +137,10 @@ fun NewSessionSheet(
     val presets = roster?.presets?.takeIf { it.isNotEmpty() } ?: PresetRoster.Fallback.presets
     var selectedPresetId by remember(roster) {
         mutableStateOf(
-            (roster?.takeIf { it.presets.isNotEmpty() } ?: PresetRoster.Fallback)
-                .initialSelection()?.id.orEmpty(),
+            state.defaultSessionPresetId
+                ?.takeIf { id -> presets.any { it.id == id && !it.broken } }
+                ?: (roster?.takeIf { it.presets.isNotEmpty() } ?: PresetRoster.Fallback)
+                    .initialSelection()?.id.orEmpty(),
         )
     }
     val selectedPreset = presets.firstOrNull { it.id == selectedPresetId }
@@ -400,6 +403,7 @@ private enum class SettingsSubPage {
     CONNECTION,
     DATA_SOURCE,
     SESSIONS,
+    SESSION_DEFAULTS,
     RECOVERY,
     NOTIFICATIONS,
     VOICE,
@@ -438,6 +442,12 @@ fun SettingsScreen(
     var showTailscaleAdd by remember { mutableStateOf(false) }
 
     // Load the host push config once per live switch, then mirror it into the editable fields.
+    LaunchedEffect(subPage) {
+        if (subPage == SettingsSubPage.SESSION_DEFAULTS) {
+            state.loadModelCatalog()
+            state.loadPresetsIfNeeded()
+        }
+    }
     LaunchedEffect(state.isLive) { state.refreshPushConfig() }
     LaunchedEffect(state.isLive) { state.loadRecoveryAccess() }
     LaunchedEffect(state.pushConfig) {
@@ -531,7 +541,8 @@ fun SettingsScreen(
         }
 
         null, SettingsSubPage.DATA_SOURCE, SettingsSubPage.SESSIONS, SettingsSubPage.RECOVERY,
-        SettingsSubPage.NOTIFICATIONS, SettingsSubPage.VOICE, SettingsSubPage.ADVANCED -> Unit
+        SettingsSubPage.NOTIFICATIONS, SettingsSubPage.VOICE, SettingsSubPage.ADVANCED,
+        SettingsSubPage.SESSION_DEFAULTS -> Unit
     }
     Column(
         Modifier
@@ -605,7 +616,7 @@ fun SettingsScreen(
                     },
                 )
             }
-            SettingsGroup("usage", visible = settingsGroupVisible(settingsQuery, "usage")) {
+            SettingsGroup("usage", visible = settingsGroupVisible(settingsQuery, "usage") && subPage == null) {
                 Column(
                     Modifier
                         .fillMaxWidth()
@@ -683,6 +694,13 @@ fun SettingsScreen(
                     )
                     Hairline()
                     SettingsIconRow(
+                        "◈",
+                        "Session defaults",
+                        "Default preset and model for new sessions",
+                        onClick = { subPage = SettingsSubPage.SESSION_DEFAULTS },
+                    )
+                    Hairline()
+                    SettingsIconRow(
                         "⛨",
                         "Recovery & security",
                         "Recovery code, paired devices, app lock",
@@ -710,6 +728,91 @@ fun SettingsScreen(
                         onClick = { subPage = SettingsSubPage.ADVANCED },
                     )
                 }
+            }
+            if (subPage == SettingsSubPage.SESSION_DEFAULTS) {
+                SettingsGroup("default preset") {
+                    SettingsChoiceRow(
+                        title = "Host default",
+                        subtitle = "Let the host pick its default preset",
+                        selected = state.defaultSessionPresetId == null,
+                        onClick = { state.updateDefaultSessionPreset(null) },
+                    )
+                    val presets = state.presetRoster?.presets?.takeIf { it.isNotEmpty() }
+                        ?: PresetRoster.Fallback.presets
+                    presets.forEach { preset ->
+                        Hairline()
+                        SettingsChoiceRow(
+                            title = preset.label,
+                            subtitle = preset.description?.takeIf { it.isNotBlank() }
+                                ?: if (preset.description.isNullOrBlank()) "Agent preset" else preset.description,
+                            selected = state.defaultSessionPresetId == preset.id,
+                            enabled = !preset.broken,
+                            onClick = { state.updateDefaultSessionPreset(preset.id) },
+                        )
+                    }
+                }
+                SettingsGroup("default model") {
+                    val catalog = state.modelCatalog
+                    when {
+                        catalog == null && state.modelCatalogLoading -> Text(
+                            "Loading the model catalogue…",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.tertiary,
+                        )
+                        catalog == null -> Text(
+                            "Couldn't load the model catalogue; new sessions use the host default.",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.tertiary,
+                        )
+                        !catalog.supported -> Text(
+                            "This host doesn't expose a model catalogue; new sessions use the host default.",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.tertiary,
+                        )
+                        else -> {
+                            SettingsChoiceRow(
+                                title = "Host default",
+                                subtitle = "Let the host choose the model",
+                                selected = state.defaultSessionModel == null,
+                                onClick = { state.updateDefaultSessionModel(null) },
+                            )
+                            catalog.groups.forEach { group ->
+                                Text(
+                                    group.name.ifBlank { group.id }.uppercase(),
+                                    modifier = Modifier.padding(start = 2.dp, top = 10.dp, bottom = 2.dp),
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = MaterialTheme.colorScheme.tertiary,
+                                )
+                                group.models.forEach { model ->
+                                    SettingsChoiceRow(
+                                        title = model.name.ifBlank { model.id },
+                                        subtitle = model.description?.takeIf { it.isNotBlank() }
+                                            ?: model.reasoning?.defaultEffort?.let { "reasoning: $it" }
+                                            ?: model.id,
+                                        selected = state.defaultSessionModel?.let {
+                                            it.provider == group.id && it.model == model.id
+                                        } == true,
+                                        onClick = {
+                                            state.updateDefaultSessionModel(
+                                                ModelSelection(
+                                                    provider = group.id,
+                                                    model = model.id,
+                                                    reasoningEffort = model.reasoning?.defaultEffort,
+                                                ),
+                                            )
+                                        },
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+                Text(
+                    "Applies to sessions created from this phone. The chat model picker still " +
+                        "overrides the model for one session.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.tertiary,
+                )
             }
             SettingsGroup("sessions", visible = settingsGroupVisible(settingsQuery, "sessions") && subPage == SettingsSubPage.SESSIONS) {
                 Column(
@@ -2833,6 +2936,67 @@ private fun ConnectionSettingsPage(
 }
 
 /** Header used by the secondary settings pages (data source, sessions, …). */
+/** Radio-style single-choice row used by the Session defaults page. */
+@Composable
+private fun SettingsChoiceRow(
+    title: String,
+    subtitle: String,
+    selected: Boolean,
+    onClick: () -> Unit,
+    enabled: Boolean = true,
+) {
+    Row(
+        Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(10.dp))
+            .clickable(enabled = enabled, onClick = onClick)
+            .padding(vertical = 9.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Box(
+            Modifier
+                .size(18.dp)
+                .clip(CircleShape)
+                .background(
+                    if (selected) MaterialTheme.colorScheme.primary
+                    else MaterialTheme.colorScheme.surfaceVariant,
+                )
+                .border(
+                    1.dp,
+                    if (selected) MaterialTheme.colorScheme.primary
+                    else MaterialTheme.colorScheme.outlineVariant,
+                    CircleShape,
+                ),
+            contentAlignment = Alignment.Center,
+        ) {
+            if (selected) {
+                Box(
+                    Modifier
+                        .size(7.dp)
+                        .clip(CircleShape)
+                        .background(MaterialTheme.colorScheme.onPrimary),
+                )
+            }
+        }
+        Spacer(Modifier.width(11.dp))
+        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+            Text(
+                title,
+                style = MaterialTheme.typography.titleSmall,
+                color = if (enabled) MaterialTheme.colorScheme.onSurface
+                else MaterialTheme.colorScheme.tertiary,
+            )
+            Text(
+                subtitle,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.tertiary,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+            )
+        }
+    }
+}
+
 @Composable
 private fun SettingsSecondaryPageHeader(title: String, onBack: () -> Unit) {
     Row(
@@ -2859,6 +3023,7 @@ private fun SettingsSecondaryPageHeader(title: String, onBack: () -> Unit) {
 private fun settingsPageTitle(page: SettingsSubPage): String = when (page) {
     SettingsSubPage.DATA_SOURCE -> "Data source"
     SettingsSubPage.SESSIONS -> "Sessions"
+    SettingsSubPage.SESSION_DEFAULTS -> "Session defaults"
     SettingsSubPage.RECOVERY -> "Recovery & security"
     SettingsSubPage.NOTIFICATIONS -> "Notifications"
     SettingsSubPage.VOICE -> "Voice"

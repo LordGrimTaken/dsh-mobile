@@ -1,5 +1,17 @@
 # Changelog
 
+## Unreleased — session defaults (local, not released yet)
+
+- **Session defaults page** (Settings → Session defaults): pick the default agent preset and the
+  default provider/model for sessions created from the phone ("Host default" preserved for both).
+  A disabled/broken preset is shown but not selectable.
+- New Session sheet preselects the chosen default preset; session creation applies the default
+  model via the existing `PUT /sessions/{id}/model` API (best effort — hosts without the model
+  service fall back to the host default instead of failing creation).
+- Choices persist in the app's presentation preferences; the per-session model picker in chat still
+  overrides for a single session.
+
+
 ## 0.11.1 — Connection route row layout fix
 
 - Fixed the Connection page route rows ballooning in height when a route was unreachable
