@@ -516,6 +516,7 @@ fun DshMobileApp(
                     onOpenPairing = { state.openPairing() },
                     onOpenHosts = state::openHosts,
                     onOpenUsage = state::openUsage,
+                    onOpenInbox = state::openInbox,
                     onOpenHiddenSessions = state::openHiddenSessions,
                     onOpenConnectionDiagnostics = state::openConnectionDiagnostics,
                 )

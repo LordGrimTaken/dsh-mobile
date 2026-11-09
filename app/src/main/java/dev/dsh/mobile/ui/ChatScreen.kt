@@ -4010,6 +4010,9 @@ private fun ChatInputBar(
         state.syncError?.let { message ->
             ComposerErrorRow(message = message, onDismiss = state::clearSyncError)
         }
+        if (state.isLive && state.connection != ConnectionStatus.Live && working) {
+            ChatRetryBanner(state = state)
+        }
         if (state.isLive) {
             ChatConnectionStrip(state = state, working = working)
         }
@@ -4291,6 +4294,53 @@ private fun SchedulePromptDialog(
             )
         },
     )
+}
+
+/** While a reply is in flight and the stream is down: say what is being retried and from where. */
+@Composable
+private fun ChatRetryBanner(state: AppState) {
+    val route = state.activeProfile?.ensureRoutes()?.activeRoute
+    Row(
+        Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(10.dp))
+            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.45f))
+            .padding(horizontal = 10.dp, vertical = 7.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(6.dp),
+    ) {
+        Text(
+            "⟳",
+            style = MaterialTheme.typography.titleSmall,
+            color = MaterialTheme.colorScheme.primary,
+        )
+        Text(
+            "stream busy · retrying" + (route?.let { " via ${it.label}" } ?: "") + "…",
+            modifier = Modifier.weight(1f),
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.tertiary,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+        )
+        Text(
+            "Retry",
+            modifier = Modifier
+                .clip(RoundedCornerShape(8.dp))
+                .clickable { state.reconnect() }
+                .padding(horizontal = 6.dp, vertical = 2.dp),
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.primary,
+        )
+        Text(
+            "Fastest",
+            modifier = Modifier
+                .clip(RoundedCornerShape(8.dp))
+                .clickable { state.useFastestRoute() }
+                .padding(horizontal = 6.dp, vertical = 2.dp),
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.primary,
+        )
+    }
 }
 
 /** Always-visible connection line above the composer: active route, latency, stream state. */

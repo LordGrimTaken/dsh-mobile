@@ -345,6 +345,7 @@ fun SessionListScreen(
                 onSelect = { state.updateStatusFilter(it) },
                 onOpenFilters = { showHomeFilters = true },
             )
+            HomeWorkspaceChips(state = state)
             Spacer(Modifier.height(8.dp))
             PullToRefreshBox(
                 isRefreshing = state.refreshing,
@@ -360,6 +361,12 @@ fun SessionListScreen(
                     modifier = Modifier.fillMaxSize(),
                 )
             }
+            HomeBottomNav(
+                state = state,
+                onOpenInbox = onOpenInbox,
+                onOpenUsage = onOpenUsage,
+                onOpenSettings = onOpenSettings,
+            )
             if (showHomeFilters) {
                 HomeFiltersSheet(
                     state = state,
@@ -638,6 +645,127 @@ private fun CompactHomeHeader(
                     }
                 }
             }
+        }
+    }
+}
+
+/** Workspace chips shown under the status filters (mockup home refresh). */
+@Composable
+private fun HomeWorkspaceChips(state: AppState) {
+    Row(
+        Modifier
+            .fillMaxWidth()
+            .horizontalScroll(rememberScrollState())
+            .padding(horizontal = 16.dp),
+        horizontalArrangement = Arrangement.spacedBy(6.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        HomeWorkspaceChip(
+            "All workspaces",
+            selected = state.selectedWorkspace == null,
+        ) { state.selectWorkspace(null) }
+        state.workspaces.forEach { workspace ->
+            HomeWorkspaceChip(
+                workspace.name,
+                selected = state.selectedWorkspace == workspace.id,
+            ) { state.selectWorkspace(workspace.id) }
+        }
+    }
+}
+
+@Composable
+private fun HomeWorkspaceChip(text: String, selected: Boolean, onClick: () -> Unit) {
+    Text(
+        text,
+        modifier = Modifier
+            .clip(RoundedCornerShape(20.dp))
+            .background(
+                if (selected) MaterialTheme.colorScheme.primary.copy(alpha = 0.18f)
+                else MaterialTheme.colorScheme.surfaceVariant,
+            )
+            .clickable(onClick = onClick)
+            .padding(horizontal = 12.dp, vertical = 6.dp),
+        style = MaterialTheme.typography.labelMedium,
+        color = if (selected) MaterialTheme.colorScheme.primary
+        else MaterialTheme.colorScheme.onSurfaceVariant,
+        maxLines = 1,
+    )
+}
+
+/** Home bottom navigation (home mockup): Home / Inbox / Usage / Settings. */
+@Composable
+private fun HomeBottomNav(
+    state: AppState,
+    onOpenInbox: () -> Unit,
+    onOpenUsage: () -> Unit,
+    onOpenSettings: () -> Unit,
+) {
+    Column(Modifier.fillMaxWidth()) {
+        Box(
+            Modifier
+                .fillMaxWidth()
+                .height(1.dp)
+                .background(MaterialTheme.colorScheme.outlineVariant),
+        )
+        Row(
+            Modifier
+                .fillMaxWidth()
+                .padding(top = 6.dp, bottom = 4.dp),
+            horizontalArrangement = Arrangement.SpaceEvenly,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            HomeNavItem("▤", "Home", active = true) {}
+            HomeNavItem(
+                "◎",
+                "Inbox",
+                active = false,
+                badge = state.pendingInputCount,
+                onClick = onOpenInbox,
+            )
+            HomeNavItem("◔", "Usage", active = false, onClick = onOpenUsage)
+            HomeNavItem("⚙", "Settings", active = false, onClick = onOpenSettings)
+        }
+    }
+}
+
+@Composable
+private fun HomeNavItem(
+    glyph: String,
+    label: String,
+    active: Boolean,
+    badge: Int = 0,
+    onClick: () -> Unit,
+) {
+    Row(
+        Modifier
+            .clip(RoundedCornerShape(10.dp))
+            .clickable(onClick = onClick)
+            .padding(horizontal = 12.dp, vertical = 4.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(4.dp),
+    ) {
+        Text(
+            glyph,
+            style = MaterialTheme.typography.titleSmall,
+            color = if (active) MaterialTheme.colorScheme.primary
+            else MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        Text(
+            label,
+            style = MaterialTheme.typography.labelMedium,
+            color = if (active) MaterialTheme.colorScheme.primary
+            else MaterialTheme.colorScheme.tertiary,
+        )
+        if (badge > 0) {
+            Text(
+                "$badge",
+                modifier = Modifier
+                    .clip(RoundedCornerShape(20.dp))
+                    .background(MaterialTheme.colorScheme.primary)
+                    .padding(horizontal = 5.dp, vertical = 1.dp),
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onPrimary,
+            )
         }
     }
 }

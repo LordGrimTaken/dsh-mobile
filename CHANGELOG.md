@@ -1,5 +1,20 @@
 # Changelog
 
+## 0.7.0 — Mockup-faithful settings rows, home bottom nav, retry banner
+
+Third UI-refresh batch: the remaining design elements from the approved mockups.
+
+- **Settings home** now uses the mockup's mint icon-tile rows with chevrons/pills:
+  Hosts (count), Routes & failover ("fastest" pill), Pair a device, Sign in with Tailscale,
+  Theme (swatch accessory), Text & density; the Advanced row got the same icon treatment.
+  Hero buttons are now **Connection** (primary) + **Pair device** (ghost).
+- **Home**: workspace chips row (All + each workspace), and the mockup's **bottom navigation**
+  (Home / Inbox with pending badge / Usage / Settings).
+- **Chat**: while a reply is in flight and the stream is down, an inline retry banner shows
+  "stream busy · retrying via <route>…" with Retry and Fastest actions.
+- **Appearance page**: accent picker is now the mockup's two-column gradient theme gallery
+  (Hadal/Ocean/Amethyst/Ember/Sakura/Slate) with selected checkmark.
+
 ## 0.6.0 — Appearance & connection pages, chat status strip
 
 Second UI-refresh batch, filling in the mockup screens on top of the 0.5.0 shell.

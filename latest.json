@@ -1,14 +1,14 @@
 {
   "schemaVersion": 1,
-  "versionCode": 153,
-  "versionName": "0.6.0",
-  "tag": "v0.6.0",
-  "publishedAt": "2026-11-09T12:06:05Z",
-  "apkUrl": "https://github.com/LordGrimTaken/dsh-mobile/releases/download/v0.6.0/dsh-android-0.6.0-debug.apk",
-  "apkAssetName": "dsh-android-0.6.0-debug.apk",
-  "apkSizeBytes": 44060892,
-  "sha256": "7456c2ed63c8135df7f220c6e5b9a66b7c63d2d3b3d58d4a5f635a098cc7cc1f",
+  "versionCode": 154,
+  "versionName": "0.7.0",
+  "tag": "v0.7.0",
+  "publishedAt": "2026-11-09T12:49:41Z",
+  "apkUrl": "https://github.com/LordGrimTaken/dsh-mobile/releases/download/v0.7.0/dsh-android-0.7.0-debug.apk",
+  "apkAssetName": "dsh-android-0.7.0-debug.apk",
+  "apkSizeBytes": 44077276,
+  "sha256": "3e347203d88c67bd7d719bfa0c0103b13e514544d55e9f9203d25a9db943bd80",
   "minSdk": 26,
-  "notes": "DSH Android 0.6.0: second UI-refresh batch. New Appearance page (theme gallery, preview, dark/AMOLED, text sizes, code wrapping), new Connection page (route health list, Probe all / Use fastest, latency/sync metrics, transport info), settings sub-page navigation, a chat connection strip (route + latency + streaming state), and host-side gzip for JSON responses >=1KB (faster transcripts on slow links).",
-  "releaseUrl": "https://github.com/LordGrimTaken/dsh-mobile/releases/tag/v0.6.0"
+  "notes": "DSH Android 0.7.0: mockup-faithful settings icon-tile rows (Hosts/Routes/Pair/Tailscale/Theme/Text), Connection+Pair device hero buttons, accent theme gallery, home workspace chips + bottom nav (Home/Inbox/Usage/Settings), and a chat retry banner during stream drops.",
+  "releaseUrl": "https://github.com/LordGrimTaken/dsh-mobile/releases/tag/v0.7.0"
 }

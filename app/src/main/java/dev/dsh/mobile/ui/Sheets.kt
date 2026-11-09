@@ -12,6 +12,7 @@ import android.widget.Toast
 
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -401,6 +402,7 @@ fun SettingsScreen(
     onOpenPairing: () -> Unit,
     onOpenHosts: () -> Unit,
     onOpenUsage: () -> Unit,
+    onOpenInbox: () -> Unit,
     onOpenHiddenSessions: () -> Unit,
     onOpenConnectionDiagnostics: () -> Unit,
 ) {
@@ -420,6 +422,7 @@ fun SettingsScreen(
     var settingsQuery by remember { mutableStateOf("") }
     var advancedExpanded by remember { mutableStateOf(false) }
     var subPage by remember { mutableStateOf<SettingsSubPage?>(null) }
+    var showTailscaleAdd by remember { mutableStateOf(false) }
 
     // Load the host push config once per live switch, then mirror it into the editable fields.
     LaunchedEffect(state.isLive) { state.refreshPushConfig() }
@@ -535,6 +538,7 @@ fun SettingsScreen(
             SettingsHeroCard(
                 state = state,
                 onOpenHosts = onOpenHosts,
+                onOpenPair = onOpenPairing,
                 onOpenConnection = { subPage = SettingsSubPage.CONNECTION },
             )
             SettingsSearchField(
@@ -545,11 +549,38 @@ fun SettingsScreen(
                 },
             )
             SettingsGroup("host & connection", visible = settingsGroupVisible(settingsQuery, "host & connection")) {
-                HostCard(
-                    state = state,
-                    onOpenHosts = onOpenHosts,
-                    onOpenPairing = onOpenPairing,
-                    compact = true,
+                val profile = state.activeProfile
+                val routeCount = profile?.ensureRoutes()?.routes?.size ?: 0
+                SettingsIconRow(
+                    glyph = "▤",
+                    title = "Hosts (${state.hostCount})",
+                    subtitle = profile?.label?.takeIf { it.isNotBlank() } ?: "No host paired yet",
+                    onClick = onOpenHosts,
+                )
+                Hairline()
+                SettingsIconRow(
+                    glyph = "⇄",
+                    title = "Routes & failover",
+                    subtitle = "$routeCount routes · auto-failover on",
+                    onClick = { subPage = SettingsSubPage.CONNECTION },
+                    accessory = { if (routeCount > 1) SettingsPill("fastest") },
+                )
+                Hairline()
+                SettingsIconRow(
+                    glyph = "◈",
+                    title = "Pair a device",
+                    subtitle = "QR code or six-digit pairing code",
+                    onClick = onOpenPairing,
+                )
+                Hairline()
+                SettingsIconRow(
+                    glyph = "◌",
+                    title = "Sign in with Tailscale",
+                    subtitle = "Add a tailnet host without a QR code",
+                    onClick = {
+                        state.clearTailscaleSignInError()
+                        showTailscaleAdd = true
+                    },
                 )
             }
             SettingsGroup("usage", visible = settingsGroupVisible(settingsQuery, "usage")) {
@@ -594,18 +625,20 @@ fun SettingsScreen(
                 }
             }
             SettingsGroup("appearance", visible = settingsGroupVisible(settingsQuery, "appearance")) {
-                SettingsActionRow(
+                SettingsIconRow(
+                    glyph = "◐",
                     title = "Theme",
                     subtitle = "${state.themeAccent.label} · ${if (darkTheme) "dark" else "light"}" +
                         if (darkTheme && state.amoledDark) " · AMOLED" else "",
                     onClick = { subPage = SettingsSubPage.APPEARANCE },
+                    accessory = { SettingsThemeSwatches(state) },
                 )
                 Hairline()
-                SettingsActionRow(
-                    title = "Text, density & motion",
+                SettingsIconRow(
+                    glyph = "Aa",
+                    title = "Text & density",
                     subtitle = "Chat ${fontScaleLabel(state.chatFontScale)} · interface " +
-                        "${fontScaleLabel(state.appFontScale)}" +
-                        if (state.wrapCodeBlocks) " · code wraps" else "",
+                        "${fontScaleLabel(state.appFontScale)}",
                     onClick = { subPage = SettingsSubPage.APPEARANCE },
                 )
             }
@@ -1419,6 +1452,19 @@ fun SettingsScreen(
             )
         }
     }
+    if (showTailscaleAdd) {
+        TailscaleSignInDialog(
+            state = state,
+            initialHostUrl = "",
+            onHostUrlChange = {},
+            onSignIn = state::addHostWithTailscale,
+            onSignedIn = { showTailscaleAdd = false },
+            onDismiss = {
+                showTailscaleAdd = false
+                state.clearTailscaleSignInError()
+            },
+        )
+    }
     if (state.pairedDevicesDialogOpen) {
         PairedDevicesDialog(state = state)
     }
@@ -1898,6 +1944,7 @@ private fun FontScaleChips(
 private fun SettingsHeroCard(
     state: AppState,
     onOpenHosts: () -> Unit,
+    onOpenPair: () -> Unit,
     onOpenConnection: () -> Unit,
 ) {
     val profile = state.activeProfile
@@ -1960,13 +2007,13 @@ private fun SettingsHeroCard(
         Spacer(Modifier.height(10.dp))
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             HadalPrimaryButton(
-                text = if (profile == null) "Pair a host" else "Hosts & routes",
-                onClick = onOpenHosts,
+                text = "Connection",
+                onClick = onOpenConnection,
                 modifier = Modifier.weight(1f),
             )
             HadalGhostButton(
-                text = "Connection",
-                onClick = onOpenConnection,
+                text = "Pair device",
+                onClick = onOpenPair,
                 modifier = Modifier.weight(1f),
             )
         }
@@ -2053,6 +2100,25 @@ private fun SettingsAdvancedRow(
             .padding(horizontal = 14.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
+        Box(
+            Modifier
+                .size(34.dp)
+                .clip(RoundedCornerShape(9.dp))
+                .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.12f))
+                .border(
+                    1.dp,
+                    MaterialTheme.colorScheme.primary.copy(alpha = 0.28f),
+                    RoundedCornerShape(9.dp),
+                ),
+            contentAlignment = Alignment.Center,
+        ) {
+            Text(
+                "⚙",
+                style = MaterialTheme.typography.titleSmall,
+                color = MaterialTheme.colorScheme.primary,
+            )
+        }
+        Spacer(Modifier.width(11.dp))
         Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
             Text(
                 "Advanced",
@@ -2103,6 +2169,158 @@ private fun settingsGroupVisible(query: String, title: String): Boolean {
     if (words.isEmpty()) return true
     val haystack = (title + " " + SETTINGS_GROUP_KEYWORDS[title].orEmpty()).lowercase()
     return words.all { haystack.contains(it) }
+}
+
+/** Mint icon-tile row used across the settings overview (mockup-style). */
+@Composable
+private fun SettingsIconRow(
+    glyph: String,
+    title: String,
+    subtitle: String,
+    onClick: (() -> Unit)? = null,
+    accessory: @Composable RowScope.() -> Unit = {},
+) {
+    val base = Modifier.fillMaxWidth()
+    val modifier = if (onClick != null) {
+        base.clip(RoundedCornerShape(10.dp)).clickable(onClick = onClick)
+    } else {
+        base
+    }
+    Row(modifier.padding(vertical = 9.dp), verticalAlignment = Alignment.CenterVertically) {
+        Box(
+            Modifier
+                .size(34.dp)
+                .clip(RoundedCornerShape(9.dp))
+                .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.12f))
+                .border(
+                    1.dp,
+                    MaterialTheme.colorScheme.primary.copy(alpha = 0.28f),
+                    RoundedCornerShape(9.dp),
+                ),
+            contentAlignment = Alignment.Center,
+        ) {
+            Text(
+                glyph,
+                style = MaterialTheme.typography.titleSmall,
+                color = MaterialTheme.colorScheme.primary,
+            )
+        }
+        Spacer(Modifier.width(11.dp))
+        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+            Text(
+                title,
+                style = MaterialTheme.typography.titleSmall,
+                color = MaterialTheme.colorScheme.onSurface,
+            )
+            Text(
+                subtitle,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.tertiary,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+        }
+        Spacer(Modifier.width(8.dp))
+        accessory()
+        if (onClick != null) {
+            Spacer(Modifier.width(2.dp))
+            Text(
+                "›",
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.tertiary,
+            )
+        }
+    }
+}
+
+@Composable
+private fun SettingsPill(text: String) {
+    Text(
+        text,
+        modifier = Modifier
+            .clip(RoundedCornerShape(20.dp))
+            .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.12f))
+            .border(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.35f), RoundedCornerShape(20.dp))
+            .padding(horizontal = 8.dp, vertical = 3.dp),
+        style = MaterialTheme.typography.labelSmall,
+        color = MaterialTheme.colorScheme.primary,
+    )
+}
+
+@Composable
+private fun SettingsThemeSwatches(state: AppState) {
+    Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+        listOf(
+            MaterialTheme.colorScheme.primary,
+            MaterialTheme.colorScheme.primaryContainer,
+            MaterialTheme.colorScheme.tertiary,
+        ).forEach { color ->
+            Box(
+                Modifier
+                    .size(12.dp)
+                    .clip(RoundedCornerShape(4.dp))
+                    .background(color),
+            )
+        }
+    }
+}
+
+/** Two-column accent gallery with gradient previews (Appearance page). */
+@Composable
+private fun AccentGalleryCards(
+    selected: ThemeAccent,
+    darkTheme: Boolean,
+    onSelected: (ThemeAccent) -> Unit,
+) {
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        ThemeAccent.entries.chunked(2).forEach { pair ->
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                pair.forEach { accent ->
+                    val active = accent == selected
+                    val swatch = Color(accentSwatchArgb(accent, darkTheme).toInt())
+                    Column(
+                        Modifier
+                            .weight(1f)
+                            .clip(RoundedCornerShape(14.dp))
+                            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f))
+                            .border(
+                                if (active) 1.5.dp else 1.dp,
+                                if (active) MaterialTheme.colorScheme.primary
+                                else MaterialTheme.colorScheme.outlineVariant,
+                                RoundedCornerShape(14.dp),
+                            )
+                            .clickable { onSelected(accent) }
+                            .padding(8.dp),
+                        verticalArrangement = Arrangement.spacedBy(6.dp),
+                    ) {
+                        Box(
+                            Modifier
+                                .fillMaxWidth()
+                                .height(38.dp)
+                                .clip(RoundedCornerShape(8.dp))
+                                .background(swatch),
+                        )
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text(
+                                accent.label,
+                                modifier = Modifier.weight(1f),
+                                style = MaterialTheme.typography.labelMedium,
+                                color = MaterialTheme.colorScheme.onSurface,
+                            )
+                            if (active) {
+                                Text(
+                                    "✓",
+                                    style = MaterialTheme.typography.labelMedium,
+                                    color = MaterialTheme.colorScheme.primary,
+                                )
+                            }
+                        }
+                    }
+                }
+                if (pair.size == 1) Spacer(Modifier.weight(1f))
+            }
+        }
+    }
 }
 
 /** Settings overview row that opens a dedicated sub-page. */
@@ -2237,7 +2455,7 @@ private fun AppearanceSettingsPage(
                 )
             }
             Hairline()
-            AccentColorChips(
+            AccentGalleryCards(
                 selected = state.themeAccent,
                 darkTheme = darkTheme,
                 onSelected = state::updateThemeAccent,
