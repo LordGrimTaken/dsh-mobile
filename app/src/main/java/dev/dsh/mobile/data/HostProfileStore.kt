@@ -10,6 +10,14 @@ data class HostProfilesSnapshot(
 )
 
 @Serializable
+internal data class StoredHostRoute(
+    val id: String = "",
+    val label: String = "",
+    val baseUrl: String = "",
+    val kind: String = HostRoute.KIND_CUSTOM,
+)
+
+@Serializable
 internal data class StoredHostProfile(
     val id: String = "",
     val label: String = "",
@@ -18,6 +26,9 @@ internal data class StoredHostProfile(
     val tokenCiphertext: String = "",
     val pairedAt: String = "",
     val lastUsedAt: String = "",
+    /** Optional: legacy documents have no routes and migrate to a single route from [baseUrl]. */
+    val routes: List<StoredHostRoute> = emptyList(),
+    val activeRouteId: String? = null,
 )
 
 @Serializable
@@ -50,7 +61,8 @@ class HostProfileStore(
 
     /** Encrypts every token and writes the whole list. The welcome flag is preserved. */
     fun save(profiles: List<HostProfile>, activeId: String?) {
-        val stored = profiles.mapNotNull { profile ->
+        val stored = profiles.mapNotNull { rawProfile ->
+            val profile = rawProfile.ensureRoutes()
             if (profile.id.isBlank() || profile.baseUrl.isBlank() || profile.token.isBlank()) {
                 return@mapNotNull null
             }
@@ -65,6 +77,15 @@ class HostProfileStore(
                 tokenCiphertext = ciphertext,
                 pairedAt = profile.pairedAt,
                 lastUsedAt = profile.lastUsedAt,
+                routes = profile.routes.map { route ->
+                    StoredHostRoute(
+                        id = route.id,
+                        label = route.label,
+                        baseUrl = route.baseUrl,
+                        kind = route.kind,
+                    )
+                },
+                activeRouteId = profile.activeRouteId,
             )
         }
         val safeActiveId = activeId?.takeIf { id -> stored.any { it.id == id } }
@@ -88,14 +109,30 @@ class HostProfileStore(
         val token = runCatching { cipher.decrypt(stored.tokenCiphertext) }.getOrNull()
             ?.takeIf { it.isNotBlank() }
             ?: return null
+        val routes = stored.routes.mapNotNull { route ->
+            val baseUrl = (HostUrl.parse(route.baseUrl) as? HostUrlResult.Valid)?.root
+                ?: return@mapNotNull null
+            HostRoute(
+                id = route.id.ifBlank { HostRoute.newId() },
+                label = route.label.ifBlank { HostRoute.labelForKind(route.kind) },
+                baseUrl = baseUrl,
+                kind = route.kind.takeIf { it in HostRoute.KINDS } ?: HostRoute.KIND_CUSTOM,
+            )
+        }.distinctBy { it.baseUrl.lowercase() }
+        // Legacy documents (no `routes`) and corrupted route lists fall back to the single
+        // saved base URL, so old pairings keep working without re-pairing.
+        val safeRoutes = routes.ifEmpty { RoutePlanner.defaultRoutes(stored.baseUrl) }
+        val active = safeRoutes.firstOrNull { it.id == stored.activeRouteId } ?: safeRoutes.first()
         return HostProfile(
             id = stored.id,
             label = stored.label.ifBlank { "Host" },
-            baseUrl = stored.baseUrl,
+            baseUrl = active.baseUrl,
             deviceId = stored.deviceId,
             token = token,
             pairedAt = stored.pairedAt,
             lastUsedAt = stored.lastUsedAt,
+            routes = safeRoutes,
+            activeRouteId = active.id,
         )
     }
 

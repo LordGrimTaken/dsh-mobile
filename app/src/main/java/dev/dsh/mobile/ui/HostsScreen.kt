@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
@@ -38,6 +39,11 @@ import androidx.compose.ui.unit.dp
 import dev.dsh.mobile.data.AppState
 import dev.dsh.mobile.data.ConnectionStatus
 import dev.dsh.mobile.data.HostProfile
+import dev.dsh.mobile.data.HostRoute
+import dev.dsh.mobile.data.RouteProbe
+import dev.dsh.mobile.data.activeRoute
+import dev.dsh.mobile.data.ensureRoutes
+import dev.dsh.mobile.data.hasMultipleRoutes
 import dev.dsh.mobile.ui.theme.Danger
 import kotlinx.coroutines.launch
 
@@ -59,6 +65,7 @@ fun HostsScreen(state: AppState) {
     var showTailscaleAdd by remember { mutableStateOf(false) }
     var tailscaleAddUrl by remember { mutableStateOf("") }
     var showRecoveryRestore by remember { mutableStateOf(false) }
+    var routesTargetId by remember { mutableStateOf<String?>(null) }
 
     Column(
         Modifier
@@ -135,6 +142,7 @@ fun HostsScreen(state: AppState) {
                         onSwitch = { state.switchHost(profile.id) },
                         onRename = { renameTarget = profile },
                         onRemove = { removeTarget = profile },
+                        onRoutes = { routesTargetId = profile.id },
                         onTest = {
                             testStates = testStates + (profile.id to HostTestUi.Testing)
                             scope.launch {
@@ -227,6 +235,13 @@ fun HostsScreen(state: AppState) {
             },
         )
     }
+    routesTargetId?.let { hostId ->
+        HostRoutesDialog(
+            state = state,
+            hostId = hostId,
+            onDismiss = { routesTargetId = null },
+        )
+    }
     if (showRecoveryRestore) {
         RecoveryRestoreDialog(
             state = state,
@@ -288,7 +303,10 @@ private fun HostProfileCard(
     onRename: () -> Unit,
     onRemove: () -> Unit,
     onTest: () -> Unit,
+    onRoutes: () -> Unit,
 ) {
+    val normalized = profile.ensureRoutes()
+    val routeCount = normalized.routes.size
     HadalCard {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text(
@@ -310,7 +328,11 @@ private fun HostProfileCard(
         }
         Spacer(Modifier.height(4.dp))
         Text(
-            profile.baseUrl,
+            if (routeCount > 1) {
+                "${normalized.activeRoute.label}: ${profile.baseUrl} · $routeCount routes"
+            } else {
+                profile.baseUrl
+            },
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.tertiary,
             maxLines = 1,
@@ -364,6 +386,10 @@ private fun HostProfileCard(
         }
         Spacer(Modifier.height(4.dp))
         Row(horizontalArrangement = Arrangement.spacedBy(14.dp)) {
+            HostAction(
+                text = if (routeCount > 1) "routes ($routeCount)" else "routes",
+                onClick = onRoutes,
+            )
             HostAction(text = "test connection", onClick = onTest)
             HostAction(text = "rename", onClick = onRename)
             HostAction(text = "remove", onClick = onRemove, danger = true)
@@ -387,6 +413,240 @@ private fun HostAction(
         color = if (danger) Danger else MaterialTheme.colorScheme.primary,
         maxLines = 1,
     )
+}
+
+/**
+ * Settings → Hosts → Routes: probe, switch, add and remove the endpoints of one host.
+ * The dialog reads the live profile from [AppState] so edits made here re-render immediately.
+ */
+@Composable
+private fun HostRoutesDialog(
+    state: AppState,
+    hostId: String,
+    onDismiss: () -> Unit,
+) {
+    val profile = state.profiles.firstOrNull { it.id == hostId }
+    if (profile == null) {
+        onDismiss()
+        return
+    }
+    val normalized = profile.ensureRoutes()
+    val routes = normalized.routes
+    var adding by remember { mutableStateOf(false) }
+    var addLabel by remember { mutableStateOf("") }
+    var addUrl by remember { mutableStateOf("https://") }
+    var addError by remember { mutableStateOf<String?>(null) }
+    val probing = state.routeProbing
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        containerColor = MaterialTheme.colorScheme.surface,
+        title = {
+            Text(
+                "Routes · ${profile.label}",
+                color = MaterialTheme.colorScheme.onSurface,
+            )
+        },
+        text = {
+            Column(
+                Modifier
+                    .heightIn(max = 480.dp)
+                    .verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(10.dp),
+            ) {
+                Text(
+                    "The phone uses the active route for every request. When the connection " +
+                        "drops it probes all routes and reconnects through the fastest reachable " +
+                        "one; the pairing token is shared by every route.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.tertiary,
+                )
+                routes.forEach { route ->
+                    HostRouteRow(
+                        route = route,
+                        active = route.id == normalized.activeRouteId,
+                        probe = state.routeProbes[route.id],
+                        probing = probing,
+                        canRemove = routes.size > 1,
+                        onUse = { state.selectRoute(profile.id, route.id) },
+                        onRemove = {
+                            addError = state.removeRoute(profile.id, route.id)
+                        },
+                    )
+                }
+                Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                    HadalPrimaryButton(
+                        text = if (probing) "Probing…" else "Probe all",
+                        onClick = { state.probeRoutes(profile.id) },
+                        enabled = !probing,
+                        modifier = Modifier.weight(1f),
+                    )
+                    HadalPrimaryButton(
+                        text = "Use fastest",
+                        onClick = { state.useFastestRoute(profile.id) },
+                        enabled = !probing && routes.size > 1,
+                        modifier = Modifier.weight(1f),
+                    )
+                }
+                if (!adding) {
+                    HadalGhostButton(
+                        text = "Add route",
+                        onClick = {
+                            addError = null
+                            adding = true
+                        },
+                    )
+                } else {
+                    Text(
+                        "New route",
+                        style = MaterialTheme.typography.titleSmall,
+                        color = MaterialTheme.colorScheme.onSurface,
+                    )
+                    OutlinedTextField(
+                        value = addLabel,
+                        onValueChange = { addLabel = it },
+                        modifier = Modifier.fillMaxWidth(),
+                        label = { Text("Label (optional)") },
+                        placeholder = { Text("Tailscale / LAN / Cloudflare") },
+                        singleLine = true,
+                    )
+                    OutlinedTextField(
+                        value = addUrl,
+                        onValueChange = {
+                            addUrl = it
+                            addError = null
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                        label = { Text("Base URL") },
+                        placeholder = { Text("https://pc.tailnet.ts.net") },
+                        singleLine = true,
+                    )
+                    addError?.let { message ->
+                        Text(
+                            message,
+                            style = MaterialTheme.typography.labelSmall,
+                            color = Danger,
+                        )
+                    }
+                    Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                        HadalPrimaryButton(
+                            text = "Add route",
+                            enabled = addUrl.isNotBlank(),
+                            onClick = {
+                                val error = state.addRoute(
+                                    profile.id,
+                                    addLabel,
+                                    addUrl,
+                                    HostRoute.kindForUrl(addUrl),
+                                )
+                                if (error != null) {
+                                    addError = error
+                                } else {
+                                    adding = false
+                                    addLabel = ""
+                                    addUrl = "https://"
+                                    addError = null
+                                    state.probeRoutes(profile.id)
+                                }
+                            },
+                            modifier = Modifier.weight(1f),
+                        )
+                        HadalGhostButton(
+                            text = "Cancel",
+                            onClick = {
+                                adding = false
+                                addError = null
+                            },
+                        )
+                    }
+                }
+                addError?.takeIf { !adding }?.let { message ->
+                    Text(
+                        message,
+                        style = MaterialTheme.typography.labelSmall,
+                        color = Danger,
+                    )
+                }
+            }
+        },
+        confirmButton = {
+            HadalGhostButton(text = "Done", onClick = onDismiss)
+        },
+    )
+}
+
+/** One route row: label, kind, URL, last probe result and the per-row actions. */
+@Composable
+private fun HostRouteRow(
+    route: HostRoute,
+    active: Boolean,
+    probe: RouteProbe?,
+    probing: Boolean,
+    canRemove: Boolean,
+    onUse: () -> Unit,
+    onRemove: () -> Unit,
+) {
+    Column(
+        Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(10.dp))
+            .background(
+                if (active) {
+                    MaterialTheme.colorScheme.primaryContainer
+                } else {
+                    MaterialTheme.colorScheme.surfaceVariant
+                },
+            )
+            .padding(horizontal = 12.dp, vertical = 10.dp),
+        verticalArrangement = Arrangement.spacedBy(2.dp),
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text(
+                route.label,
+                modifier = Modifier.weight(1f),
+                style = MaterialTheme.typography.titleSmall,
+                color = if (active) {
+                    MaterialTheme.colorScheme.onPrimaryContainer
+                } else {
+                    MaterialTheme.colorScheme.onSurface
+                },
+                maxLines = 1,
+            )
+            Text(
+                HostRoute.labelForKind(route.kind),
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.tertiary,
+            )
+            if (active) {
+                Spacer(Modifier.width(8.dp))
+                Text(
+                    "active",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.primary,
+                )
+            }
+        }
+        Text(
+            route.baseUrl,
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.tertiary,
+            maxLines = 1,
+        )
+        Text(
+            probe?.summary() ?: if (probing) "probing…" else "not probed",
+            style = MaterialTheme.typography.labelSmall,
+            color = when {
+                probe == null -> MaterialTheme.colorScheme.tertiary
+                probe.reachable -> MaterialTheme.colorScheme.primary
+                else -> Danger
+            },
+            maxLines = 2,
+        )
+        Row(horizontalArrangement = Arrangement.spacedBy(14.dp)) {
+            if (!active) HostAction(text = "use", onClick = onUse)
+            if (canRemove) HostAction(text = "remove", onClick = onRemove, danger = true)
+        }
+    }
 }
 
 @Composable

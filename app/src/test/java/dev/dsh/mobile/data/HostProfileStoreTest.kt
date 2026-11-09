@@ -196,5 +196,82 @@ class HostProfileStoreTest {
         assertEquals("2026-10-30T10:00:00Z", withoutPairedAt.pairedAt)
     }
 
+    // region multi-route connection manager
+
+    @Test
+    fun `legacy document without routes migrates to one direct route`() {
+        val ciphertext = FakeTokenCipher().encrypt("token-a")
+        val legacyJson = """{"profiles":[{"id":"a","label":"Desktop","baseUrl":"https://desk.example.com","deviceId":"dev_a","tokenCiphertext":"$ciphertext","pairedAt":"2026-10-01T00:00:00Z","lastUsedAt":"2026-10-02T00:00:00Z"}],"activeId":"a"}"""
+        kv.putString(HostProfileStore.DOC_KEY, legacyJson)
+
+        val loaded = store.load()
+        assertEquals(1, loaded.profiles.size)
+        val profile = loaded.profiles.first()
+        assertEquals("https://desk.example.com", profile.baseUrl)
+        assertEquals(1, profile.routes.size)
+        assertEquals("https://desk.example.com", profile.routes.first().baseUrl)
+        assertEquals(profile.routes.first().id, profile.activeRouteId)
+    }
+
+    @Test
+    fun `routes round-trip and the active route mirrors baseUrl`() {
+        val routes = listOf(
+            HostRoute("r1", "LAN", "http://192.168.1.20:3543", HostRoute.KIND_LAN),
+            HostRoute("r2", "Tailscale", "https://pc.tailnet.ts.net", HostRoute.KIND_TAILSCALE),
+        )
+        val paired = profile("a").copy(
+            routes = routes,
+            activeRouteId = "r2",
+            baseUrl = "https://pc.tailnet.ts.net",
+        )
+        store.save(listOf(paired), "a")
+
+        val loaded = store.load().profiles.first()
+        assertEquals(2, loaded.routes.size)
+        assertEquals("r2", loaded.activeRouteId)
+        assertEquals("https://pc.tailnet.ts.net", loaded.baseUrl)
+        assertEquals(HostRoute.KIND_LAN, loaded.routes[0].kind)
+        assertEquals("Tailscale", loaded.routes[1].label)
+    }
+
+    @Test
+    fun `stale active route falls back to the first configured route`() {
+        val routes = listOf(
+            HostRoute("r1", "LAN", "http://192.168.1.20:3543"),
+            HostRoute("r2", "Tailscale", "https://pc.tailnet.ts.net"),
+        )
+        store.save(
+            listOf(profile("a").copy(routes = routes, activeRouteId = "gone", baseUrl = "https://pc.tailnet.ts.net")),
+            "a",
+        )
+        val loaded = store.load().profiles.first()
+        assertEquals("r1", loaded.activeRouteId)
+        assertEquals("http://192.168.1.20:3543", loaded.baseUrl)
+    }
+
+    @Test
+    fun `corrupt route entries are dropped and a bad-only list falls back to baseUrl`() {
+        val ciphertext = FakeTokenCipher().encrypt("token-a")
+        val doc = """{"profiles":[{"id":"a","label":"Desktop","baseUrl":"https://desk.example.com","deviceId":"dev_a","tokenCiphertext":"$ciphertext","pairedAt":"2026-10-01T00:00:00Z","lastUsedAt":"2026-10-02T00:00:00Z","routes":[{"id":"bad","label":"Bad","baseUrl":"not a url"},{"id":"ok","label":"Tailscale","baseUrl":"https://pc.tailnet.ts.net","kind":"tailscale"}],"activeRouteId":"bad"}],"activeId":"a"}"""
+        kv.putString(HostProfileStore.DOC_KEY, doc)
+
+        val loaded = store.load().profiles.first()
+        assertEquals(1, loaded.routes.size)
+        assertEquals("ok", loaded.activeRouteId)
+        assertEquals("https://pc.tailnet.ts.net", loaded.baseUrl)
+
+        kv.putString(
+            HostProfileStore.DOC_KEY,
+            doc.replace(
+                """{"id":"ok","label":"Tailscale","baseUrl":"https://pc.tailnet.ts.net","kind":"tailscale"}""",
+                "",
+            ).replace("""[{"id":"bad","label":"Bad","baseUrl":"not a url"},]""", """[{"id":"bad","label":"Bad","baseUrl":"not a url"}]"""),
+        )
+        val fallback = store.load().profiles.first()
+        assertEquals(1, fallback.routes.size)
+        assertEquals("https://desk.example.com", fallback.routes.first().baseUrl)
+        assertEquals(fallback.routes.first().id, fallback.activeRouteId)
+    }
+
     // endregion
 }

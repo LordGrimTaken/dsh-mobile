@@ -2,6 +2,14 @@
 
 ## Unreleased — mobile ecosystem batch 1
 
+- **P0 connection manager (multi-route hosts).** A paired host can now carry several endpoints
+  (LAN / Tailscale / Cloudflare / custom). Every route shares the pairing token; the app probes
+  them in parallel (`/health`, 4 s budget) and shows latency in Settings → Hosts → Routes and in
+  Connection diagnostics. When the live connection drops, the app probes the routes and
+  reconnects through the fastest reachable one instead of retrying the dead URL (60 s storm
+  guard); a manual Reconnect follows the same policy. Routes are validated, capped at 8 per host,
+  at least one is kept, and legacy single-URL profiles migrate to one "Direct" route.
+
 - **QR pairing (P0).** The host plugin serves a loopback "Connect a phone" page at
   `http://127.0.0.1:3543/pair`: it mints a one-use code, renders the `qrPayload` as a QR (vendored
   MIT `qrcode-generator`, no CDN), shows the six-digit fallback and an expiry countdown, under a

@@ -36,6 +36,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import dev.dsh.mobile.data.AppState
 import dev.dsh.mobile.data.ConnectionStatus
+import dev.dsh.mobile.data.activeRoute
+import dev.dsh.mobile.data.ensureRoutes
 import dev.dsh.mobile.ui.theme.Warning
 import kotlinx.coroutines.launch
 import java.io.InterruptedIOException
@@ -114,6 +116,72 @@ fun ConnectionDiagnosticsScreen(state: AppState, onBack: () -> Unit) {
                                 "VPN as active. Turn Tailscale on / enable Always-on VPN.",
                             style = MaterialTheme.typography.bodySmall,
                             color = Warning,
+                        )
+                    }
+                }
+            }
+
+            if (profile != null) {
+                val normalized = profile.ensureRoutes()
+                HadalCaps("ROUTES")
+                HadalCard {
+                    Text(
+                        "Every endpoint saved for this host. The client probes them in " +
+                            "parallel and reconnects through the fastest reachable route when " +
+                            "the current connection drops.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.tertiary,
+                    )
+                    Spacer(Modifier.padding(vertical = 2.dp))
+                    normalized.routes.forEach { route ->
+                        val probe = state.routeProbes[route.id]
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Column(Modifier.weight(1f)) {
+                                Text(
+                                    if (route.id == normalized.activeRouteId) {
+                                        "● ${route.label} (active)"
+                                    } else {
+                                        "○ ${route.label}"
+                                    },
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = if (route.id == normalized.activeRouteId) {
+                                        MaterialTheme.colorScheme.primary
+                                    } else {
+                                        MaterialTheme.colorScheme.onSurface
+                                    },
+                                )
+                                Text(
+                                    route.baseUrl,
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = MaterialTheme.colorScheme.tertiary,
+                                    maxLines = 1,
+                                )
+                            }
+                            Text(
+                                probe?.summary() ?: if (state.routeProbing) "probing…" else "not probed",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = when {
+                                    probe == null -> MaterialTheme.colorScheme.tertiary
+                                    probe.reachable -> MaterialTheme.colorScheme.primary
+                                    else -> MaterialTheme.colorScheme.error
+                                },
+                                maxLines = 2,
+                            )
+                        }
+                    }
+                    Spacer(Modifier.padding(vertical = 4.dp))
+                    Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                        HadalPrimaryButton(
+                            text = if (state.routeProbing) "Probing…" else "Probe routes",
+                            enabled = !state.routeProbing,
+                            onClick = { state.probeRoutes(profile.id) },
+                            modifier = Modifier.weight(1f),
+                        )
+                        HadalPrimaryButton(
+                            text = "Use fastest",
+                            enabled = !state.routeProbing && normalized.routes.size > 1,
+                            onClick = { state.useFastestRoute(profile.id) },
+                            modifier = Modifier.weight(1f),
                         )
                     }
                 }

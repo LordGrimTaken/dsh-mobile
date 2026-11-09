@@ -33,6 +33,7 @@ There is no account system, no developer cloud and no analytics.
 
 | | |
 | --- | --- |
+| **Route failover** | Save several endpoints per host (LAN, Tailscale, Cloudflare, custom), probe their latency in parallel and reconnect through the fastest reachable one when the connection drops. |
 | **QR pairing** | Scan the host's **Connect a phone** QR (or open a `dshmobile://pair` link) and connect in one tap; the 6-digit code stays as the fallback. |
 | **Live sessions** | Follow streaming replies, tool output and session state in real time. |
 | **Approvals & questions** | Approve or deny agent actions, answer structured questions, and stay in control of queued prompts. |

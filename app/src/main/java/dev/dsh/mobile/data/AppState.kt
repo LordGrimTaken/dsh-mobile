@@ -31,9 +31,13 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeout
 import java.io.File
 import java.time.Instant
 import java.util.concurrent.ConcurrentHashMap
@@ -193,6 +197,23 @@ class AppState(context: Context) {
     /** Version reported by the active host's `GET /health` (null until reachable). */
     var activeHostVersion: String? by mutableStateOf(null)
         private set
+
+    /**
+     * Latest reachability/latency probe per route id (see [HostRoute]). Absent = never probed.
+     * The connection manager fills this on demand and before a failover decision.
+     */
+    var routeProbes: Map<String, RouteProbe> by mutableStateOf(emptyMap())
+        private set
+
+    /** Host id whose routes are being probed right now, or null. */
+    var routeProbingHostId: String? by mutableStateOf(null)
+        private set
+
+    val routeProbing: Boolean get() = routeProbingHostId != null
+
+    /** Last automatic multi-route failover attempt (storm guard). */
+    private var lastAutoFailoverAt = 0L
+    private var failoverJob: Job? = null
 
     /** Explicit "use demo data" toggle. Forced on whenever no host is paired. */
     var useDemoData: Boolean by mutableStateOf(
@@ -4035,8 +4056,23 @@ class AppState(context: Context) {
     fun reconnect() {
         if (!isLive) return
         val remote = remoteRepository ?: return
-        lastAutoReconnectAt = System.currentTimeMillis()
+        val now = System.currentTimeMillis()
+        lastAutoReconnectAt = now
+        lastAutoFailoverAt = now
         syncError = null
+        val profile = activeProfile
+        if (profile != null && profile.ensureRoutes().routes.size > 1) {
+            failoverJob?.cancel()
+            failoverJob = scope.launch {
+                val routeId = pickFastestRoute(profile)
+                if (routeId != null && routeId != profile.ensureRoutes().activeRouteId) {
+                    selectRoute(profile.id, routeId)
+                } else {
+                    remoteRepository?.forceReconnect("manual")
+                }
+            }
+            return
+        }
         remote.forceReconnect("manual")
     }
 
@@ -4116,6 +4152,25 @@ class AppState(context: Context) {
         }
         lastAutoReconnectAt = now
         syncError = null
+        val profile = activeProfile
+        if (profile != null && profile.ensureRoutes().routes.size > 1 &&
+            now - lastAutoFailoverAt >= AUTO_FAILOVER_MIN_INTERVAL_MILLIS
+        ) {
+            // A dead route should not force a manual reconnect to that same dead URL: probe the
+            // configured routes first and rebuild the connection on the fastest reachable one.
+            lastAutoFailoverAt = now
+            failoverJob?.cancel()
+            failoverJob = scope.launch {
+                val routeId = pickFastestRoute(profile)
+                val currentRouteId = profile.ensureRoutes().activeRouteId
+                if (routeId != null && routeId != currentRouteId) {
+                    selectRoute(profile.id, routeId)
+                } else {
+                    remoteRepository?.forceReconnect(reason)
+                }
+            }
+            return
+        }
         remote.forceReconnect(reason)
     }
 
@@ -4165,10 +4220,18 @@ class AppState(context: Context) {
                 val profile = if (existing != null) {
                     existing.copy(
                         label = label,
+                        baseUrl = baseUrl,
                         deviceId = response.deviceId,
                         token = response.token,
                         lastUsedAt = now,
-                    )
+                    ).ensureRoutes().let { normalized ->
+                        // Re-pairing through a new URL keeps the saved routes but activates it.
+                        val match = normalized.routes.firstOrNull { it.baseUrl == baseUrl }
+                        if (match != null) normalized.copy(
+                            activeRouteId = match.id,
+                            baseUrl = match.baseUrl,
+                        ) else normalized
+                    }
                 } else {
                     HostProfile(
                         id = HostIds.newId(),
@@ -4178,7 +4241,7 @@ class AppState(context: Context) {
                         token = response.token,
                         pairedAt = now,
                         lastUsedAt = now,
-                    )
+                    ).ensureRoutes()
                 }
                 profiles = profiles.filterNot { it.id == profile.id || it.baseUrl == baseUrl } +
                     profile
@@ -4556,6 +4619,134 @@ class AppState(context: Context) {
         }
     }
 
+    // region connection manager (multi-route hosts)
+
+    /**
+     * Probes every configured route of [hostId] in parallel, stores the latencies and — with
+     * [autoSelect] — switches the host to the fastest reachable route. A host with a single route
+     * is probed too so diagnostics can still show whether it is reachable.
+     */
+    fun probeRoutes(hostId: String? = activeHostId, autoSelect: Boolean = false) {
+        val profile = profiles.firstOrNull { it.id == hostId } ?: return
+        val routes = profile.ensureRoutes().routes
+        if (routeProbingHostId == profile.id) return
+        routeProbingHostId = profile.id
+        scope.launch {
+            try {
+                val probes = probeAll(routes)
+                routeProbes = routeProbes + probes.associateBy { it.routeId }
+                if (autoSelect) {
+                    val best = RouteSelector.bestRouteId(probes, routes) ?: return@launch
+                    val current = profile.ensureRoutes().activeRouteId
+                    if (best != current) selectRoute(profile.id, best)
+                }
+            } finally {
+                routeProbingHostId = null
+            }
+        }
+    }
+
+    /** Probes the routes and switches to the fastest reachable one (manual "use fastest"). */
+    fun useFastestRoute(hostId: String? = activeHostId) {
+        probeRoutes(hostId, autoSelect = true)
+    }
+
+    /** Activates one saved route; rebuilding the live connection when it is the active host. */
+    fun selectRoute(hostId: String, routeId: String) {
+        val profile = profiles.firstOrNull { it.id == hostId } ?: return
+        val updated = profile.ensureRoutes().withActiveRoute(routeId) ?: return
+        profiles = profiles.map { if (it.id == hostId) updated else it }
+        hostStore.save(profiles, activeHostId)
+        if (activeHostId == hostId) reconnectOnRoute(updated)
+    }
+
+    /**
+     * Adds a reachable endpoint to a host. Returns an error message for the dialog, or null when
+     * the route was saved.
+     */
+    fun addRoute(hostId: String, label: String, baseUrl: String, kind: String): String? {
+        val profile = profiles.firstOrNull { it.id == hostId } ?: return "That host is no longer saved."
+        val current = profile.ensureRoutes()
+        return when (val result = RoutePlanner.add(current.routes, label, baseUrl, kind)) {
+            is RouteAddResult.Invalid -> result.message
+            is RouteAddResult.Added -> {
+                val updated = current.copy(routes = result.routes)
+                profiles = profiles.map { if (it.id == hostId) updated else it }
+                hostStore.save(profiles, activeHostId)
+                null
+            }
+        }
+    }
+
+    /** Removes a route (never the last one). Returns an error message or null on success. */
+    fun removeRoute(hostId: String, routeId: String): String? {
+        val profile = profiles.firstOrNull { it.id == hostId } ?: return "That host is no longer saved."
+        val current = profile.ensureRoutes()
+        return when (val result = RoutePlanner.remove(current.routes, current.activeRouteId, routeId)) {
+            is RouteRemoveResult.Invalid -> result.message
+            is RouteRemoveResult.Removed -> {
+                val active = result.routes.first { it.id == result.activeRouteId }
+                val updated = current.copy(
+                    routes = result.routes,
+                    activeRouteId = active.id,
+                    baseUrl = active.baseUrl,
+                )
+                profiles = profiles.map { if (it.id == hostId) updated else it }
+                hostStore.save(profiles, activeHostId)
+                if (activeHostId == hostId && result.activeChanged) reconnectOnRoute(updated)
+                null
+            }
+        }
+    }
+
+    private fun reconnectOnRoute(profile: HostProfile) {
+        if (activeHostId != profile.id) return
+        remoteRepository?.dispose()
+        remoteRepository = null
+        startRemote()
+        fetchActiveHostHealth()
+        recordConnectionEvent("Route: ${profile.activeRoute.label} (${profile.baseUrl})")
+    }
+
+    private suspend fun probeAll(routes: List<HostRoute>): List<RouteProbe> =
+        coroutineScope {
+            routes.map { route -> async { probeRoute(route) } }.awaitAll()
+        }
+
+    private suspend fun probeRoute(route: HostRoute): RouteProbe {
+        val startedAt = System.nanoTime()
+        return try {
+            val health = withTimeout(ROUTE_PROBE_TIMEOUT_MILLIS) {
+                DshApiClient(route.baseUrl).health()
+            }
+            RouteProbe(
+                routeId = route.id,
+                reachable = true,
+                latencyMs = (System.nanoTime() - startedAt) / 1_000_000,
+                hostVersion = health.version.takeIf { it.isNotBlank() },
+            )
+        } catch (cancelled: CancellationException) {
+            throw cancelled
+        } catch (error: Exception) {
+            RouteProbe(
+                routeId = route.id,
+                reachable = false,
+                error = errorMessage(error),
+            )
+        }
+    }
+
+    /** Probes routes and returns the fastest reachable id, or null when all failed. */
+    private suspend fun pickFastestRoute(profile: HostProfile): String? {
+        val routes = profile.ensureRoutes().routes
+        if (routes.size < 2) return null
+        val probes = probeAll(routes)
+        routeProbes = routeProbes + probes.associateBy { it.routeId }
+        return RouteSelector.bestRouteId(probes, routes)
+    }
+
+    // endregion
+
     /** Welcome screen "Use demo data": dismisses onboarding and enters demo mode. */
     fun chooseDemoData() {
         hostStore.dismissWelcome()
@@ -4619,6 +4810,8 @@ class AppState(context: Context) {
         selectedWorkspace = null
         syncError = null
         activeHostVersion = null
+        routeProbes = emptyMap()
+        routeProbingHostId = null
         resetHostSearchForHostChange()
         startRemote()
         fetchActiveHostHealth()
@@ -4685,6 +4878,8 @@ class AppState(context: Context) {
     // region lifecycle
 
     fun dispose() {
+        failoverJob?.cancel()
+        failoverJob = null
         networkReconnectJob?.cancel()
         networkReconnectJob = null
         connectivityMonitor.stop()
@@ -4774,6 +4969,12 @@ class AppState(context: Context) {
 
         /** Let the system install VPN/DNS routes before restarting the stream. */
         const val NETWORK_RECONNECT_DEBOUNCE_MILLIS = 700L
+
+        /** Per-route /health budget when the connection manager probes endpoints. */
+        const val ROUTE_PROBE_TIMEOUT_MILLIS = 4_000L
+
+        /** Do not auto-probe/fail over more often than this while a host stays unhealthy. */
+        const val AUTO_FAILOVER_MIN_INTERVAL_MILLIS = 60_000L
     }
 }
 

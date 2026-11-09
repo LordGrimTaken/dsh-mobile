@@ -10,11 +10,16 @@ data class HostProfile(
     val id: String,
     /** User-facing name, e.g. "Desktop" or "Cloud". */
     val label: String,
+    /** Base URL of the [activeRoute] (mirrored for every existing network call path). */
     val baseUrl: String,
     val deviceId: String,
     val token: String,
     val pairedAt: String,
     val lastUsedAt: String,
+    /** Every reachable endpoint for this host; at least one after [ensureRoutes]. */
+    val routes: List<HostRoute> = emptyList(),
+    /** Route id currently in use; null on legacy profiles (falls back to the first route). */
+    val activeRouteId: String? = null,
 )
 
 internal object HostIds {

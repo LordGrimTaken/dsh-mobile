@@ -60,3 +60,25 @@ to keep the VPN alive in the background.
    **Copy diagnostics** when reporting the issue.
 
 This doc reflects app build 0.2.39+; older builds only had the manual Reconnect path.
+
+
+## Multiple routes and automatic failover (0.4.0)
+
+A host can be reachable through more than one address — for example a LAN URL at home, Tailscale
+Serve elsewhere, and a named Cloudflare tunnel for locked-down networks. Add them under
+**Settings → Hosts → Routes → Add route**; they all share the same device token, so no second
+pairing code is needed.
+
+- **Probe all** checks each route's `/health` in parallel and shows the latency (4 s budget per
+  route).
+- **Use fastest** switches the active route to the quickest reachable one and rebuilds the live
+  connection without dropping the paired session.
+- When the connection drops, the app probes the routes automatically and reconnects through the
+  fastest reachable one instead of retrying the dead URL. The same happens for a manual
+  **Reconnect**; automatic failover is rate-limited to once per minute.
+- **Connection diagnostics → Routes** shows the last probe result for every route.
+
+Limits worth knowing: a route is only as good as its answer to `/health` (reachable but wrong host
+still ranks), route order breaks latency ties (reorders are not editable yet), and the client
+cannot bind a request to a specific network interface — Android decides which network carries
+each request.
