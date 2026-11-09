@@ -113,6 +113,7 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -4300,6 +4301,16 @@ private fun SchedulePromptDialog(
 @Composable
 private fun ChatStreamStalledCard(state: AppState) {
     val route = state.activeProfile?.ensureRoutes()?.activeRoute
+    var nowMillis by remember { mutableLongStateOf(System.currentTimeMillis()) }
+    LaunchedEffect(Unit) {
+        while (true) {
+            delay(1_000)
+            nowMillis = System.currentTimeMillis()
+        }
+    }
+    val stalledSeconds = state.lastStreamEventAt
+        ?.let { ((nowMillis - it) / 1000).coerceAtLeast(0) }
+        ?: 0
     Row(
         Modifier
             .fillMaxWidth()
@@ -4315,7 +4326,8 @@ private fun ChatStreamStalledCard(state: AppState) {
             color = MaterialTheme.colorScheme.primary,
         )
         Text(
-            "stream stalled · retrying" + (route?.let { " via ${it.label}" } ?: "") + "…",
+            "stream stalled" + (if (stalledSeconds > 0) " ${stalledSeconds}s" else "") +
+                " · retrying" + (route?.let { " via ${it.label}" } ?: "") + "…",
             modifier = Modifier.weight(1f),
             style = MaterialTheme.typography.labelSmall,
             color = MaterialTheme.colorScheme.tertiary,

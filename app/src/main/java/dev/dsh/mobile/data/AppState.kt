@@ -205,6 +205,9 @@ class AppState(context: Context) {
     var routeProbes: Map<String, RouteProbe> by mutableStateOf(emptyMap())
     var lastSpeedTest: Map<String, SpeedTestResult> by mutableStateOf(emptyMap())
     var speedTestingHostId: String? by mutableStateOf(null)
+
+    /** Recently resolved approvals/questions so the Inbox can show a Done history. */
+    var resolvedInboxHistory: List<ResolvedInboxItem> by mutableStateOf(emptyList())
         private set
 
     /** Host id whose routes are being probed right now, or null. */
@@ -3200,6 +3203,17 @@ class AppState(context: Context) {
             try {
                 repository.decideApproval(approvalId, approved)
                 dismissedApprovalIds.remove(approvalId)
+                inboxApprovals.firstOrNull { it.id == approvalId }?.let { approval ->
+                    resolvedInboxHistory = (listOf(
+                        ResolvedInboxItem(
+                            id = approval.id,
+                            sessionTitle = sessionTitleFor(approval.sessionId),
+                            title = approval.title,
+                            action = if (approved) "approved" else "denied",
+                            atMillis = System.currentTimeMillis(),
+                        ),
+                    ) + resolvedInboxHistory).take(MAX_RESOLVED_INBOX_HISTORY)
+                }
                 syncError = null
             } catch (error: Exception) {
                 handleApprovalDecisionFailure(approvalId, error)
@@ -3247,6 +3261,17 @@ class AppState(context: Context) {
                 repository.answerQuestion(questionId, answer, optionIndex)
                 // Success: the answered row disappears via question.resolved; keep the batch.
                 dismissedQuestionIds.remove(questionId)
+                inboxQuestions.firstOrNull { it.id == questionId }?.let { question ->
+                    resolvedInboxHistory = (listOf(
+                        ResolvedInboxItem(
+                            id = question.id,
+                            sessionTitle = sessionTitleFor(question.sessionId),
+                            title = question.prompt,
+                            action = "answered",
+                            atMillis = System.currentTimeMillis(),
+                        ),
+                    ) + resolvedInboxHistory).take(MAX_RESOLVED_INBOX_HISTORY)
+                }
                 syncError = null
             } catch (error: Exception) {
                 handleQuestionAnswerFailure(questionId, error)
@@ -4753,6 +4778,9 @@ class AppState(context: Context) {
         recordConnectionEvent("Route: ${profile.activeRoute.label} (${profile.baseUrl})")
     }
 
+    private fun sessionTitleFor(sessionId: String): String =
+        sessions.firstOrNull { it.id == sessionId }?.title ?: "session"
+
     private suspend fun probeAll(routes: List<HostRoute>): List<RouteProbe> =
         coroutineScope {
             routes.map { route -> async { probeRoute(route) } }.awaitAll()
@@ -5134,3 +5162,14 @@ object GoalDashboard {
         else -> 3
     }
 }
+
+private const val MAX_RESOLVED_INBOX_HISTORY = 20
+
+/** One resolved Inbox row kept for the Done history. */
+data class ResolvedInboxItem(
+    val id: String,
+    val sessionTitle: String,
+    val title: String,
+    val action: String,
+    val atMillis: Long,
+)

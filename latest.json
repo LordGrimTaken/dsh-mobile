@@ -1,14 +1,14 @@
 {
   "schemaVersion": 1,
-  "versionCode": 157,
-  "versionName": "0.10.0",
-  "tag": "v0.10.0",
-  "publishedAt": "2026-11-09T13:30:32Z",
-  "apkUrl": "https://github.com/LordGrimTaken/dsh-mobile/releases/download/v0.10.0/dsh-android-0.10.0-debug.apk",
-  "apkAssetName": "dsh-android-0.10.0-debug.apk",
-  "apkSizeBytes": 44093664,
-  "sha256": "975dbde235c94a3835181fd5e7e172a121ea7e779285218bda1387e33b394876",
+  "versionCode": 158,
+  "versionName": "0.11.0",
+  "tag": "v0.11.0",
+  "publishedAt": "2026-11-09T13:40:48Z",
+  "apkUrl": "https://github.com/LordGrimTaken/dsh-mobile/releases/download/v0.11.0/dsh-android-0.11.0-debug.apk",
+  "apkAssetName": "dsh-android-0.11.0-debug.apk",
+  "apkSizeBytes": 44110048,
+  "sha256": "76b383fa37cd17ab0d862692e55e1357250516bb27b5630c1c3810f7e52fc7c0",
   "minSdk": 26,
-  "notes": "DSH Android 0.10.0: Connection page Run speed test with real p50/p90 per route plus signal bars, and a chat stalled-stream card with Retry now / Switch route. Docs map every mockup element to its release.",
-  "releaseUrl": "https://github.com/LordGrimTaken/dsh-mobile/releases/tag/v0.10.0"
+  "notes": "DSH Android 0.11.0: Inbox Done history for resolved approvals/questions, appearance theme copy/import JSON, live stalled-stream seconds in chat, and accessibility content descriptions + haptics on tabs.",
+  "releaseUrl": "https://github.com/LordGrimTaken/dsh-mobile/releases/tag/v0.11.0"
 }

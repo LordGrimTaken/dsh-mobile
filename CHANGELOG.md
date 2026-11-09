@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.11.0 — Inbox Done history, theme transfer, accessibility pass
+
+- **Inbox "Done" history**: resolving an approval (approve/deny) or answering a question now records
+  a Done card with the title, session, action and age, so the Inbox shows what was just handled.
+- **Theme transfer**: Appearance page can copy the theme (accent, dark/AMOLED, chat/interface text
+  scales, code wrapping) as JSON and import one from the clipboard on another phone.
+- **Stalled-stream timing**: the chat retry card now shows how long the stream has been stalled in
+  seconds, counting live.
+- **Accessibility/haptics**: settings icon rows expose content descriptions; bottom-nav tabs expose
+  labels/badges to TalkBack and give haptic feedback on tap.
+
 ## 0.10.0 — Connection speed test, signal bars, chat stalled-stream card
 
 - **Run speed test** on the Connection page: three rounds per route, real **p50/p90** shown under

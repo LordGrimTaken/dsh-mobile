@@ -64,6 +64,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
@@ -71,6 +72,7 @@ import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import dev.dsh.mobile.BuildConfig
@@ -85,6 +87,7 @@ import dev.dsh.mobile.data.LOCAL_BACKUP_MAX_FILE_BYTES
 import dev.dsh.mobile.data.PairedDevice
 import dev.dsh.mobile.data.ThemeAccent
 import dev.dsh.mobile.data.activeRoute
+import org.json.JSONObject
 import dev.dsh.mobile.net.PerfBus
 import dev.dsh.mobile.data.accentChipColumns
 import dev.dsh.mobile.data.ensureRoutes
@@ -2250,9 +2253,12 @@ private fun SettingsIconRow(
 ) {
     val base = Modifier.fillMaxWidth()
     val modifier = if (onClick != null) {
-        base.clip(RoundedCornerShape(10.dp)).clickable(onClick = onClick)
-    } else {
         base
+            .clip(RoundedCornerShape(10.dp))
+            .semantics { contentDescription = "$title. $subtitle" }
+            .clickable(onClick = onClick)
+    } else {
+        base.semantics { contentDescription = "$title. $subtitle" }
     }
     Row(modifier.padding(vertical = 9.dp), verticalAlignment = Alignment.CenterVertically) {
         Box(
@@ -2592,6 +2598,41 @@ private fun AppearanceSettingsPage(
                 onCheckedChange = state::updateWrapCodeBlocks,
             )
         }
+        val clipboard = LocalClipboardManager.current
+        var transferStatus by remember { mutableStateOf<String?>(null) }
+        SettingsGroup("theme backup") {
+            Text(
+                "Copy this device's theme as JSON, or import a theme copied on another phone.",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.tertiary,
+            )
+            Spacer(Modifier.height(8.dp))
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                HadalGhostButton(
+                    text = "Copy JSON",
+                    onClick = {
+                        clipboard.setText(AnnotatedString(themeSettingsJson(state, darkTheme)))
+                        transferStatus = "Theme JSON copied to clipboard"
+                    },
+                    modifier = Modifier.weight(1f),
+                )
+                HadalGhostButton(
+                    text = "Import",
+                    onClick = {
+                        transferStatus = importThemeSettings(clipboard.getText()?.text.orEmpty(), state, onToggleTheme)
+                    },
+                    modifier = Modifier.weight(1f),
+                )
+            }
+            transferStatus?.let { status ->
+                Spacer(Modifier.height(6.dp))
+                Text(
+                    status,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.tertiary,
+                )
+            }
+        }
     }
 }
 
@@ -2822,6 +2863,38 @@ private fun settingsPageTitle(page: SettingsSubPage): String = when (page) {
     SettingsSubPage.APPEARANCE -> "Appearance"
     SettingsSubPage.CONNECTION -> "Connection"
 }
+
+/** Theme settings as a compact transferable JSON document. */
+private fun themeSettingsJson(state: AppState, darkTheme: Boolean): String = JSONObject()
+    .put("version", 1)
+    .put("accent", state.themeAccent.key)
+    .put("dark", darkTheme)
+    .put("amoled", state.amoledDark)
+    .put("chatScale", state.chatFontScale.toDouble())
+    .put("appScale", state.appFontScale.toDouble())
+    .put("wrapCode", state.wrapCodeBlocks)
+    .toString()
+
+/** Applies a theme JSON blob; returns a short human status (success or a readable failure). */
+private fun importThemeSettings(
+    raw: String,
+    state: AppState,
+    onToggleTheme: (Boolean) -> Unit,
+): String = runCatching {
+    val obj = JSONObject(raw.trim())
+    val accentKey = obj.optString("accent").takeIf { it.isNotBlank() }
+    ThemeAccent.entries.firstOrNull { it.key == accentKey }?.let(state::updateThemeAccent)
+    if (obj.has("dark")) onToggleTheme(obj.optBoolean("dark", true))
+    if (obj.has("amoled")) state.updateAmoledDark(obj.optBoolean("amoled", state.amoledDark))
+    if (obj.has("chatScale")) {
+        state.updateChatFontScale(obj.optDouble("chatScale", state.chatFontScale.toDouble()).toFloat())
+    }
+    if (obj.has("appScale")) {
+        state.updateAppFontScale(obj.optDouble("appScale", state.appFontScale.toDouble()).toFloat())
+    }
+    if (obj.has("wrapCode")) state.updateWrapCodeBlocks(obj.optBoolean("wrapCode", state.wrapCodeBlocks))
+    "Theme imported"
+}.getOrElse { error -> "Couldn't import: ${error.message?.take(70) ?: "invalid theme JSON"}" }
 
 @Composable
 private fun SettingsGroup(

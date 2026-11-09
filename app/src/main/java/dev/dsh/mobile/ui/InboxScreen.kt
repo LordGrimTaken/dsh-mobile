@@ -5,8 +5,10 @@ import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -34,6 +36,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import dev.dsh.mobile.data.AppState
@@ -264,6 +267,25 @@ fun InboxScreen(state: AppState, onBack: () -> Unit) {
                     )
                 }
             }
+
+            if (state.resolvedInboxHistory.isNotEmpty()) {
+                item(key = "done-header") {
+                    HadalCaps("Done", modifier = Modifier.padding(start = 2.dp, top = 10.dp))
+                }
+                items(state.resolvedInboxHistory, key = { "done:${it.id}" }) { entry ->
+                    val ageSeconds = ((System.currentTimeMillis() - entry.atMillis) / 1000).coerceAtLeast(0)
+                    InboxDoneRow(
+                        title = entry.title,
+                        sessionTitle = entry.sessionTitle,
+                        action = entry.action,
+                        ageLabel = when {
+                            ageSeconds < 60 -> "just now"
+                            ageSeconds < 3600 -> "${ageSeconds / 60}m ago"
+                            else -> "${ageSeconds / 3600}h ago"
+                        },
+                    )
+                }
+            }
         }
     }
 }
@@ -339,6 +361,48 @@ private fun InboxApprovalCard(
             style = MaterialTheme.typography.labelSmall,
             color = MaterialTheme.colorScheme.tertiary,
         )
+    }
+}
+
+/** Resolved approval/question row shown in the Inbox "Done" history. */
+@Composable
+private fun InboxDoneRow(title: String, sessionTitle: String, action: String, ageLabel: String) {
+    Row(
+        Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(12.dp))
+            .background(MaterialTheme.colorScheme.surfaceContainer)
+            .padding(horizontal = 12.dp, vertical = 10.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Box(
+            Modifier
+                .size(28.dp)
+                .clip(RoundedCornerShape(8.dp))
+                .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)),
+            contentAlignment = Alignment.Center,
+        ) {
+            Text("✓", style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.primary)
+        }
+        Spacer(Modifier.width(10.dp))
+        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+            Text(
+                title,
+                style = MaterialTheme.typography.titleSmall,
+                color = MaterialTheme.colorScheme.onSurface,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+            Text(
+                "$sessionTitle · $action",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.tertiary,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+        }
+        Spacer(Modifier.width(8.dp))
+        Text(ageLabel, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.tertiary)
     }
 }
 
