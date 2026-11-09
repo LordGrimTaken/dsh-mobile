@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.9.0 — Settings hub with per-section pages, larger home tabs
+
+- **Every settings section is now its own page**: the overview is a hub of mint icon rows
+  (Hosts, Routes & failover, Pair a device, Tailscale, Theme, Text & density, Usage, Data source,
+  Sessions, Recovery & security, Notifications, Voice, Advanced) and each secondary section opens
+  a dedicated page with a back header instead of one long scroll.
+- **Home tabs**: the bottom navigation is now a row of individual boxes with bigger glyphs/labels
+  (no more underline row), and the old `dsh · live · sessions` status strip is hidden on Home so
+  the nav gets the full bottom area.
+
 ## 0.8.0 — Real connection metrics, Inbox filters
 
 - **Request timing instrumentation**: OkHttp event listener records first-byte and total time for

@@ -277,6 +277,8 @@ fun ShellFrame(
     showDeck: Boolean = true,
     /** Terminal-style compact shell: no command strip, no workspace deck, shorter bar, one-line status. */
     compact: Boolean = false,
+    /** Hide the bottom status strip entirely (home uses the bottom nav instead). */
+    showStatus: Boolean = true,
     /** Cockpit drawer content supplied by the host screen. */
     drawerActions: List<ShellDrawerAction> = emptyList(),
     drawerSessions: List<ShellDrawerSession> = emptyList(),
@@ -362,7 +364,9 @@ fun ShellFrame(
             ) {
                 content()
             }
-            ShellStatusStrip(status = status, compact = compact)
+            if (showStatus) {
+                ShellStatusStrip(status = status, compact = compact)
+            }
         }
     }
 

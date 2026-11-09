@@ -307,6 +307,7 @@ fun SessionListScreen(
         onOpenSettings = onOpenSettings,
         onOpenAbout = { aboutOpen = true },
         compact = true,
+        showStatus = false,
     ) {
         Column(Modifier.fillMaxSize()) {
             CompactHomeHeader(
@@ -710,20 +711,21 @@ private fun HomeBottomNav(
         Row(
             Modifier
                 .fillMaxWidth()
-                .padding(top = 6.dp, bottom = 4.dp),
-            horizontalArrangement = Arrangement.SpaceEvenly,
+                .padding(top = 6.dp, bottom = 4.dp, start = 8.dp, end = 8.dp),
+            horizontalArrangement = Arrangement.spacedBy(6.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            HomeNavItem("▤", "Home", active = true) {}
+            HomeNavItem("▤", "Home", active = true, modifier = Modifier.weight(1f)) {}
             HomeNavItem(
                 "◎",
                 "Inbox",
                 active = false,
                 badge = state.pendingInputCount,
+                modifier = Modifier.weight(1f),
                 onClick = onOpenInbox,
             )
-            HomeNavItem("◔", "Usage", active = false, onClick = onOpenUsage)
-            HomeNavItem("⚙", "Settings", active = false, onClick = onOpenSettings)
+            HomeNavItem("◔", "Usage", active = false, modifier = Modifier.weight(1f), onClick = onOpenUsage)
+            HomeNavItem("⚙", "Settings", active = false, modifier = Modifier.weight(1f), onClick = onOpenSettings)
         }
     }
 }
@@ -734,27 +736,33 @@ private fun HomeNavItem(
     label: String,
     active: Boolean,
     badge: Int = 0,
+    modifier: Modifier = Modifier,
     onClick: () -> Unit,
 ) {
     Row(
-        Modifier
-            .clip(RoundedCornerShape(10.dp))
+        modifier
+            .clip(RoundedCornerShape(14.dp))
+            .background(
+                if (active) MaterialTheme.colorScheme.primary.copy(alpha = 0.14f)
+                else MaterialTheme.colorScheme.surfaceContainer,
+            )
             .clickable(onClick = onClick)
-            .padding(horizontal = 12.dp, vertical = 4.dp),
+            .padding(horizontal = 10.dp, vertical = 11.dp),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(4.dp),
+        horizontalArrangement = Arrangement.Center,
     ) {
         Text(
             glyph,
-            style = MaterialTheme.typography.titleSmall,
+            style = MaterialTheme.typography.titleMedium,
             color = if (active) MaterialTheme.colorScheme.primary
             else MaterialTheme.colorScheme.onSurfaceVariant,
         )
+        Spacer(Modifier.width(6.dp))
         Text(
             label,
-            style = MaterialTheme.typography.labelMedium,
+            style = MaterialTheme.typography.titleSmall,
             color = if (active) MaterialTheme.colorScheme.primary
-            else MaterialTheme.colorScheme.tertiary,
+            else MaterialTheme.colorScheme.onSurfaceVariant,
         )
         if (badge > 0) {
             Text(

@@ -392,7 +392,16 @@ private fun PresetChip(
 
 // region settings
 
-private enum class SettingsSubPage { APPEARANCE, CONNECTION }
+private enum class SettingsSubPage {
+    APPEARANCE,
+    CONNECTION,
+    DATA_SOURCE,
+    SESSIONS,
+    RECOVERY,
+    NOTIFICATIONS,
+    VOICE,
+    ADVANCED,
+}
 
 @Composable
 fun SettingsScreen(
@@ -518,7 +527,8 @@ fun SettingsScreen(
             return
         }
 
-        null -> Unit
+        null, SettingsSubPage.DATA_SOURCE, SettingsSubPage.SESSIONS, SettingsSubPage.RECOVERY,
+        SettingsSubPage.NOTIFICATIONS, SettingsSubPage.VOICE, SettingsSubPage.ADVANCED -> Unit
     }
     Column(
         Modifier
@@ -536,6 +546,13 @@ fun SettingsScreen(
                 .padding(top = 12.dp, bottom = 24.dp),
             verticalArrangement = Arrangement.spacedBy(14.dp),
         ) {
+            subPage?.let { page ->
+                SettingsSecondaryPageHeader(
+                    title = settingsPageTitle(page),
+                    onBack = { subPage = null },
+                )
+            }
+            if (subPage == null) {
             SettingsHeroCard(
                 state = state,
                 onOpenHosts = onOpenHosts,
@@ -549,7 +566,8 @@ fun SettingsScreen(
                     if (it.isNotBlank()) advancedExpanded = true
                 },
             )
-            SettingsGroup("host & connection", visible = settingsGroupVisible(settingsQuery, "host & connection")) {
+            }
+            SettingsGroup("host & connection", visible = settingsGroupVisible(settingsQuery, "host & connection") && subPage == null) {
                 val profile = state.activeProfile
                 val routeCount = profile?.ensureRoutes()?.routes?.size ?: 0
                 SettingsIconRow(
@@ -603,7 +621,7 @@ fun SettingsScreen(
                     )
                 }
             }
-            SettingsGroup("data source", visible = settingsGroupVisible(settingsQuery, "data source")) {
+            SettingsGroup("data source", visible = settingsGroupVisible(settingsQuery, "data source") && subPage == SettingsSubPage.DATA_SOURCE) {
                 if (state.hostCount == 0) {
                     Text(
                         "Demo data is always on while no host is paired. Pair a desktop or cloud " +
@@ -625,7 +643,7 @@ fun SettingsScreen(
                     )
                 }
             }
-            SettingsGroup("appearance", visible = settingsGroupVisible(settingsQuery, "appearance")) {
+            SettingsGroup("appearance", visible = settingsGroupVisible(settingsQuery, "appearance") && subPage == null) {
                 SettingsIconRow(
                     glyph = "◐",
                     title = "Theme",
@@ -643,7 +661,54 @@ fun SettingsScreen(
                     onClick = { subPage = SettingsSubPage.APPEARANCE },
                 )
             }
-            SettingsGroup("sessions", visible = settingsGroupVisible(settingsQuery, "sessions")) {
+            if (subPage == null) {
+                SettingsGroup("sections", visible = settingsGroupVisible(settingsQuery, "sections")) {
+                    SettingsIconRow("◔", "Usage", "Tokens, balance and API cost", onClick = onOpenUsage)
+                    Hairline()
+                    SettingsIconRow(
+                        "⇆",
+                        "Data source",
+                        if (state.useDemoData) "Showing demo data" else "Showing live host sessions",
+                        onClick = { subPage = SettingsSubPage.DATA_SOURCE },
+                    )
+                    Hairline()
+                    SettingsIconRow(
+                        "▤",
+                        "Sessions",
+                        "Hidden/archived sessions and lists",
+                        onClick = { subPage = SettingsSubPage.SESSIONS },
+                    )
+                    Hairline()
+                    SettingsIconRow(
+                        "⛨",
+                        "Recovery & security",
+                        "Recovery code, paired devices, app lock",
+                        onClick = { subPage = SettingsSubPage.RECOVERY },
+                    )
+                    Hairline()
+                    SettingsIconRow(
+                        "◎",
+                        "Notifications",
+                        "Push, quiet hours, background sync",
+                        onClick = { subPage = SettingsSubPage.NOTIFICATIONS },
+                    )
+                    Hairline()
+                    SettingsIconRow(
+                        "◌",
+                        "Voice",
+                        "Dictation language and prompts",
+                        onClick = { subPage = SettingsSubPage.VOICE },
+                    )
+                    Hairline()
+                    SettingsIconRow(
+                        "⚙",
+                        "Advanced",
+                        "Diagnostics, storage, build info",
+                        onClick = { subPage = SettingsSubPage.ADVANCED },
+                    )
+                }
+            }
+            SettingsGroup("sessions", visible = settingsGroupVisible(settingsQuery, "sessions") && subPage == SettingsSubPage.SESSIONS) {
                 Column(
                     Modifier
                         .fillMaxWidth()
@@ -662,7 +727,7 @@ fun SettingsScreen(
                     )
                 }
             }
-            SettingsGroup("recovery & security", visible = settingsGroupVisible(settingsQuery, "recovery & security")) {
+            SettingsGroup("recovery & security", visible = settingsGroupVisible(settingsQuery, "recovery & security") && subPage == SettingsSubPage.RECOVERY) {
                 ToggleRow(
                     title = "App lock",
                     subtitle = "Require biometrics when opening DSH Mobile",
@@ -895,7 +960,7 @@ fun SettingsScreen(
                     }
                 }
             }
-            SettingsGroup("notifications", visible = settingsGroupVisible(settingsQuery, "notifications")) {
+            SettingsGroup("notifications", visible = settingsGroupVisible(settingsQuery, "notifications") && subPage == SettingsSubPage.NOTIFICATIONS) {
                 ToggleRow(
                     title = "Agent needs input",
                     subtitle = "Notify when an approval or question is waiting",
@@ -1225,7 +1290,7 @@ fun SettingsScreen(
                     }
                 }
             }
-            SettingsGroup("voice", visible = settingsGroupVisible(settingsQuery, "voice")) {
+            SettingsGroup("voice", visible = settingsGroupVisible(settingsQuery, "voice") && subPage == SettingsSubPage.VOICE) {
                 ToggleRow(
                     title = "Prefer offline recognition",
                     subtitle = "Use an installed on-device speech model; avoids network/VPN audio stalls",
@@ -1268,12 +1333,14 @@ fun SettingsScreen(
             if (!BuildConfig.PLAY_BUILD) {
                 UpdateSettingsRow(manager = state.updates)
             }
-            SettingsAdvancedRow(
-                expanded = advancedExpanded || settingsQuery.isNotBlank(),
-                onToggle = { advancedExpanded = !advancedExpanded },
-                hint = "Diagnostics, storage & build info",
-            )
-            if (advancedExpanded || settingsQuery.isNotBlank()) {
+            if (subPage == null) {
+                SettingsAdvancedRow(
+                    expanded = advancedExpanded || settingsQuery.isNotBlank(),
+                    onToggle = { advancedExpanded = !advancedExpanded },
+                    hint = "Diagnostics, storage & build info",
+                )
+            }
+            if (subPage == SettingsSubPage.ADVANCED || advancedExpanded || settingsQuery.isNotBlank()) {
             SettingsGroup("diagnostics", visible = settingsGroupVisible(settingsQuery, "diagnostics")) {
                 Text(
                     "Connection diagnostics",
@@ -2686,6 +2753,41 @@ private fun ConnectionSettingsPage(
             )
         }
     }
+}
+
+/** Header used by the secondary settings pages (data source, sessions, …). */
+@Composable
+private fun SettingsSecondaryPageHeader(title: String, onBack: () -> Unit) {
+    Row(
+        Modifier
+            .fillMaxWidth()
+            .padding(vertical = 4.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        IconButton(onClick = onBack) {
+            Icon(
+                Icons.Filled.ArrowBack,
+                contentDescription = "Back",
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+        Text(
+            title.uppercase(),
+            style = MaterialTheme.typography.titleMedium,
+            color = MaterialTheme.colorScheme.onSurface,
+        )
+    }
+}
+
+private fun settingsPageTitle(page: SettingsSubPage): String = when (page) {
+    SettingsSubPage.DATA_SOURCE -> "Data source"
+    SettingsSubPage.SESSIONS -> "Sessions"
+    SettingsSubPage.RECOVERY -> "Recovery & security"
+    SettingsSubPage.NOTIFICATIONS -> "Notifications"
+    SettingsSubPage.VOICE -> "Voice"
+    SettingsSubPage.ADVANCED -> "Advanced"
+    SettingsSubPage.APPEARANCE -> "Appearance"
+    SettingsSubPage.CONNECTION -> "Connection"
 }
 
 @Composable

@@ -1,14 +1,14 @@
 {
   "schemaVersion": 1,
-  "versionCode": 155,
-  "versionName": "0.8.0",
-  "tag": "v0.8.0",
-  "publishedAt": "2026-11-09T12:57:36Z",
-  "apkUrl": "https://github.com/LordGrimTaken/dsh-mobile/releases/download/v0.8.0/dsh-android-0.8.0-debug.apk",
-  "apkAssetName": "dsh-android-0.8.0-debug.apk",
+  "versionCode": 156,
+  "versionName": "0.9.0",
+  "tag": "v0.9.0",
+  "publishedAt": "2026-11-09T13:11:49Z",
+  "apkUrl": "https://github.com/LordGrimTaken/dsh-mobile/releases/download/v0.9.0/dsh-android-0.9.0-debug.apk",
+  "apkAssetName": "dsh-android-0.9.0-debug.apk",
   "apkSizeBytes": 44093664,
-  "sha256": "2c7889109a1822fff479aeaaf6eed6d69be1f85281c403d5477cf798e8b52085",
+  "sha256": "00881ab55d9dead945ff50c82abff29230a0830fac6628eee1908c8b23796009",
   "minSdk": 26,
-  "notes": "DSH Android 0.8.0: real first-byte/reconnect metrics (OkHttp event listener), Connection page buffering status rows, and Inbox filter chips (All/Approvals/Questions).",
-  "releaseUrl": "https://github.com/LordGrimTaken/dsh-mobile/releases/tag/v0.8.0"
+  "notes": "DSH Android 0.9.0: Settings is a hub where every section (data source, sessions, recovery, notifications, voice, advanced) opens its own page like host/connection/appearance; Home bottom tabs are larger boxed buttons and the old bottom status strip is removed.",
+  "releaseUrl": "https://github.com/LordGrimTaken/dsh-mobile/releases/tag/v0.9.0"
 }
