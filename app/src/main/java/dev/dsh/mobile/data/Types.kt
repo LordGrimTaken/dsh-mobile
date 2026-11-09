@@ -82,6 +82,34 @@ internal fun attachmentCacheFileName(attachmentId: String, name: String): String
 // region agent presets
 
 /** One host agent preset shown in the new-session sheet. */
+/** One installed package in the host's active DSH profile (from GET /plugins). */
+data class ProfilePlugin(
+    val name: String,
+    val version: String = "",
+    val specifier: String = "",
+    val local: Boolean = false,
+) {
+    /** "0.4.2" / "local link" / "installed". */
+    val summary: String get() = when {
+        local -> "local link"
+        version.isNotBlank() -> "v$version"
+        else -> "installed"
+    }
+}
+
+/** Installed-plugin inventory for the active profile; unsupported hosts return [Unsupported]. */
+data class PluginCatalog(
+    val supported: Boolean,
+    val profile: String = "",
+    val packages: List<ProfilePlugin> = emptyList(),
+    val bundles: List<String> = emptyList(),
+    val truncated: Boolean = false,
+) {
+    companion object {
+        val Unsupported = PluginCatalog(supported = false)
+    }
+}
+
 data class AgentPreset(
     /** Machine id sent to POST /sessions. */
     val id: String,

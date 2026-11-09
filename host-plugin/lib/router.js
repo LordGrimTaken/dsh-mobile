@@ -16,6 +16,7 @@ import { normalizeQueueAction } from './queue.js';
 import { parseScheduleCreateBody, parseScheduleUpdateBody } from './schedules.js';
 import { SEARCH_MAX_LIMIT, hasSearchFilters, normalizeSearchFilters, normalizeSearchLimit, normalizeSearchOffset, normalizeSearchQuery } from './search.js';
 import { normalizeSessionTitle } from './sessions.js';
+import { readProfilePlugins } from './plugins.js';
 /** All v1 routes live under this prefix; the prefix itself is optional (`/health` works too). */
 export const API_PREFIX = '/mobile/v1';
 
@@ -445,6 +446,10 @@ export function createRouter({ config, pairing, adapter, attachments = null, hid
           throw new ApiError('not_found', 'Device not found');
         }
         return json(200, { ok: true, revoked: true });
+      }
+
+      if (method === 'GET' && path === '/plugins') {
+        return json(200, readProfilePlugins());
       }
 
       if (method === 'GET' && path === '/presets') {

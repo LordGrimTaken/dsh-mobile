@@ -1,5 +1,16 @@
 # Changelog
 
+## Unreleased — plugin ecosystem inventory (local, not released yet)
+
+- **Host: `GET /plugins`** reads the active DSH profile (`$DSH_HOME/profiles/web/package.json`) and
+  returns the installed packages (`name`, `version`, `specifier`, `local`), the profile's bundle
+  list, a `truncated` flag (200 entries max) and `supported:false` when unreadable. Read-only,
+  bounded, never throws.
+- **App: Settings → Plugins & ecosystem** lists the profile package inventory with versions and
+  `local` badges, plus the profile bundle list. Runtime health/enable actions stay desktop-side.
+- Fake host mirrors the endpoint for UI/contract tests; new host test covers the parser
+  (link/local detection, missing profile, 200-entry cap).
+
 ## Unreleased — session defaults (local, not released yet)
 
 - **Session defaults page** (Settings → Session defaults): pick the default agent preset and the

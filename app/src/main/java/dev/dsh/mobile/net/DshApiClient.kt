@@ -180,6 +180,12 @@ class DshApiClient(
         PresetsResponse.serializer(),
     )
 
+    /** GET /plugins — installed packages in the host's active DSH profile. */
+    suspend fun plugins(): PluginsResponse = decode(
+        execute(request("GET", "/plugins")),
+        PluginsResponse.serializer(),
+    )
+
     /** GET /search?q=…&limit=…&role=…&since=…&until=…&offset=… — host-wide message search. */
     suspend fun search(
         query: String,

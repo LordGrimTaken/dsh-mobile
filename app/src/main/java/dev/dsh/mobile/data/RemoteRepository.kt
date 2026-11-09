@@ -784,6 +784,30 @@ class RemoteRepository(
         PresetRoster.Fallback
     }
 
+    override suspend fun pluginCatalog(): PluginCatalog = try {
+        val response = api.plugins()
+        PluginCatalog(
+            supported = response.supported,
+            profile = response.profile.orEmpty(),
+            packages = response.packages.map { entry ->
+                ProfilePlugin(
+                    name = entry.name,
+                    version = entry.version.orEmpty(),
+                    specifier = entry.specifier.orEmpty(),
+                    local = entry.local,
+                )
+            },
+            bundles = response.bundles,
+            truncated = response.truncated,
+        )
+    } catch (unsupported: DshApiException.Unsupported) {
+        PluginCatalog.Unsupported
+    } catch (notFound: DshApiException.NotFound) {
+        PluginCatalog.Unsupported
+    } catch (error: Exception) {
+        PluginCatalog.Unsupported
+    }
+
     override suspend fun searchMessages(
         query: String,
         roles: Set<String>,

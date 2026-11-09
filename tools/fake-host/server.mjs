@@ -1512,6 +1512,29 @@ function handlePresetsList(res) {
   });
 }
 
+/** GET /mobile/v1/plugins: installed profile-plugin inventory (contract mirror of the real host). */
+function handlePluginsList(res) {
+  sendJson(res, 200, {
+    supported: true,
+    profile: 'web',
+    packages: [
+      { name: '@deepseek-ai/dsh-base', version: '0.2.2-rc.1', specifier: '^0.2.2-rc.1', local: false },
+      { name: '@deepseek-ai/dsh-web-app', version: '0.2.2-rc.1', specifier: '^0.2.2-rc.1', local: false },
+      { name: '@goodandready/dsh-context-lens', version: '0.1.35', specifier: '^0.1.35', local: false },
+      { name: '@goodandready/dsh-plugin-notify', version: '0.4.7', specifier: '^0.4.7', local: false },
+      { name: '@local/agent-team-plus', version: '', specifier: 'link:/srv/dsh/workspaces/dsh-root/Xians-DeepSeek-Plugins/plugins/agent-team-plus', local: true },
+      { name: '@local/game-lab', version: '', specifier: 'link:/srv/dsh/workspaces/dsh-root/dsh-inapp-plugin', local: true },
+      { name: '@local/harness-deck', version: '', specifier: 'link:/srv/dsh/workspaces/dsh-root/Xians-DeepSeek-Plugins/plugins/harness-deck', local: true },
+      { name: 'dsh-mobile-host', version: '', specifier: 'link:/srv/dsh/workspaces/dsh-root/dsh-mobile/host-plugin', local: true },
+    ],
+    bundles: [
+      '@deepseek-ai/dsh-base',
+      '@deepseek-ai/dsh-web-app',
+      '@deepseek-ai/dsh-experimental-plugin-market-bundle',
+    ],
+  });
+}
+
 /** GET /mobile/v1/models: catalog, default selection, failures. */
 function handleModelsList(res) {
   sendJson(res, 200, {
@@ -2735,6 +2758,7 @@ async function dispatch(req, res, url, pathname) {
   if (method === 'GET' && pathname === `${API}/host`) return handleHost(res);
   if (method === 'GET' && pathname === `${API}/presets`) return handlePresetsList(res);
   if (method === 'GET' && pathname === `${API}/models`) return handleModelsList(res);
+  if (method === 'GET' && pathname === `${API}/plugins`) return handlePluginsList(res);
   if (method === 'GET' && pathname === `${API}/sessions`) return handleSessionsList(res);
   if (method === 'GET' && pathname === `${API}/sessions/archived`) return handleArchivedSessionsList(res);
   if (method === 'POST' && pathname === `${API}/sessions`) return handleSessionCreate(req, res);

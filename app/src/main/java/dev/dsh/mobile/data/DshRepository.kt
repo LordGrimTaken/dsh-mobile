@@ -182,6 +182,9 @@ interface DshRepository {
      */
     suspend fun presets(): PresetRoster
 
+    /** Installed plugins for the active profile; unsupported hosts return [PluginCatalog.Unsupported]. */
+    suspend fun pluginCatalog(): PluginCatalog
+
     /**
      * Host-wide message search. Hosts without the search service return
      * [HostSearchResult.Unsupported] rather than throwing; invalid queries throw.

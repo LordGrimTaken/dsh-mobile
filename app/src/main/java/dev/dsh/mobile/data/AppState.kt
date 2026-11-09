@@ -426,6 +426,25 @@ class AppState(context: Context) {
         },
     )
 
+    var pluginCatalog: PluginCatalog? by mutableStateOf(null)
+    var pluginCatalogLoading: Boolean by mutableStateOf(false)
+
+    /** Loads the installed-plugin inventory once; unsupported hosts degrade to [PluginCatalog.Unsupported]. */
+    fun loadPluginCatalogIfNeeded() {
+        if (pluginCatalogLoading) return
+        pluginCatalog?.takeIf { it.supported }?.let { return }
+        pluginCatalogLoading = true
+        scope.launch {
+            try {
+                pluginCatalog = repository.pluginCatalog()
+            } catch (error: Exception) {
+                pluginCatalog = PluginCatalog.Unsupported
+            } finally {
+                pluginCatalogLoading = false
+            }
+        }
+    }
+
     fun updateDefaultSessionPreset(presetId: String?) {
         defaultSessionPresetId = presetId?.takeIf { it.isNotBlank() }
         presentationPrefs.edit().putString("default_session_preset", defaultSessionPresetId).apply()

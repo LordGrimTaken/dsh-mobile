@@ -404,6 +404,7 @@ private enum class SettingsSubPage {
     DATA_SOURCE,
     SESSIONS,
     SESSION_DEFAULTS,
+    PLUGINS,
     RECOVERY,
     NOTIFICATIONS,
     VOICE,
@@ -446,6 +447,9 @@ fun SettingsScreen(
         if (subPage == SettingsSubPage.SESSION_DEFAULTS) {
             state.loadModelCatalog()
             state.loadPresetsIfNeeded()
+        }
+        if (subPage == SettingsSubPage.PLUGINS) {
+            state.loadPluginCatalogIfNeeded()
         }
     }
     LaunchedEffect(state.isLive) { state.refreshPushConfig() }
@@ -542,7 +546,7 @@ fun SettingsScreen(
 
         null, SettingsSubPage.DATA_SOURCE, SettingsSubPage.SESSIONS, SettingsSubPage.RECOVERY,
         SettingsSubPage.NOTIFICATIONS, SettingsSubPage.VOICE, SettingsSubPage.ADVANCED,
-        SettingsSubPage.SESSION_DEFAULTS -> Unit
+        SettingsSubPage.SESSION_DEFAULTS, SettingsSubPage.PLUGINS -> Unit
     }
     Column(
         Modifier
@@ -701,6 +705,13 @@ fun SettingsScreen(
                     )
                     Hairline()
                     SettingsIconRow(
+                        "◈",
+                        "Plugins & ecosystem",
+                        "Installed profile packages and bundles",
+                        onClick = { subPage = SettingsSubPage.PLUGINS },
+                    )
+                    Hairline()
+                    SettingsIconRow(
                         "⛨",
                         "Recovery & security",
                         "Recovery code, paired devices, app lock",
@@ -810,6 +821,94 @@ fun SettingsScreen(
                 Text(
                     "Applies to sessions created from this phone. The chat model picker still " +
                         "overrides the model for one session.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.tertiary,
+                )
+            }
+            if (subPage == SettingsSubPage.PLUGINS) {
+                val catalog = state.pluginCatalog
+                SettingsGroup("installed plugins") {
+                    when {
+                        catalog == null && state.pluginCatalogLoading -> Text(
+                            "Reading the profile's installed plugins…",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.tertiary,
+                        )
+                        catalog == null -> Text(
+                            "Couldn't load the installed plugin list from the host.",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.tertiary,
+                        )
+                        !catalog.supported -> Text(
+                            "This host doesn't expose an installed-plugin inventory yet. Update the " +
+                                "mobile host plugin on the desktop, then try again.",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.tertiary,
+                        )
+                        else -> {
+                            Text(
+                                "profile ${catalog.profile.ifBlank { "?" }} · " +
+                                    "${catalog.packages.size} packages · " +
+                                    "${catalog.packages.count { it.local }} local links · " +
+                                    "${catalog.bundles.size} bundles",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.tertiary,
+                            )
+                            catalog.packages.forEach { packageInfo ->
+                                Hairline()
+                                SettingsIconRow(
+                                    glyph = if (packageInfo.local) "◈" else "▣",
+                                    title = packageInfo.name,
+                                    subtitle = if (packageInfo.local) {
+                                        packageInfo.specifier.removePrefix("link:").ifBlank { "local plugin" }
+                                    } else {
+                                        packageInfo.summary
+                                    },
+                                    accessory = {
+                                        if (packageInfo.local) SettingsPill("local")
+                                        else if (packageInfo.version.isNotBlank()) {
+                                            Text(
+                                                packageInfo.summary,
+                                                style = MaterialTheme.typography.labelSmall,
+                                                color = MaterialTheme.colorScheme.tertiary,
+                                            )
+                                        }
+                                    },
+                                )
+                            }
+                            if (catalog.truncated) {
+                                Spacer(Modifier.height(6.dp))
+                                Text(
+                                    "Showing the first ${catalog.packages.size} packages.",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = MaterialTheme.colorScheme.tertiary,
+                                )
+                            }
+                        }
+                    }
+                }
+                SettingsGroup("profile bundles") {
+                    val bundles = catalog?.bundles.orEmpty()
+                    if (bundles.isEmpty()) {
+                        Text(
+                            "No bundle list reported by this profile.",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.tertiary,
+                        )
+                    } else {
+                        bundles.forEachIndexed { index, bundle ->
+                            if (index > 0) Hairline()
+                            SettingsIconRow(
+                                glyph = "▤",
+                                title = bundle,
+                                subtitle = "Profile bundle",
+                            )
+                        }
+                    }
+                }
+                Text(
+                    "Read from the desktop's active DSH profile. Runtime plugin health and " +
+                        "enable/disable actions stay on the desktop.",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.tertiary,
                 )
@@ -3024,6 +3123,7 @@ private fun settingsPageTitle(page: SettingsSubPage): String = when (page) {
     SettingsSubPage.DATA_SOURCE -> "Data source"
     SettingsSubPage.SESSIONS -> "Sessions"
     SettingsSubPage.SESSION_DEFAULTS -> "Session defaults"
+    SettingsSubPage.PLUGINS -> "Plugins & ecosystem"
     SettingsSubPage.RECOVERY -> "Recovery & security"
     SettingsSubPage.NOTIFICATIONS -> "Notifications"
     SettingsSubPage.VOICE -> "Voice"

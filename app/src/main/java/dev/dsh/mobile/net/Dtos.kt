@@ -268,6 +268,24 @@ data class PresetDto(
     val broken: Boolean = false,
 )
 
+/** One installed plugin package from GET /plugins. */
+@Serializable
+data class PluginPackageDto(
+    val name: String = "",
+    val version: String? = null,
+    val specifier: String? = null,
+    val local: Boolean = false,
+)
+
+@Serializable
+data class PluginsResponse(
+    val supported: Boolean = true,
+    val profile: String? = null,
+    val packages: List<PluginPackageDto> = emptyList(),
+    val bundles: List<String> = emptyList(),
+    val truncated: Boolean = false,
+)
+
 @Serializable
 data class PresetsResponse(
     val presets: List<PresetDto> = emptyList(),

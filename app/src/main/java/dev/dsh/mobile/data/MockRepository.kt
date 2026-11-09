@@ -207,6 +207,19 @@ class MockRepository(private val demo: DemoState) : DshRepository {
 
     override suspend fun presets(): PresetRoster = PresetRoster.Fallback
 
+    override suspend fun pluginCatalog(): PluginCatalog = PluginCatalog(
+        supported = true,
+        profile = "demo",
+        packages = listOf(
+            ProfilePlugin("@deepseek-ai/dsh-base", "0.3.0", "^0.3.0"),
+            ProfilePlugin("@deepseek-ai/dsh-web-app", "0.3.0", "^0.3.0"),
+            ProfilePlugin("@local/harness-deck", "", "link:/plugins/harness-deck", local = true),
+            ProfilePlugin("@local/game-lab", "", "link:/plugins/game-lab", local = true),
+            ProfilePlugin("dsh-mobile-host", "0.3.13", "link:/host-plugin", local = true),
+        ),
+        bundles = listOf("dsh-base", "dsh-web-app", "dsh-experimental-plugin-market-bundle"),
+    )
+
     override suspend fun searchMessages(
         query: String,
         roles: Set<String>,
