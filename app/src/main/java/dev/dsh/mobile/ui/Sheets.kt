@@ -85,6 +85,7 @@ import dev.dsh.mobile.data.LOCAL_BACKUP_MAX_FILE_BYTES
 import dev.dsh.mobile.data.PairedDevice
 import dev.dsh.mobile.data.ThemeAccent
 import dev.dsh.mobile.data.activeRoute
+import dev.dsh.mobile.net.PerfBus
 import dev.dsh.mobile.data.accentChipColumns
 import dev.dsh.mobile.data.ensureRoutes
 import dev.dsh.mobile.data.accentSwatchArgb
@@ -2547,14 +2548,13 @@ private fun ConnectionSettingsPage(
                 Spacer(Modifier.height(8.dp))
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     SettingsMetric(
-                        label = "latency",
-                        value = probe?.latencyMs?.let { "$it ms" }
-                            ?: if (state.routeProbingHostId != null) "…" else "—",
+                        label = "first byte",
+                        value = PerfBus.lastFirstByteMillis?.let { "$it ms" } ?: "—",
                         modifier = Modifier.weight(1f),
                     )
                     SettingsMetric(
-                        label = "routes",
-                        value = routes.size.toString(),
+                        label = "reconnects",
+                        value = state.reconnectAttempts.toString(),
                         modifier = Modifier.weight(1f),
                     )
                     SettingsMetric(
@@ -2654,6 +2654,28 @@ private fun ConnectionSettingsPage(
                     modifier = Modifier.weight(1f),
                 )
             }
+        }
+        SettingsGroup("buffering") {
+            SettingsIconRow(
+                glyph = "⇣",
+                title = "gzip payloads",
+                subtitle = "host compresses JSON ≥ 1 KB",
+                accessory = { SettingsPill("on") },
+            )
+            Hairline()
+            SettingsIconRow(
+                glyph = "≋",
+                title = "stale cache",
+                subtitle = "cached sessions render instantly",
+                accessory = { SettingsPill("on") },
+            )
+            Hairline()
+            SettingsIconRow(
+                glyph = "↻",
+                title = "warm connect",
+                subtitle = "stream opens with the app",
+                accessory = { SettingsPill("auto") },
+            )
         }
         SettingsGroup("transport") {
             Text(

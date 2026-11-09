@@ -1,14 +1,14 @@
 {
   "schemaVersion": 1,
-  "versionCode": 154,
-  "versionName": "0.7.0",
-  "tag": "v0.7.0",
-  "publishedAt": "2026-11-09T12:49:41Z",
-  "apkUrl": "https://github.com/LordGrimTaken/dsh-mobile/releases/download/v0.7.0/dsh-android-0.7.0-debug.apk",
-  "apkAssetName": "dsh-android-0.7.0-debug.apk",
-  "apkSizeBytes": 44077276,
-  "sha256": "3e347203d88c67bd7d719bfa0c0103b13e514544d55e9f9203d25a9db943bd80",
+  "versionCode": 155,
+  "versionName": "0.8.0",
+  "tag": "v0.8.0",
+  "publishedAt": "2026-11-09T12:57:36Z",
+  "apkUrl": "https://github.com/LordGrimTaken/dsh-mobile/releases/download/v0.8.0/dsh-android-0.8.0-debug.apk",
+  "apkAssetName": "dsh-android-0.8.0-debug.apk",
+  "apkSizeBytes": 44093664,
+  "sha256": "2c7889109a1822fff479aeaaf6eed6d69be1f85281c403d5477cf798e8b52085",
   "minSdk": 26,
-  "notes": "DSH Android 0.7.0: mockup-faithful settings icon-tile rows (Hosts/Routes/Pair/Tailscale/Theme/Text), Connection+Pair device hero buttons, accent theme gallery, home workspace chips + bottom nav (Home/Inbox/Usage/Settings), and a chat retry banner during stream drops.",
-  "releaseUrl": "https://github.com/LordGrimTaken/dsh-mobile/releases/tag/v0.7.0"
+  "notes": "DSH Android 0.8.0: real first-byte/reconnect metrics (OkHttp event listener), Connection page buffering status rows, and Inbox filter chips (All/Approvals/Questions).",
+  "releaseUrl": "https://github.com/LordGrimTaken/dsh-mobile/releases/tag/v0.8.0"
 }

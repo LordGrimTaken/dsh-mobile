@@ -912,12 +912,14 @@ class DshApiClient(
         private const val DOWNLOAD_CHUNK_BYTES = 64 * 1024
 
         fun defaultHttp(): OkHttpClient = OkHttpClient.Builder()
+            .eventListenerFactory { PerfEventListener() }
             .connectTimeout(10, TimeUnit.SECONDS)
             .readTimeout(30, TimeUnit.SECONDS)
             .writeTimeout(30, TimeUnit.SECONDS)
             .build()
 
         fun defaultStreamHttp(): OkHttpClient = OkHttpClient.Builder()
+            .eventListenerFactory { PerfEventListener() }
             .connectTimeout(10, TimeUnit.SECONDS)
             // The host sends an SSE `ping` heartbeat every ~20 s. A 90 s read timeout is a bounded
             // liveness guarantee: a silently dead route (Tailscale hand-off, network switch) raises

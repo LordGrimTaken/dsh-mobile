@@ -1,6 +1,8 @@
 package dev.dsh.mobile.ui
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -46,6 +48,9 @@ import dev.dsh.mobile.ui.theme.Warning
 fun InboxScreen(state: AppState, onBack: () -> Unit) {
     val approvals = state.inboxApprovals
     val questions = state.inboxQuestions
+    var inboxFilter by remember { mutableStateOf("all") }
+    val visibleApprovals = if (inboxFilter == "questions") emptyList() else approvals
+    val visibleQuestions = if (inboxFilter == "approvals") emptyList() else questions
     val approvalsReadOnly = state.approvalsReadOnly
     val questionsReadOnly = state.questionsReadOnly
     val openSession: (String) -> Unit = { sessionId ->
@@ -87,6 +92,35 @@ fun InboxScreen(state: AppState, onBack: () -> Unit) {
             Spacer(Modifier.width(14.dp))
         }
 
+        Row(
+            Modifier
+                .fillMaxWidth()
+                .horizontalScroll(rememberScrollState())
+                .padding(horizontal = 14.dp),
+            horizontalArrangement = Arrangement.spacedBy(6.dp),
+        ) {
+            listOf(
+                "all" to "All",
+                "approvals" to "Approvals ${approvals.size}",
+                "questions" to "Questions ${questions.size}",
+            ).forEach { (key, label) ->
+                Text(
+                    label,
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(20.dp))
+                        .background(
+                            if (inboxFilter == key) MaterialTheme.colorScheme.primary
+                            else MaterialTheme.colorScheme.surfaceVariant,
+                        )
+                        .clickable { inboxFilter = key }
+                        .padding(horizontal = 12.dp, vertical = 7.dp),
+                    style = MaterialTheme.typography.labelMedium,
+                    color = if (inboxFilter == key) MaterialTheme.colorScheme.onPrimary
+                    else MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+        }
+        Spacer(Modifier.height(8.dp))
         // First-answer-wins / read-only status: brief copy instead of a raw error, dismissible.
         state.syncError?.let { message ->
             Row(
@@ -117,7 +151,7 @@ fun InboxScreen(state: AppState, onBack: () -> Unit) {
             Spacer(Modifier.height(6.dp))
         }
 
-        if (approvals.isEmpty() && questions.isEmpty()) {
+        if (visibleApprovals.isEmpty() && visibleQuestions.isEmpty()) {
             val hostSupportsBridge = state.approvalsSupported || state.questionsSupported
             Column(
                 Modifier
@@ -178,7 +212,7 @@ fun InboxScreen(state: AppState, onBack: () -> Unit) {
             ),
             verticalArrangement = Arrangement.spacedBy(10.dp),
         ) {
-            if (approvals.isNotEmpty()) {
+            if (visibleApprovals.isNotEmpty()) {
                 item(key = "approvals-header") {
                     HadalCaps("Approvals", modifier = Modifier.padding(start = 2.dp, top = 6.dp))
                 }
@@ -192,7 +226,7 @@ fun InboxScreen(state: AppState, onBack: () -> Unit) {
                         )
                     }
                 }
-                items(approvals, key = { "approval:${it.id}" }) { approval ->
+                items(visibleApprovals, key = { "approval:${it.id}" }) { approval ->
                     InboxApprovalCard(
                         approval = approval,
                         sessionTitle = sessionTitle(state, approval.sessionId),
@@ -203,7 +237,7 @@ fun InboxScreen(state: AppState, onBack: () -> Unit) {
                     )
                 }
             }
-            if (questions.isNotEmpty()) {
+            if (visibleQuestions.isNotEmpty()) {
                 item(key = "questions-header") {
                     HadalCaps("Questions", modifier = Modifier.padding(start = 2.dp, top = 8.dp))
                 }
@@ -217,7 +251,7 @@ fun InboxScreen(state: AppState, onBack: () -> Unit) {
                         )
                     }
                 }
-                items(questions, key = { "question:${it.id}" }) { question ->
+                items(visibleQuestions, key = { "question:${it.id}" }) { question ->
                     InboxQuestionCard(
                         question = question,
                         sessionTitle = sessionTitle(state, question.sessionId),

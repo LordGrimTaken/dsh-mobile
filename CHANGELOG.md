@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.8.0 — Real connection metrics, Inbox filters
+
+- **Request timing instrumentation**: OkHttp event listener records first-byte and total time for
+  every API call (`PerfBus`); the Connection page now shows real **FIRST BYTE** and **RECONNECTS**
+  numbers instead of placeholders.
+- **Connection page buffering section**: honest status rows for gzip payloads, stale cache and warm
+  connect (what is actually on, not fake switches).
+- **Inbox restyle**: filter chips (All / Approvals N / Questions N) above the approval and question
+  cards; first-answer-wins behaviour unchanged.
+
 ## 0.7.0 — Mockup-faithful settings rows, home bottom nav, retry banner
 
 Third UI-refresh batch: the remaining design elements from the approved mockups.
