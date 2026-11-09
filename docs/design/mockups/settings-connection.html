@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Connection &amp; sync — proposed</title>
+<link rel="stylesheet" href="mock.css"></head>
+<body><div class="app">
+  <div class="sb"><span>9:41</span><span class="right"><i class="wifi"></i><span class="batt"><i></i></span></span></div>
+  <header><span class="back">←</span><span class="h-title">Connection</span><span class="proposed">PROPOSED</span></header>
+  <div class="content" style="gap:8px">
+    <div class="card" style="padding:12px;display:flex;flex-direction:column;gap:8px">
+      <div style="display:flex;align-items:center;gap:8px">
+        <span class="dot"></span><span style="font:650 14px var(--sans)">Dev host</span>
+        <span class="pill live" style="margin-left:auto">● live</span>
+      </div>
+      <div style="font:500 10.5px var(--mono);color:var(--text2)">active route <b style="color:var(--mint)">LAN mirror</b> · 42 ms stream · 1253 ms probe</div>
+      <div style="display:flex;gap:8px">
+        <div class="metric"><div class="k">first byte</div><div class="v">480 ms</div></div>
+        <div class="metric"><div class="k">render</div><div class="v mint">16 ms</div></div>
+        <div class="metric"><div class="k">reconnects</div><div class="v">0</div></div>
+      </div>
+    </div>
+
+    <div class="cap">Routes <span class="val">auto-failover on</span></div>
+    <div class="row" style="border-color:var(--line-strong)">
+      <span class="ic" style="background:var(--mint-wash)">●</span><span class="meta"><b>LAN mirror</b><span>active · http://10.0.2.2:3548 · probes 1253 ms</span></span>
+      <span class="bars" style="margin-left:auto"><i style="height:5px"></i><i style="height:8px"></i><i style="height:12px"></i></span></div>
+    <div class="row"><span class="ic">◦</span><span class="meta"><b>Dev host</b><span>http://10.0.2.2:3547 · probes 1359 ms</span></span><span class="bars mid" style="margin-left:auto"><i style="height:5px"></i><i style="height:8px"></i></span></div>
+    <div class="row" style="opacity:.85"><span class="ic" style="background:rgba(255,107,107,.08)">✕</span><span class="meta"><b>Old tunnel</b><span>http://10.0.2.2:9999 · unreachable</span></span><span class="pill bad">fail</span></div>
+    <div style="display:flex;gap:8px"><div class="btn ghost">Probe all</div><div class="btn ghost">+ Add route</div></div>
+
+    <div class="cap">Buffering</div>
+    <div class="grid2">
+      <div class="row"><span class="meta"><b>Warm connect</b><span>open stream at launch</span></span><span class="toggle"></span></div>
+      <div class="row"><span class="meta"><b>Prefetch</b><span>next page</span></span><span class="toggle"></span></div>
+      <div class="row"><span class="meta"><b>Stale cache</b><span>instant render</span></span><span class="toggle"></span></div>
+      <div class="row"><span class="meta"><b>gzip</b><span>smaller payloads</span></span><span class="toggle"></span></div>
+    </div>
+
+    <div class="cap">Transport</div>
+    <div class="seg" style="margin-bottom:2px"><span class="on">SSE (current)</span><span>WebSocket (beta)</span><span>Auto</span></div>
+    <div class="seg"><span>Probe on drop</span><span class="on">On resume</span><span>Every 60 s</span></div>
+
+    <div style="display:flex;gap:8px;margin-top:2px">
+      <div class="btn primary" style="flex:1.4">Run speed test</div>
+      <div class="btn ghost" style="flex:1">Diagnostics</div>
+    </div>
+    <div class="note">Speed test pings every route ×3 and reports p50 / p90 latency, so “Tailscale looks good but the app is slow” becomes attributable.</div>
+    <div class="footer">buffer policy · 2 s soft timeout → route probe → retry once</div>
+  </div>
+</div></body></html>

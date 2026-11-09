@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Inbox actions — proposed</title>
+<link rel="stylesheet" href="mock.css"></head>
+<body><div class="app">
+  <div class="sb"><span>9:41</span><span class="right"><i class="wifi"></i><span class="batt"><i></i></span></span></div>
+  <header><span class="back">←</span><span class="h-title">Inbox</span><span class="pill warn" style="margin-left:6px">2 need input</span><span class="proposed">PROPOSED</span></header>
+  <div class="content" style="gap:9px">
+    <div class="chips" style="gap:5px"><span class="chip on" style="padding:5px 9px;font-size:9.5px">All</span><span class="chip" style="padding:5px 9px;font-size:9.5px">Needs input <span class="n">2</span></span><span class="chip" style="padding:5px 9px;font-size:9.5px">Approvals</span><span class="chip" style="padding:5px 9px;font-size:9.5px">Questions</span></div>
+
+    <div class="cap">Needs input</div>
+    <div class="card" style="padding:12px;display:flex;flex-direction:column;gap:8px;border-color:var(--line-strong)">
+      <div style="display:flex;align-items:center;gap:8px">
+        <span class="dot amber"></span><span style="font:650 12.5px var(--sans)">Approval requested</span>
+        <span style="margin-left:auto;font:500 9px var(--mono);color:var(--text3)">now</span>
+      </div>
+      <div style="font:400 11.5px var(--sans);color:var(--text2)">“Release notes draft” wants to run a shell command on <b style="color:var(--text)">Dev host</b>.</div>
+      <div class="cmd">./gradlew :app:assembleRelease &amp;&amp; gh release create v0.4.0</div>
+      <div class="act-row"><div class="act danger">Deny</div><div class="act primary">Approve</div></div>
+    </div>
+
+    <div class="card" style="padding:12px;display:flex;flex-direction:column;gap:8px">
+      <div style="display:flex;align-items:center;gap:8px">
+        <span class="dot amber"></span><span style="font:650 12.5px var(--sans)">Question</span>
+        <span style="margin-left:auto;font:500 9px var(--mono);color:var(--text3)">2m</span>
+      </div>
+      <div style="font:400 11.5px var(--sans);color:var(--text2)">Which branch should the release go out from — <b style="color:var(--text)">main</b> or <b style="color:var(--text)">release/0.4</b>?</div>
+      <div class="answer-chips"><span class="chip on" style="padding:5px 9px">main</span><span class="chip" style="padding:5px 9px">release/0.4</span><span class="chip" style="padding:5px 9px">type…</span></div>
+    </div>
+
+    <div class="cap">Done</div>
+    <div class="row"><span class="ic">✓</span><span class="meta"><b>Turn finished</b><span>“Cut a patch release” · 3 min ago</span></span><span class="chev">›</span></div>
+    <div class="row"><span class="ic">✓</span><span class="meta"><b>Goal completed</b><span>“Economy page copy pass” · 23 min</span></span><span class="chev">›</span></div>
+    <div class="row"><span class="ic">☾</span><span class="meta"><b>Muted during quiet hours</b><span>Schedule prompts still queue locally</span></span><span class="toggle off"></span></div>
+
+    <div class="note">Swipe a card to mute the session. Approve/deny is first-answer-wins with the desktop; actions here mirror the same API so the desktop and phone can’t disagree.</div>
+    <div class="footer">grouped notifications · per-session mute · inline answers</div>
+  </div>
+</div></body></html>

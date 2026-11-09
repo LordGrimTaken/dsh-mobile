@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Chat buffering — proposed</title>
+<link rel="stylesheet" href="mock.css"></head>
+<body><div class="app">
+  <div class="sb"><span>9:41</span><span class="right"><i class="wifi"></i><span class="batt"><i></i></span></span></div>
+  <header><span class="back">←</span><span class="h-title" style="font-size:12.5px;letter-spacing:.04em;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis">Release notes draft</span><span class="pill live" style="margin-left:auto">● 42 ms</span><span class="proposed" style="margin-left:6px">PROPOSED</span></header>
+  <div class="content" style="gap:9px;padding-bottom:6px">
+    <div class="msgs">
+      <div class="msg user">Add the v0.4.0 notes and tag it after the tests pass.</div>
+      <div class="msg bot">Running the release checks now. Changelog drafted, version bumped to <b style="color:var(--mint);font-family:var(--mono);font-size:11px">0.4.0</b>, three test suites queued<span class="cursor"></span></div>
+
+      <div class="tool"><span class="spin"></span><span>bash · ./gradlew test</span><span style="margin-left:auto">12s</span></div>
+
+      <div class="buffering">⟳ host busy · retrying via <b style="margin-left:3px;color:var(--mint-bright)">LAN mirror</b><span style="margin-left:auto">1.2 s</span></div>
+
+      <div style="border:1px solid rgba(255,107,107,.32);background:rgba(255,107,107,.05);border-radius:12px;padding:9px 11px;display:flex;flex-direction:column;gap:7px">
+        <div style="font:600 10.5px var(--mono);color:var(--red)">stream stalled · 2 s soft timeout</div>
+        <div style="font:400 10.5px/1.45 var(--sans);color:var(--text2)">Partial reply kept — waiting for the host to resume from event #1842.</div>
+        <div class="act-row"><div class="act ghost">Retry now</div><div class="act primary">Switch route</div></div>
+      </div>
+
+      <div class="msg bot" style="font-size:12px">Checks passed · 128/128. Tagging release and opening the PR…</div>
+    </div>
+
+    <div class="streamstat"><span class="dot" style="width:5px;height:5px"></span> streaming · first token 0.3 s · 12 tok/s · route <b style="color:var(--text2)">LAN mirror</b></div>
+
+    <div class="composer">
+      <div style="display:flex;gap:6px;align-items:center">
+        <span class="pill" style="font-size:8.5px">≡ release-notes.md</span>
+        <span class="pill" style="font-size:8.5px">model 0.4 flash</span>
+      </div>
+      <div class="ask">❯ Ask DSH…</div>
+      <div class="tools">◉ ⌾ ⌁ <span class="send">➤</span></div>
+    </div>
+
+    <div class="status-strip"><span>❯ dsh</span><span>·</span><span>Live</span><span>·</span><span>2 msgs</span><span>·</span><span>CTX 4k</span><b style="margin-left:auto">42 ms · LAN</b></div>
+  </div>
+</div></body></html>
