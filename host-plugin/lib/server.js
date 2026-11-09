@@ -7,6 +7,7 @@
  */
 
 import http from 'node:http';
+import zlib from 'node:zlib';
 
 import { ApiError, errorResponse } from './errors.js';
 import { formatLiveFrame, formatPingFrame } from './events.js';
@@ -75,14 +76,25 @@ export function createMobileServer({ config, router, bus, adapter, pairing = nul
   /** @param {http.ServerResponse} res @param {{ status: number, body?: unknown, headers?: Record<string, string> }} result */
   function sendJson(res, result) {
     if (res.writableEnded || res.destroyed) return;
-    const body = JSON.stringify(result.body ?? {});
-    res.writeHead(result.status, {
+    let body = Buffer.from(JSON.stringify(result.body ?? {}), 'utf8');
+    const headers = {
       'Content-Type': 'application/json; charset=utf-8',
-      'Content-Length': Buffer.byteLength(body),
       'Cache-Control': 'no-store',
       'X-Content-Type-Options': 'nosniff',
       ...(result.headers ?? {}),
-    });
+    };
+    // Snapshot/transcript payloads dominate slow-link time; gzip them when the client advertises
+    // support. Small responses stay uncompressed so headers don't outweigh the body.
+    const acceptEncoding = String(res.req?.headers?.['accept-encoding'] ?? '');
+    const alreadyEncoded = headers['Content-Encoding'] || headers['content-encoding'];
+    if (!alreadyEncoded && body.length >= 1024 && /\bgzip\b/.test(acceptEncoding)) {
+      const compressed = zlib.gzipSync(body);
+      body = compressed;
+      headers['Content-Encoding'] = 'gzip';
+      headers.Vary = 'Accept-Encoding';
+    }
+    headers['Content-Length'] = body.length;
+    res.writeHead(result.status, headers);
     res.end(body);
   }
 

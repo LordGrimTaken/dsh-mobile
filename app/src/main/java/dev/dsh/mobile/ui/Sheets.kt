@@ -390,6 +390,8 @@ private fun PresetChip(
 
 // region settings
 
+private enum class SettingsSubPage { APPEARANCE, CONNECTION }
+
 @Composable
 fun SettingsScreen(
     state: AppState,
@@ -417,6 +419,7 @@ fun SettingsScreen(
     var pushClearToken by remember { mutableStateOf(false) }
     var settingsQuery by remember { mutableStateOf("") }
     var advancedExpanded by remember { mutableStateOf(false) }
+    var subPage by remember { mutableStateOf<SettingsSubPage?>(null) }
 
     // Load the host push config once per live switch, then mirror it into the editable fields.
     LaunchedEffect(state.isLive) { state.refreshPushConfig() }
@@ -490,6 +493,29 @@ fun SettingsScreen(
             }
         }
     }
+    when (subPage) {
+        SettingsSubPage.APPEARANCE -> {
+            AppearanceSettingsPage(
+                state = state,
+                darkTheme = darkTheme,
+                onToggleTheme = onToggleTheme,
+                onBack = { subPage = null },
+            )
+            return
+        }
+
+        SettingsSubPage.CONNECTION -> {
+            ConnectionSettingsPage(
+                state = state,
+                onBack = { subPage = null },
+                onOpenDiagnostics = onOpenConnectionDiagnostics,
+                onOpenHosts = onOpenHosts,
+            )
+            return
+        }
+
+        null -> Unit
+    }
     Column(
         Modifier
             .fillMaxSize()
@@ -509,7 +535,7 @@ fun SettingsScreen(
             SettingsHeroCard(
                 state = state,
                 onOpenHosts = onOpenHosts,
-                onOpenConnection = onOpenConnectionDiagnostics,
+                onOpenConnection = { subPage = SettingsSubPage.CONNECTION },
             )
             SettingsSearchField(
                 query = settingsQuery,
@@ -568,45 +594,19 @@ fun SettingsScreen(
                 }
             }
             SettingsGroup("appearance", visible = settingsGroupVisible(settingsQuery, "appearance")) {
-                ToggleRow(
-                    title = "Dark theme",
-                    subtitle = "Match the desktop app's dark UI",
-                    checked = darkTheme,
-                    onCheckedChange = onToggleTheme,
-                )
-                if (darkTheme) {
-                    Hairline()
-                    ToggleRow(
-                        title = "AMOLED black",
-                        subtitle = "Pure black background for OLED screens",
-                        checked = state.amoledDark,
-                        onCheckedChange = state::updateAmoledDark,
-                    )
-                }
-                Hairline()
-                AccentColorChips(
-                    selected = state.themeAccent,
-                    darkTheme = darkTheme,
-                    onSelected = state::updateThemeAccent,
+                SettingsActionRow(
+                    title = "Theme",
+                    subtitle = "${state.themeAccent.label} · ${if (darkTheme) "dark" else "light"}" +
+                        if (darkTheme && state.amoledDark) " · AMOLED" else "",
+                    onClick = { subPage = SettingsSubPage.APPEARANCE },
                 )
                 Hairline()
-                FontScaleChips(
-                    label = "Chat text",
-                    selectedScale = state.chatFontScale,
-                    onScaleSelected = state::updateChatFontScale,
-                )
-                Hairline()
-                FontScaleChips(
-                    label = "Interface text",
-                    selectedScale = state.appFontScale,
-                    onScaleSelected = state::updateAppFontScale,
-                )
-                Hairline()
-                ToggleRow(
-                    title = "Wrap code blocks",
-                    subtitle = "Soft-wrap long code instead of scrolling sideways",
-                    checked = state.wrapCodeBlocks,
-                    onCheckedChange = state::updateWrapCodeBlocks,
+                SettingsActionRow(
+                    title = "Text, density & motion",
+                    subtitle = "Chat ${fontScaleLabel(state.chatFontScale)} · interface " +
+                        "${fontScaleLabel(state.appFontScale)}" +
+                        if (state.wrapCodeBlocks) " · code wraps" else "",
+                    onClick = { subPage = SettingsSubPage.APPEARANCE },
                 )
             }
             SettingsGroup("sessions", visible = settingsGroupVisible(settingsQuery, "sessions")) {
@@ -2103,6 +2103,349 @@ private fun settingsGroupVisible(query: String, title: String): Boolean {
     if (words.isEmpty()) return true
     val haystack = (title + " " + SETTINGS_GROUP_KEYWORDS[title].orEmpty()).lowercase()
     return words.all { haystack.contains(it) }
+}
+
+/** Settings overview row that opens a dedicated sub-page. */
+@Composable
+private fun SettingsActionRow(
+    title: String,
+    subtitle: String,
+    onClick: () -> Unit,
+) {
+    Row(
+        Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(10.dp))
+            .clickable(onClick = onClick)
+            .padding(vertical = 9.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+            Text(
+                title,
+                style = MaterialTheme.typography.titleSmall,
+                color = MaterialTheme.colorScheme.onSurface,
+            )
+            Text(
+                subtitle,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.tertiary,
+            )
+        }
+        Text(
+            "›",
+            style = MaterialTheme.typography.titleMedium,
+            color = MaterialTheme.colorScheme.tertiary,
+        )
+    }
+}
+
+private fun fontScaleLabel(scale: Float): String =
+    FONT_SCALE_CHOICES.firstOrNull { it.scale == scale }?.label ?: "Default"
+
+/** Shared chrome for the Settings sub-pages (Appearance, Connection). */
+@Composable
+private fun SettingsSubPageScaffold(
+    title: String,
+    onBack: () -> Unit,
+    content: @Composable ColumnScope.() -> Unit,
+) {
+    Column(
+        Modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background)
+            .statusBarsPadding(),
+    ) {
+        Row(
+            Modifier
+                .fillMaxWidth()
+                .padding(start = 4.dp, end = 14.dp, top = 6.dp, bottom = 6.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            IconButton(onClick = onBack) {
+                Icon(
+                    Icons.Filled.ArrowBack,
+                    contentDescription = "Back",
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+            Text(
+                "❯",
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.primary,
+            )
+            Spacer(Modifier.width(6.dp))
+            Text(
+                title,
+                modifier = Modifier.weight(1f),
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onSurface,
+            )
+        }
+        Box(
+            Modifier
+                .fillMaxWidth()
+                .height(1.dp)
+                .background(MaterialTheme.colorScheme.outlineVariant),
+        )
+        Column(
+            Modifier
+                .weight(1f)
+                .verticalScroll(rememberScrollState())
+                .navigationBarsPadding()
+                .padding(horizontal = 16.dp)
+                .padding(top = 12.dp, bottom = 24.dp),
+            verticalArrangement = Arrangement.spacedBy(14.dp),
+        ) {
+            content()
+        }
+    }
+}
+
+/** Dedicated appearance editor: theme gallery, preview, text scale, motion-adjacent toggles. */
+@Composable
+private fun AppearanceSettingsPage(
+    state: AppState,
+    darkTheme: Boolean,
+    onToggleTheme: (Boolean) -> Unit,
+    onBack: () -> Unit,
+) {
+    SettingsSubPageScaffold(title = "APPEARANCE", onBack = onBack) {
+        SettingsGroup("theme") {
+            Text(
+                "Preview",
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.tertiary,
+            )
+            Spacer(Modifier.height(4.dp))
+            Row(
+                Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
+                    .padding(10.dp),
+                horizontalArrangement = Arrangement.End,
+            ) {
+                Text(
+                    "Tests are green — tagging the release now.",
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(10.dp))
+                        .background(MaterialTheme.colorScheme.primary)
+                        .padding(horizontal = 11.dp, vertical = 7.dp),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onPrimary,
+                )
+            }
+            Hairline()
+            AccentColorChips(
+                selected = state.themeAccent,
+                darkTheme = darkTheme,
+                onSelected = state::updateThemeAccent,
+            )
+            Hairline()
+            ToggleRow(
+                title = "Dark theme",
+                subtitle = "Match the desktop app's dark UI",
+                checked = darkTheme,
+                onCheckedChange = onToggleTheme,
+            )
+            if (darkTheme) {
+                Hairline()
+                ToggleRow(
+                    title = "AMOLED black",
+                    subtitle = "Pure black background for OLED screens",
+                    checked = state.amoledDark,
+                    onCheckedChange = state::updateAmoledDark,
+                )
+            }
+        }
+        SettingsGroup("text & density") {
+            FontScaleChips(
+                label = "Chat text",
+                selectedScale = state.chatFontScale,
+                onScaleSelected = state::updateChatFontScale,
+            )
+            Hairline()
+            FontScaleChips(
+                label = "Interface text",
+                selectedScale = state.appFontScale,
+                onScaleSelected = state::updateAppFontScale,
+            )
+            Hairline()
+            ToggleRow(
+                title = "Wrap code blocks",
+                subtitle = "Soft-wrap long code instead of scrolling sideways",
+                checked = state.wrapCodeBlocks,
+                onCheckedChange = state::updateWrapCodeBlocks,
+            )
+        }
+    }
+}
+
+/** Dedicated connection page: live status, route health, failover actions and transport info. */
+@Composable
+private fun ConnectionSettingsPage(
+    state: AppState,
+    onBack: () -> Unit,
+    onOpenDiagnostics: () -> Unit,
+    onOpenHosts: () -> Unit,
+) {
+    val profile = state.activeProfile
+    val normalized = profile?.ensureRoutes()
+    val routes = normalized?.routes.orEmpty()
+    val activeRoute = normalized?.activeRoute
+    val probe = activeRoute?.let { state.routeProbes[it.id] }
+    SettingsSubPageScaffold(title = "CONNECTION", onBack = onBack) {
+        HadalCard {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                ConnectionPill(state.connection)
+                Spacer(Modifier.width(8.dp))
+                Text(
+                    profile?.label?.takeIf { it.isNotBlank() } ?: "No host paired",
+                    modifier = Modifier.weight(1f),
+                    style = MaterialTheme.typography.titleSmall,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+                state.activeHostVersion?.let { version ->
+                    Text(
+                        "host v$version",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.tertiary,
+                    )
+                }
+            }
+            Spacer(Modifier.height(6.dp))
+            Text(
+                activeRoute?.let { "active ${it.label} · ${it.baseUrl}" }
+                    ?: "Pair a host to manage routes.",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.tertiary,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+            )
+            if (profile != null) {
+                Spacer(Modifier.height(8.dp))
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    SettingsMetric(
+                        label = "latency",
+                        value = probe?.latencyMs?.let { "$it ms" }
+                            ?: if (state.routeProbingHostId != null) "…" else "—",
+                        modifier = Modifier.weight(1f),
+                    )
+                    SettingsMetric(
+                        label = "routes",
+                        value = routes.size.toString(),
+                        modifier = Modifier.weight(1f),
+                    )
+                    SettingsMetric(
+                        label = "synced",
+                        value = settingsAgo(state.lastRefreshedAt),
+                        modifier = Modifier.weight(1f),
+                    )
+                }
+                Spacer(Modifier.height(10.dp))
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    HadalGhostButton(
+                        text = "Probe all",
+                        onClick = { state.probeRoutes(profile.id, autoSelect = true) },
+                        modifier = Modifier.weight(1f),
+                    )
+                    HadalPrimaryButton(
+                        text = "Use fastest",
+                        onClick = { state.useFastestRoute(profile.id) },
+                        modifier = Modifier.weight(1f),
+                    )
+                }
+            }
+        }
+        SettingsGroup("routes") {
+            if (profile == null || routes.isEmpty()) {
+                Text(
+                    "No routes yet. Pair a host or add an endpoint from Hosts.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.tertiary,
+                )
+            }
+            routes.forEach { route ->
+                val routeProbe = state.routeProbes[route.id]
+                Row(
+                    Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(10.dp))
+                        .clickable { if (profile != null) state.selectRoute(profile.id, route.id) }
+                        .padding(vertical = 9.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Box(
+                        Modifier
+                            .size(8.dp)
+                            .clip(CircleShape)
+                            .background(
+                                if (route.id == activeRoute?.id) MaterialTheme.colorScheme.primary
+                                else MaterialTheme.colorScheme.outlineVariant,
+                            ),
+                    )
+                    Spacer(Modifier.width(10.dp))
+                    Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                        Text(
+                            if (route.id == activeRoute?.id) "${route.label} · active" else route.label,
+                            style = MaterialTheme.typography.titleSmall,
+                            color = MaterialTheme.colorScheme.onSurface,
+                        )
+                        Text(
+                            route.baseUrl,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.tertiary,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                        )
+                        routeProbe?.error?.let { error ->
+                            Text(
+                                error,
+                                style = MaterialTheme.typography.bodySmall,
+                                color = Danger,
+                                maxLines = 2,
+                                overflow = TextOverflow.Ellipsis,
+                            )
+                        }
+                    }
+                    Text(
+                        routeProbe?.summary() ?: "not probed",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = if (routeProbe?.reachable == true) {
+                            MaterialTheme.colorScheme.primary
+                        } else {
+                            MaterialTheme.colorScheme.tertiary
+                        },
+                        maxLines = 1,
+                    )
+                }
+                Hairline()
+            }
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                HadalGhostButton(
+                    text = "Manage hosts",
+                    onClick = onOpenHosts,
+                    modifier = Modifier.weight(1f),
+                )
+                HadalGhostButton(
+                    text = "Diagnostics",
+                    onClick = onOpenDiagnostics,
+                    modifier = Modifier.weight(1f),
+                )
+            }
+        }
+        SettingsGroup("transport") {
+            Text(
+                "SSE over HTTP · host API v1. When the stream drops, the app probes every route " +
+                    "and reconnects through the fastest reachable one (60 s storm guard).",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.tertiary,
+            )
+        }
+    }
 }
 
 @Composable

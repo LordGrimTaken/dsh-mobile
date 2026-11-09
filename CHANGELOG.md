@@ -1,5 +1,23 @@
 # Changelog
 
+## 0.6.0 — Appearance & connection pages, chat status strip
+
+Second UI-refresh batch, filling in the mockup screens on top of the 0.5.0 shell.
+
+- **Appearance page** (Settings → Appearance): live preview card, accent theme gallery, dark/AMOLED
+  toggles, chat + interface text-size chips and code wrapping — the same controls, now a dedicated
+  page instead of a long inline block.
+- **Connection page** (Settings hero → Connection): live connection hero with host/version, active
+  route, latency/routes/sync metrics, Probe all / Use fastest, per-route health list with click to
+  switch route, and an SSE transport note; links to the full diagnostics screen.
+- **Settings sub-page navigation**: the settings overview now opens dedicated surfaces for
+  Appearance and Connection, with back navigation and no state loss.
+- **Chat connection strip**: a compact always-visible line above the composer shows connection
+  state, active route, probe latency and streaming/idle state.
+- **Host plugin buffering win**: the host now gzips JSON responses ≥1 KB when the client advertises
+  `Accept-Encoding: gzip` (transcripts/snapshots are the big payloads on slow links). Existing host
+  test suite still passes (350/350).
+
 ## 0.5.0 — Settings & home refresh
 
 - **Settings overhaul (first UI-refresh batch).** Live connection hero at the top (host, active

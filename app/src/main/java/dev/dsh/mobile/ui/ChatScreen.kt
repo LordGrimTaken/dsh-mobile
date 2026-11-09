@@ -155,6 +155,8 @@ import dev.dsh.mobile.data.Approval
 import dev.dsh.mobile.data.AssistantMessage
 import dev.dsh.mobile.data.AttachmentLimits
 import dev.dsh.mobile.data.ConnectionStatus
+import dev.dsh.mobile.data.activeRoute
+import dev.dsh.mobile.data.ensureRoutes
 import dev.dsh.mobile.data.MAX_QUESTION_ANSWER_CHARS
 import dev.dsh.mobile.data.MESSAGE_JUMP_HIGHLIGHT_MS
 import dev.dsh.mobile.data.MESSAGE_JUMP_MAX_OLDER_LOADS
@@ -4008,6 +4010,9 @@ private fun ChatInputBar(
         state.syncError?.let { message ->
             ComposerErrorRow(message = message, onDismiss = state::clearSyncError)
         }
+        if (state.isLive) {
+            ChatConnectionStrip(state = state, working = working)
+        }
         if (attachments.isNotEmpty()) {
             Row(
                 Modifier
@@ -4286,6 +4291,39 @@ private fun SchedulePromptDialog(
             )
         },
     )
+}
+
+/** Always-visible connection line above the composer: active route, latency, stream state. */
+@Composable
+private fun ChatConnectionStrip(state: AppState, working: Boolean) {
+    val route = state.activeProfile?.ensureRoutes()?.activeRoute
+    val latency = route?.let { state.routeProbes[it.id]?.latencyMs }
+    Row(
+        Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 3.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(6.dp),
+    ) {
+        ConnectionPill(state.connection)
+        Text(
+            buildString {
+                append(route?.label ?: "no route")
+                latency?.let { append(" · ").append(it).append(" ms") }
+                append(if (working) " · streaming" else " · idle")
+            },
+            modifier = Modifier.weight(1f),
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.tertiary,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+        )
+        Text(
+            "SSE",
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.tertiary,
+        )
+    }
 }
 
 @Composable
