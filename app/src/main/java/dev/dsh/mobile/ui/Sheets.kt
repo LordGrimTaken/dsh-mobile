@@ -2764,7 +2764,10 @@ private fun ConnectionSettingsPage(
                             )
                         }
                     }
-                    Column(horizontalAlignment = Alignment.End, verticalArrangement = Arrangement.spacedBy(3.dp)) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    ) {
                         RouteSignalBars(
                             reachable = routeProbe?.reachable == true,
                             latencyMs = state.lastSpeedTest[route.id]?.p50Ms ?: routeProbe?.latencyMs,

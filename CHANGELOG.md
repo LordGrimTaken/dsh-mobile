@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.11.1 — Connection route row layout fix
+
+- Fixed the Connection page route rows ballooning in height when a route was unreachable
+  (signal bars + summary now share one compact row, error text stays on its own line).
+
 ## 0.11.0 — Inbox Done history, theme transfer, accessibility pass
 
 - **Inbox "Done" history**: resolving an approval (approve/deny) or answering a question now records
