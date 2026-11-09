@@ -78,6 +78,12 @@ pairing code is needed.
   **Reconnect**; automatic failover is rate-limited to once per minute.
 - **Connection diagnostics → Routes** shows the last probe result for every route.
 
+![Host routes dialog: Dev host reachable at 1359 ms, active LAN mirror at 1253 ms, Old tunnel unreachable](screenshots/routes-dialog.png)
+
+![Hosts card showing the active route and the route count](screenshots/routes-hosts.png)
+
+![Connection diagnostics ROUTES section with per-route probe results](screenshots/routes-diagnostics.png)
+
 Limits worth knowing: a route is only as good as its answer to `/health` (reachable but wrong host
 still ranks), route order breaks latency ties (reorders are not editable yet), and the client
 cannot bind a request to a specific network interface — Android decides which network carries

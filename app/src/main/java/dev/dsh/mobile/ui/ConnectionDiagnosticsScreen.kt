@@ -135,14 +135,19 @@ fun ConnectionDiagnosticsScreen(state: AppState, onBack: () -> Unit) {
                     Spacer(Modifier.padding(vertical = 2.dp))
                     normalized.routes.forEach { route ->
                         val probe = state.routeProbes[route.id]
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Column(Modifier.weight(1f)) {
+                        // Full-width column: a long error string must not squeeze the route name.
+                        Column(Modifier.fillMaxWidth()) {
+                            Row(
+                                Modifier.fillMaxWidth(),
+                                verticalAlignment = Alignment.CenterVertically,
+                            ) {
                                 Text(
                                     if (route.id == normalized.activeRouteId) {
                                         "● ${route.label} (active)"
                                     } else {
                                         "○ ${route.label}"
                                     },
+                                    modifier = Modifier.weight(1f),
                                     style = MaterialTheme.typography.bodySmall,
                                     color = if (route.id == normalized.activeRouteId) {
                                         MaterialTheme.colorScheme.primary
@@ -151,22 +156,33 @@ fun ConnectionDiagnosticsScreen(state: AppState, onBack: () -> Unit) {
                                     },
                                 )
                                 Text(
-                                    route.baseUrl,
+                                    when {
+                                        probe == null -> if (state.routeProbing) "probing…" else "not probed"
+                                        probe.reachable -> "reachable · ${probe.latencyMs ?: "?"}ms"
+                                        else -> "unreachable"
+                                    },
                                     style = MaterialTheme.typography.labelSmall,
-                                    color = MaterialTheme.colorScheme.tertiary,
-                                    maxLines = 1,
+                                    color = when {
+                                        probe == null -> MaterialTheme.colorScheme.tertiary
+                                        probe.reachable -> MaterialTheme.colorScheme.primary
+                                        else -> MaterialTheme.colorScheme.error
+                                    },
                                 )
                             }
                             Text(
-                                probe?.summary() ?: if (state.routeProbing) "probing…" else "not probed",
+                                route.baseUrl,
                                 style = MaterialTheme.typography.labelSmall,
-                                color = when {
-                                    probe == null -> MaterialTheme.colorScheme.tertiary
-                                    probe.reachable -> MaterialTheme.colorScheme.primary
-                                    else -> MaterialTheme.colorScheme.error
-                                },
-                                maxLines = 2,
+                                color = MaterialTheme.colorScheme.tertiary,
+                                maxLines = 1,
                             )
+                            if (probe != null && !probe.reachable) {
+                                Text(
+                                    probe.error ?: "unreachable",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = MaterialTheme.colorScheme.error,
+                                    maxLines = 2,
+                                )
+                            }
                         }
                     }
                     Spacer(Modifier.padding(vertical = 4.dp))
