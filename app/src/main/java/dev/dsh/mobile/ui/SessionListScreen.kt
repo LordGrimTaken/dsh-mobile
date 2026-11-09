@@ -86,6 +86,8 @@ import dev.dsh.mobile.data.AppState
 import dev.dsh.mobile.data.APPROVAL_POLICY_ASK
 import dev.dsh.mobile.data.APPROVAL_POLICY_NEVER
 import dev.dsh.mobile.data.ConnectionStatus
+import dev.dsh.mobile.data.activeRoute
+import dev.dsh.mobile.data.ensureRoutes
 import dev.dsh.mobile.data.delegationBadgeLabel
 import dev.dsh.mobile.data.delegationContentDescription
 import dev.dsh.mobile.data.GoalPhaseBadge
@@ -336,17 +338,11 @@ fun SessionListScreen(
                 focusRequester = searchFocusRequester,
             )
             Spacer(Modifier.height(8.dp))
-            HomeFilterBar(
-                workspaceName = state.workspaces
-                    .firstOrNull { it.id == state.selectedWorkspace }
-                    ?.name,
+            HomeQuickFilters(
                 statusFilter = state.statusFilter,
-                sort = state.sessionSort,
-                activeCount = homeActiveFilterCount(
-                    workspaceId = state.selectedWorkspace,
-                    statusFilter = state.statusFilter,
-                    sort = state.sessionSort,
-                ),
+                workingCount = state.sessions.count { it.status == SessionStatus.Working },
+                needsInputCount = state.sessions.count { it.unread },
+                onSelect = { state.updateStatusFilter(it) },
                 onOpenFilters = { showHomeFilters = true },
             )
             Spacer(Modifier.height(8.dp))
@@ -569,6 +565,28 @@ private fun CompactHomeHeader(
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
         )
+        val activeRoute = state.activeProfile?.ensureRoutes()?.activeRoute
+        val routeLatency = activeRoute?.let { state.routeProbes[it.id]?.latencyMs }
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(6.dp),
+        ) {
+            ConnectionPill(state.connection)
+            Text(
+                buildString {
+                    append(activeRoute?.label ?: "no route")
+                    routeLatency?.let { append(" · ").append(it).append(" ms") }
+                    state.lastRefreshedAt?.let {
+                        val seconds = ((System.currentTimeMillis() - it) / 1000).coerceAtLeast(0)
+                        append(" · synced ").append(if (seconds < 60) "${seconds}s" else "${seconds / 60}m")
+                    }
+                },
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.tertiary,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+        }
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text(
                 if (sessionCount == 1) "1 session" else "$sessionCount sessions",
@@ -622,6 +640,55 @@ private fun CompactHomeHeader(
             }
         }
     }
+}
+
+/** One-tap status filters on the home screen, with the full filter sheet one chip away. */
+@Composable
+private fun HomeQuickFilters(
+    statusFilter: String?,
+    workingCount: Int,
+    needsInputCount: Int,
+    onSelect: (String?) -> Unit,
+    onOpenFilters: () -> Unit,
+) {
+    Row(
+        Modifier
+            .fillMaxWidth()
+            .horizontalScroll(rememberScrollState())
+            .padding(horizontal = 16.dp),
+        horizontalArrangement = Arrangement.spacedBy(6.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        HomeQuickChip(text = "All", selected = statusFilter == null) { onSelect(null) }
+        HomeQuickChip(
+            text = if (workingCount > 0) "Working $workingCount" else "Working",
+            selected = statusFilter == "working",
+        ) { onSelect("working") }
+        HomeQuickChip(
+            text = if (needsInputCount > 0) "Needs input $needsInputCount" else "Needs input",
+            selected = statusFilter == "unread",
+        ) { onSelect("unread") }
+        HomeQuickChip(text = "Idle", selected = statusFilter == "idle") { onSelect("idle") }
+        HomeQuickChip(text = "Filters", selected = false, onClick = onOpenFilters)
+    }
+}
+
+/** Small pill used by the home quick filters. */
+@Composable
+private fun HomeQuickChip(text: String, selected: Boolean, onClick: () -> Unit) {
+    Text(
+        text,
+        modifier = Modifier
+            .clip(RoundedCornerShape(20.dp))
+            .background(
+                if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant,
+            )
+            .clickable(onClick = onClick)
+            .padding(horizontal = 12.dp, vertical = 7.dp),
+        style = MaterialTheme.typography.labelMedium,
+        color = if (selected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
+        maxLines = 1,
+    )
 }
 
 /** One-line active-filter summary plus the single Filters action that opens the sheet. */

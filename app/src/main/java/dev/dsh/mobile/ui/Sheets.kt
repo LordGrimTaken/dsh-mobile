@@ -38,6 +38,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
@@ -82,7 +83,9 @@ import dev.dsh.mobile.data.LocalBackupDecodeResult
 import dev.dsh.mobile.data.LOCAL_BACKUP_MAX_FILE_BYTES
 import dev.dsh.mobile.data.PairedDevice
 import dev.dsh.mobile.data.ThemeAccent
+import dev.dsh.mobile.data.activeRoute
 import dev.dsh.mobile.data.accentChipColumns
+import dev.dsh.mobile.data.ensureRoutes
 import dev.dsh.mobile.data.accentSwatchArgb
 import dev.dsh.mobile.data.themeAccentChipContentDescription
 import dev.dsh.mobile.data.pairedDeviceIsCurrent
@@ -412,6 +415,8 @@ fun SettingsScreen(
     var pushTopic by remember { mutableStateOf("") }
     var pushToken by remember { mutableStateOf("") }
     var pushClearToken by remember { mutableStateOf(false) }
+    var settingsQuery by remember { mutableStateOf("") }
+    var advancedExpanded by remember { mutableStateOf(false) }
 
     // Load the host push config once per live switch, then mirror it into the editable fields.
     LaunchedEffect(state.isLive) { state.refreshPushConfig() }
@@ -501,14 +506,27 @@ fun SettingsScreen(
                 .padding(top = 12.dp, bottom = 24.dp),
             verticalArrangement = Arrangement.spacedBy(14.dp),
         ) {
-            SettingsGroup("hosts") {
+            SettingsHeroCard(
+                state = state,
+                onOpenHosts = onOpenHosts,
+                onOpenConnection = onOpenConnectionDiagnostics,
+            )
+            SettingsSearchField(
+                query = settingsQuery,
+                onQueryChange = {
+                    settingsQuery = it
+                    if (it.isNotBlank()) advancedExpanded = true
+                },
+            )
+            SettingsGroup("host & connection", visible = settingsGroupVisible(settingsQuery, "host & connection")) {
                 HostCard(
                     state = state,
                     onOpenHosts = onOpenHosts,
                     onOpenPairing = onOpenPairing,
+                    compact = true,
                 )
             }
-            SettingsGroup("usage") {
+            SettingsGroup("usage", visible = settingsGroupVisible(settingsQuery, "usage")) {
                 Column(
                     Modifier
                         .fillMaxWidth()
@@ -527,7 +545,7 @@ fun SettingsScreen(
                     )
                 }
             }
-            SettingsGroup("data source") {
+            SettingsGroup("data source", visible = settingsGroupVisible(settingsQuery, "data source")) {
                 if (state.hostCount == 0) {
                     Text(
                         "Demo data is always on while no host is paired. Pair a desktop or cloud " +
@@ -549,7 +567,7 @@ fun SettingsScreen(
                     )
                 }
             }
-            SettingsGroup("appearance") {
+            SettingsGroup("appearance", visible = settingsGroupVisible(settingsQuery, "appearance")) {
                 ToggleRow(
                     title = "Dark theme",
                     subtitle = "Match the desktop app's dark UI",
@@ -591,7 +609,7 @@ fun SettingsScreen(
                     onCheckedChange = state::updateWrapCodeBlocks,
                 )
             }
-            SettingsGroup("sessions") {
+            SettingsGroup("sessions", visible = settingsGroupVisible(settingsQuery, "sessions")) {
                 Column(
                     Modifier
                         .fillMaxWidth()
@@ -610,7 +628,7 @@ fun SettingsScreen(
                     )
                 }
             }
-            SettingsGroup("security") {
+            SettingsGroup("recovery & security", visible = settingsGroupVisible(settingsQuery, "recovery & security")) {
                 ToggleRow(
                     title = "App lock",
                     subtitle = "Require biometrics when opening DSH Mobile",
@@ -843,7 +861,7 @@ fun SettingsScreen(
                     }
                 }
             }
-            SettingsGroup("notifications") {
+            SettingsGroup("notifications", visible = settingsGroupVisible(settingsQuery, "notifications")) {
                 ToggleRow(
                     title = "Agent needs input",
                     subtitle = "Notify when an approval or question is waiting",
@@ -1173,7 +1191,7 @@ fun SettingsScreen(
                     }
                 }
             }
-            SettingsGroup("voice") {
+            SettingsGroup("voice", visible = settingsGroupVisible(settingsQuery, "voice")) {
                 ToggleRow(
                     title = "Prefer offline recognition",
                     subtitle = "Use an installed on-device speech model; avoids network/VPN audio stalls",
@@ -1216,7 +1234,13 @@ fun SettingsScreen(
             if (!BuildConfig.PLAY_BUILD) {
                 UpdateSettingsRow(manager = state.updates)
             }
-            SettingsGroup("diagnostics") {
+            SettingsAdvancedRow(
+                expanded = advancedExpanded || settingsQuery.isNotBlank(),
+                onToggle = { advancedExpanded = !advancedExpanded },
+                hint = "Diagnostics, storage & build info",
+            )
+            if (advancedExpanded || settingsQuery.isNotBlank()) {
+            SettingsGroup("diagnostics", visible = settingsGroupVisible(settingsQuery, "diagnostics")) {
                 Text(
                     "Connection diagnostics",
                     modifier = Modifier
@@ -1297,7 +1321,7 @@ fun SettingsScreen(
                 }
                 CrashDiagnostics()
             }
-            SettingsGroup("storage") {
+            SettingsGroup("storage", visible = settingsGroupVisible(settingsQuery, "storage")) {
                 val cacheStats = remember(cacheRevision) { state.offlineCacheStats() }
                 Text(
                     "Offline cache",
@@ -1373,16 +1397,19 @@ fun SettingsScreen(
                     )
                 }
             }
-            SettingsGroup("this build") {
+            SettingsGroup("this build", visible = settingsGroupVisible(settingsQuery, "this build")) {
                 Text(
                     "Multi-host preview: pair several desktop or cloud hosts, switch between " +
                         "them, and stream sessions over the DSH Mobile API v1 (HTTP + SSE). " +
                         "Host tokens are encrypted with the Android Keystore. Notifications work " +
                         "while DSH Mobile is running, and background sync keeps watching while " +
-                        "it is closed; the QR scanner is still to come.",
+                        "it is closed. This build adds QR pairing and multi-route hosts; " +
+                        "Settings now has search, a live connection hero and a collapsed " +
+                        "Advanced section.",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.tertiary,
                 )
+            }
             }
             Text(
                 buildFooter(state),
@@ -1863,27 +1890,21 @@ private fun FontScaleChips(
     }
 }
 
+/**
+ * Settings overview hero: live connection state, the active route and quick entry points.
+ * Mirrors the design-proposal mockup so users see host health before the long settings list.
+ */
 @Composable
-private fun SettingsGroup(
-    title: String,
-    content: @Composable ColumnScope.() -> Unit,
-) {
-    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-        HadalCaps(title.uppercase(), modifier = Modifier.padding(start = 2.dp))
-        HadalCard { content() }
-    }
-}
-
-@Composable
-private fun HostCard(
+private fun SettingsHeroCard(
     state: AppState,
     onOpenHosts: () -> Unit,
-    onOpenPairing: () -> Unit,
+    onOpenConnection: () -> Unit,
 ) {
     val profile = state.activeProfile
-    var showTailscaleAdd by remember { mutableStateOf(false) }
-    var tailscaleAddUrl by remember { mutableStateOf("") }
-    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+    val normalized = profile?.ensureRoutes()
+    val route = normalized?.activeRoute
+    val probe = route?.let { state.routeProbes[it.id] }
+    HadalCard {
         Row(verticalAlignment = Alignment.CenterVertically) {
             ConnectionPill(state.connection)
             Spacer(Modifier.width(8.dp))
@@ -1903,12 +1924,241 @@ private fun HostCard(
                 )
             }
         }
-        if (profile == null) {
+        Spacer(Modifier.height(6.dp))
+        Text(
+            if (profile == null) {
+                "Pair a desktop or cloud host to stream live sessions."
+            } else {
+                "active ${route?.label ?: "route"} · ${route?.baseUrl ?: profile.baseUrl}"
+            },
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.tertiary,
+            maxLines = 2,
+            overflow = TextOverflow.Ellipsis,
+        )
+        if (profile != null) {
+            Spacer(Modifier.height(8.dp))
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                SettingsMetric(
+                    label = "latency",
+                    value = probe?.latencyMs?.let { "$it ms" }
+                        ?: if (state.routeProbing) "…" else "—",
+                    modifier = Modifier.weight(1f),
+                )
+                SettingsMetric(
+                    label = "routes",
+                    value = (normalized?.routes?.size ?: 1).toString(),
+                    modifier = Modifier.weight(1f),
+                )
+                SettingsMetric(
+                    label = "synced",
+                    value = settingsAgo(state.lastRefreshedAt),
+                    modifier = Modifier.weight(1f),
+                )
+            }
+        }
+        Spacer(Modifier.height(10.dp))
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            HadalPrimaryButton(
+                text = if (profile == null) "Pair a host" else "Hosts & routes",
+                onClick = onOpenHosts,
+                modifier = Modifier.weight(1f),
+            )
+            HadalGhostButton(
+                text = "Connection",
+                onClick = onOpenConnection,
+                modifier = Modifier.weight(1f),
+            )
+        }
+    }
+}
+
+@Composable
+private fun SettingsMetric(
+    label: String,
+    value: String,
+    modifier: Modifier = Modifier,
+) {
+    Column(
+        modifier
+            .clip(RoundedCornerShape(10.dp))
+            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f))
+            .padding(horizontal = 10.dp, vertical = 7.dp),
+        verticalArrangement = Arrangement.spacedBy(1.dp),
+    ) {
+        Text(
+            label.uppercase(),
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.tertiary,
+        )
+        Text(
+            value,
+            style = MaterialTheme.typography.titleSmall,
+            color = MaterialTheme.colorScheme.onSurface,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+        )
+    }
+}
+
+/** Filter-as-you-type field for the settings overview. */
+@Composable
+private fun SettingsSearchField(query: String, onQueryChange: (String) -> Unit) {
+    OutlinedTextField(
+        value = query,
+        onValueChange = onQueryChange,
+        modifier = Modifier.fillMaxWidth(),
+        singleLine = true,
+        shape = RoundedCornerShape(14.dp),
+        label = { Text("Search settings") },
+        placeholder = { Text("host, theme, notifications, storage…") },
+        leadingIcon = {
+            Icon(
+                Icons.Filled.Search,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.tertiary,
+            )
+        },
+        trailingIcon = if (query.isNotBlank()) {
+            {
+                Text(
+                    "×",
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(8.dp))
+                        .clickable { onQueryChange("") }
+                        .padding(horizontal = 10.dp, vertical = 4.dp),
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.tertiary,
+                )
+            }
+        } else {
+            null
+        },
+    )
+}
+
+/** Release-hatch row for diagnostics, storage and build info. */
+@Composable
+private fun SettingsAdvancedRow(
+    expanded: Boolean,
+    onToggle: () -> Unit,
+    hint: String,
+) {
+    Row(
+        Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(14.dp))
+            .background(MaterialTheme.colorScheme.surfaceContainer)
+            .clickable(onClick = onToggle)
+            .padding(horizontal = 14.dp, vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
             Text(
-                "Pair a DSH host (desktop or cloud) with a base URL and a one-time pairing code.",
+                "Advanced",
+                style = MaterialTheme.typography.titleSmall,
+                color = MaterialTheme.colorScheme.onSurface,
+            )
+            Text(
+                hint,
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.tertiary,
             )
+        }
+        Text(
+            if (expanded) "−" else "+",
+            style = MaterialTheme.typography.titleLarge,
+            color = MaterialTheme.colorScheme.primary,
+        )
+    }
+}
+
+private fun settingsAgo(at: Long?): String {
+    if (at == null) return "—"
+    val seconds = ((System.currentTimeMillis() - at) / 1000).coerceAtLeast(0)
+    return when {
+        seconds < 60 -> "${seconds}s"
+        seconds < 3600 -> "${seconds / 60}m"
+        else -> "${seconds / 3600}h"
+    }
+}
+
+private val SETTINGS_GROUP_KEYWORDS = mapOf(
+    "host & connection" to "host connection paired routes failover qr pairing tailscale url",
+    "usage" to "usage tokens balance api cost",
+    "data source" to "demo data live source",
+    "appearance" to "theme dark light amoled accent colour color text size font density",
+    "sessions" to "sessions hidden archived",
+    "recovery & security" to "security recovery code devices app lock paired",
+    "notifications" to "notifications push ntfy quiet hours alerts sync background",
+    "voice" to "voice dictation speech language",
+    "diagnostics" to "diagnostics logs crash report safe mode",
+    "storage" to "storage cache backup export import",
+    "this build" to "build version about changelog",
+)
+
+/** True when the search box is empty or every query word matches the group's keywords. */
+private fun settingsGroupVisible(query: String, title: String): Boolean {
+    val words = query.trim().lowercase().split(' ').filter { it.isNotBlank() }
+    if (words.isEmpty()) return true
+    val haystack = (title + " " + SETTINGS_GROUP_KEYWORDS[title].orEmpty()).lowercase()
+    return words.all { haystack.contains(it) }
+}
+
+@Composable
+private fun SettingsGroup(
+    title: String,
+    visible: Boolean = true,
+    content: @Composable ColumnScope.() -> Unit,
+) {
+    if (!visible) return
+    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+        HadalCaps(title.uppercase(), modifier = Modifier.padding(start = 2.dp))
+        HadalCard { content() }
+    }
+}
+
+@Composable
+private fun HostCard(
+    state: AppState,
+    onOpenHosts: () -> Unit,
+    onOpenPairing: () -> Unit,
+    /** Compact mode: the settings hero already shows host/route status, so only actions remain. */
+    compact: Boolean = false,
+) {
+    val profile = state.activeProfile
+    var showTailscaleAdd by remember { mutableStateOf(false) }
+    var tailscaleAddUrl by remember { mutableStateOf("") }
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        if (!compact) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                ConnectionPill(state.connection)
+                Spacer(Modifier.width(8.dp))
+                Text(
+                    profile?.label?.takeIf { it.isNotBlank() } ?: "No host paired",
+                    modifier = Modifier.weight(1f),
+                    style = MaterialTheme.typography.titleSmall,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+                state.activeHostVersion?.let { version ->
+                    Text(
+                        "host v$version",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.tertiary,
+                    )
+                }
+            }
+        }
+        if (profile == null) {
+            if (!compact) {
+                Text(
+                    "Pair a DSH host (desktop or cloud) with a base URL and a one-time pairing code.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.tertiary,
+                )
+            }
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 HadalPrimaryButton(
                     text = "Pair host",
@@ -1937,21 +2187,23 @@ private fun HostCard(
                 color = MaterialTheme.colorScheme.primary,
             )
         } else {
-            Text(
-                profile.baseUrl,
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.tertiary,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-            )
-            ConnectionDetail(label = "device", value = profile.deviceId)
-            ConnectionDetail(
-                label = "paired",
-                value = profile.pairedAt
-                    .take(16)
-                    .replace('T', ' ')
-                    .ifBlank { "unknown" },
-            )
+            if (!compact) {
+                Text(
+                    profile.baseUrl,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.tertiary,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+                ConnectionDetail(label = "device", value = profile.deviceId)
+                ConnectionDetail(
+                    label = "paired",
+                    value = profile.pairedAt
+                        .take(16)
+                        .replace('T', ' ')
+                        .ifBlank { "unknown" },
+                )
+            }
             state.syncError?.let { message ->
                 Text(
                     message,

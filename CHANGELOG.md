@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.5.0 — Settings & home refresh
+
+- **Settings overhaul (first UI-refresh batch).** Live connection hero at the top (host, active
+  route, latency, routes, last sync, Hosts/Connection shortcuts), filter-as-you-type search across
+  settings groups, refreshed group titles, and a collapsed **Advanced** section holding diagnostics,
+  storage and build info. Groups: host & connection, usage, data source, appearance, sessions,
+  recovery & security, notifications, voice, advanced.
+- **Home refresh**: connection pill + active route/latency/sync strip under the host prompt, and
+  one-tap quick filters (All / Working / Needs input / Idle) with counts plus a Filters shortcut.
+- No functional regressions: every existing settings control and host flow is unchanged, just
+  reorganized.
+
 ## 0.4.0 — QR pairing, connection routes & design preview
 
 First release with the mobile-ecosystem batch 1 features: QR pairing (host page + app scanner),

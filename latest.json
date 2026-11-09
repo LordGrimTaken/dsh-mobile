@@ -1,14 +1,14 @@
 {
   "schemaVersion": 1,
-  "versionCode": 151,
-  "versionName": "0.4.0",
-  "tag": "v0.4.0",
-  "publishedAt": "2026-11-09T11:00:57Z",
-  "apkUrl": "https://github.com/LordGrimTaken/dsh-mobile/releases/download/v0.4.0/dsh-android-0.4.0-debug.apk",
-  "apkAssetName": "dsh-android-0.4.0-debug.apk",
-  "apkSizeBytes": 44011744,
-  "sha256": "b0d5d0b9ce1d0ca3ad9584a7702614862e6ff5da02413c26297a0f3115e19c01",
+  "versionCode": 152,
+  "versionName": "0.5.0",
+  "tag": "v0.5.0",
+  "publishedAt": "2026-11-09T11:49:55Z",
+  "apkUrl": "https://github.com/LordGrimTaken/dsh-mobile/releases/download/v0.5.0/dsh-android-0.5.0-debug.apk",
+  "apkAssetName": "dsh-android-0.5.0-debug.apk",
+  "apkSizeBytes": 45631470,
+  "sha256": "12ba2edbe5d6d36cab1df69c16c2446534f56945c594b684219a301102649c03",
   "minSdk": 26,
-  "notes": "DSH Android 0.4.0: QR pairing (host Connect-a-phone page + in-app CameraX/ML Kit scanner + dshmobile://pair deep link) and multi-route hosts with latency probing and automatic failover (Settings -> Hosts -> Routes, diagnostics ROUTES, fastest-route reconnect). Includes legible scanner chrome, manual-code fallback and the connection/design proposals in docs/design.",
-  "releaseUrl": "https://github.com/LordGrimTaken/dsh-mobile/releases/tag/v0.4.0"
+  "notes": "DSH Android 0.5.0: Settings & home refresh (first UI-refresh batch). Settings gets a live connection hero (host, active route, latency, routes, last sync, Hosts/Connection shortcuts), search-as-you-type across groups, a compact host-actions card and a collapsed Advanced section (diagnostics, storage, build). Home gets a route/latency/sync strip and quick filters (All/Working/Needs input/Idle + Filters). All previous controls unchanged.",
+  "releaseUrl": "https://github.com/LordGrimTaken/dsh-mobile/releases/tag/v0.5.0"
 }
