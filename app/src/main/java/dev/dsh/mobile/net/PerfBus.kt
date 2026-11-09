@@ -18,6 +18,14 @@ object PerfBus {
     var lastRequestMillis by mutableStateOf<Long?>(null)
         private set
 
+    /** Number of conditional GETs answered with 304 in this app session. */
+    var cacheHits by mutableStateOf(0)
+        private set
+
+    internal fun recordCacheHit() {
+        cacheHits += 1
+    }
+
     internal fun record(firstByteMillis: Long?, totalMillis: Long?) {
         firstByteMillis?.let { lastFirstByteMillis = it.coerceAtLeast(0) }
         totalMillis?.let { lastRequestMillis = it.coerceAtLeast(0) }

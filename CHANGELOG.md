@@ -1,5 +1,19 @@
 # Changelog
 
+## Unreleased — conditional GETs / buffering deltas (local, not released yet)
+
+- **Host: weak ETags + 304** on the two big reads: `GET /sessions` (snapshot) and
+  `GET /sessions/{id}` (transcript). Bodies over 512 KiB stay untagged; a matching
+  `If-None-Match` returns an empty 304 with the same ETag (same weak-ETag format the app sends).
+- **App: conditional GET cache** in `DshApiClient` (LRU, 16 URLs): GETs carry `If-None-Match` when a
+  cached body exists, 304s resume the cached body without parsing, and a `CACHE HITS` metric on the
+  Connection page shows how many revalidations were saved.
+- **Connection page route rows fixed**: unreachable routes no longer inflate the row height
+  (removed the verbose error line — `RouteProbe.summary()` already carries the reason — and capped
+  the row at 64dp). Buffering status rows are visible under ROUTES.
+- Fake host mirrors the ETag/304 contract; host tests: **358/358 green** (including a router test
+  asserting 200+ETag → 304 with empty body → stale ETag → 200).
+
 ## Unreleased — plugin ecosystem inventory (local, not released yet)
 
 - **Host: `GET /plugins`** reads the active DSH profile (`$DSH_HOME/profiles/web/package.json`) and

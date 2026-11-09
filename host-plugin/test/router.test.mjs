@@ -2200,3 +2200,26 @@ test('goal edit validates objective, round cap and JSON body', async () => {
   );
 });
 
+
+test('session snapshot revalidates with a weak ETag and returns an empty 304', async () => {
+  const { router, token } = setup();
+  const first = await routeCall(router, { path: '/mobile/v1/sessions', token });
+  assert.equal(first.status, 200);
+  const etag = first.headers?.ETag;
+  assert.equal(typeof etag, 'string');
+  assert.match(etag, /^W\/"[0-9a-f]{20}"$/);
+  const second = await routeCall(router, {
+    path: '/mobile/v1/sessions',
+    token,
+    headers: { 'if-none-match': etag },
+  });
+  assert.equal(second.status, 304);
+  assert.equal(second.headers?.ETag, etag);
+  assert.equal(second.body, undefined);
+  const stale = await routeCall(router, {
+    path: '/mobile/v1/sessions',
+    token,
+    headers: { 'if-none-match': 'W/"stale-0000000000000"' },
+  });
+  assert.equal(stale.status, 200);
+});

@@ -2895,8 +2895,8 @@ private fun ConnectionSettingsPage(
                         modifier = Modifier.weight(1f),
                     )
                     SettingsMetric(
-                        label = "synced",
-                        value = settingsAgo(state.lastRefreshedAt),
+                        label = "cache hits",
+                        value = PerfBus.cacheHits.toString(),
                         modifier = Modifier.weight(1f),
                     )
                 }
@@ -2928,6 +2928,7 @@ private fun ConnectionSettingsPage(
                 Row(
                     Modifier
                         .fillMaxWidth()
+                        .heightIn(max = 64.dp)
                         .clip(RoundedCornerShape(10.dp))
                         .clickable { if (profile != null) state.selectRoute(profile.id, route.id) }
                         .padding(vertical = 9.dp),
@@ -2956,35 +2957,17 @@ private fun ConnectionSettingsPage(
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis,
                         )
-                        routeProbe?.error?.let { error ->
-                            Text(
-                                error,
-                                style = MaterialTheme.typography.bodySmall,
-                                color = Danger,
-                                maxLines = 2,
-                                overflow = TextOverflow.Ellipsis,
-                            )
-                        }
                     }
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(6.dp),
-                    ) {
-                        RouteSignalBars(
-                            reachable = routeProbe?.reachable == true,
-                            latencyMs = state.lastSpeedTest[route.id]?.p50Ms ?: routeProbe?.latencyMs,
-                        )
-                        Text(
-                            state.lastSpeedTest[route.id]?.summary() ?: (routeProbe?.summary() ?: "not probed"),
-                            style = MaterialTheme.typography.labelSmall,
-                            color = if (routeProbe?.reachable == true) {
-                                MaterialTheme.colorScheme.primary
-                            } else {
-                                MaterialTheme.colorScheme.tertiary
-                            },
-                            maxLines = 1,
-                        )
-                    }
+                    Text(
+                        state.lastSpeedTest[route.id]?.summary() ?: (routeProbe?.summary() ?: "not probed"),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = if (routeProbe?.reachable == true) {
+                            MaterialTheme.colorScheme.primary
+                        } else {
+                            MaterialTheme.colorScheme.tertiary
+                        },
+                        maxLines = 1,
+                    )
                 }
                 Hairline()
             }

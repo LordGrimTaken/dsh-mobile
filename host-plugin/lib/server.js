@@ -76,6 +76,11 @@ export function createMobileServer({ config, router, bus, adapter, pairing = nul
   /** @param {http.ServerResponse} res @param {{ status: number, body?: unknown, headers?: Record<string, string> }} result */
   function sendJson(res, result) {
     if (res.writableEnded || res.destroyed) return;
+    if (result.status === 304) {
+      res.writeHead(304, result.headers ?? {});
+      res.end();
+      return;
+    }
     let body = Buffer.from(JSON.stringify(result.body ?? {}), 'utf8');
     const headers = {
       'Content-Type': 'application/json; charset=utf-8',

@@ -17,6 +17,7 @@ import { parseScheduleCreateBody, parseScheduleUpdateBody } from './schedules.js
 import { SEARCH_MAX_LIMIT, hasSearchFilters, normalizeSearchFilters, normalizeSearchLimit, normalizeSearchOffset, normalizeSearchQuery } from './search.js';
 import { normalizeSessionTitle } from './sessions.js';
 import { readProfilePlugins } from './plugins.js';
+import { MAX_ETAG_BODY_BYTES, computeWeakEtag, etagMatches } from './http-cache.js';
 /** All v1 routes live under this prefix; the prefix itself is optional (`/health` works too). */
 export const API_PREFIX = '/mobile/v1';
 
@@ -103,6 +104,20 @@ export function buildQrPayload(config, code) {
 /** @param {number} status @param {unknown} body */
 function json(status, body) {
   return { status, body };
+}
+
+/**
+ * JSON result with a weak ETag, or an empty 304 when the caller's If-None-Match matches.
+ * Used for the session snapshot and transcript endpoints.
+ */
+function etagJson(request, body) {
+  const payload = JSON.stringify(body);
+  if (payload.length > MAX_ETAG_BODY_BYTES) return json(200, body);
+  const etag = computeWeakEtag(payload);
+  if (etagMatches(request.headers?.['if-none-match'], etag)) {
+    return { status: 304, headers: { ETag: etag } };
+  }
+  return { status: 200, body, headers: { ETag: etag } };
 }
 
 /**
@@ -543,7 +558,7 @@ export function createRouter({ config, pairing, adapter, attachments = null, hid
       }
 
       if (method === 'GET' && path === '/sessions') {
-        return json(200, { sessions: await adapter.listSessions() });
+        return etagJson(request, { sessions: await adapter.listSessions() });
       }
 
       if (method === 'GET' && path === '/usage') {
@@ -910,7 +925,7 @@ export function createRouter({ config, pairing, adapter, attachments = null, hid
           limit: query.get('limit'),
           before: query.get('before'),
         });
-        return json(200, detail);
+        return etagJson(request, detail);
       }
 
       if (method === 'GET' && path === '/approvals') {

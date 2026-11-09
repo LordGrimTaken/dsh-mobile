@@ -407,6 +407,29 @@ function sendJson(res, status, payload) {
   res.end(body);
 }
 
+/** JSON with a weak ETag; answers a matching If-None-Match with an empty 304 (contract mirror). */
+function sendJsonWithEtag(req, res, status, payload) {
+  if (res.writableEnded) return;
+  const body = JSON.stringify(payload);
+  const etag = `W/"${crypto.createHash('sha1').update(body).digest('hex').slice(0, 20)}"`;
+  const ifNoneMatch = String(req.headers['if-none-match'] || '')
+    .split(',')
+    .map((value) => value.trim())
+    .includes(etag);
+  if (ifNoneMatch) {
+    res.writeHead(304, { ETag: etag });
+    res.end();
+    return;
+  }
+  res.writeHead(status, {
+    'Content-Type': 'application/json; charset=utf-8',
+    'Content-Length': Buffer.byteLength(body),
+    'Cache-Control': 'no-store',
+    ETag: etag,
+  });
+  res.end(body);
+}
+
 function sendError(res, status, code, message) {
   sendJson(res, status, { error: { code, message } });
 }
@@ -1714,11 +1737,11 @@ function handleHost(res) {
   });
 }
 
-function handleSessionsList(res) {
+function handleSessionsList(req, res) {
   const list = sortedSessions()
     .filter((session) => !archivedSessions.has(session.id))
     .map(sessionSummary);
-  sendJson(res, 200, { sessions: list });
+  sendJsonWithEtag(req, res, 200, { sessions: list });
 }
 
 /** GET /mobile/v1/sessions/archived: archived SessionSummary rows. */
@@ -1813,7 +1836,7 @@ function handleAttachmentBytes(res, sessionId, attachmentId) {
   res.end(record.bytes);
 }
 
-function handleSessionDetail(res, session, url) {
+function handleSessionDetail(req, res, session, url) {
   const limitParam = url.searchParams.get('limit');
   let limit = limitParam === null ? 100 : Number.parseInt(limitParam, 10);
   if (!Number.isFinite(limit) || limit <= 0) {
@@ -1833,7 +1856,7 @@ function handleSessionDetail(res, session, url) {
   const start = Math.max(0, end - limit);
   const messages = session.messages.slice(start, end);
   const nextCursor = start > 0 ? session.messages[start].id : null;
-  sendJson(res, 200, { session: sessionSummary(session), messages, nextCursor });
+  sendJsonWithEtag(req, res, 200, { session: sessionSummary(session), messages, nextCursor });
 }
 
 async function handleSessionCreate(req, res) {
@@ -2759,7 +2782,7 @@ async function dispatch(req, res, url, pathname) {
   if (method === 'GET' && pathname === `${API}/presets`) return handlePresetsList(res);
   if (method === 'GET' && pathname === `${API}/models`) return handleModelsList(res);
   if (method === 'GET' && pathname === `${API}/plugins`) return handlePluginsList(res);
-  if (method === 'GET' && pathname === `${API}/sessions`) return handleSessionsList(res);
+  if (method === 'GET' && pathname === `${API}/sessions`) return handleSessionsList(req, res);
   if (method === 'GET' && pathname === `${API}/sessions/archived`) return handleArchivedSessionsList(res);
   if (method === 'POST' && pathname === `${API}/sessions`) return handleSessionCreate(req, res);
 
@@ -2840,7 +2863,7 @@ async function dispatch(req, res, url, pathname) {
   if (match && method === 'GET') {
     const session = sessions.get(match[1]);
     if (!session) fail(404, 'not_found', `No such session: ${match[1]}`);
-    return handleSessionDetail(res, session, url);
+    return handleSessionDetail(req, res, session, url);
   }
 
   match = /^\/mobile\/v1\/approvals\/([^/]+)$/.exec(pathname);

@@ -62,6 +62,14 @@ class DshApiClient(
 
     private val apiRoot: String = normalizeApiRoot(baseUrl)
 
+    /** Last body + weak ETag per GET URL so repeated snapshot/transcript fetches can revalidate. */
+    private data class CachedGet(val etag: String, val body: String)
+
+    private val conditionalGetCache = object : LinkedHashMap<String, CachedGet>(16, 0.75f, true) {
+        override fun removeEldestEntry(eldest: MutableMap.MutableEntry<String, CachedGet>?): Boolean =
+            size > 16
+    }
+
     /** True for Tailscale MagicDNS / Serve hostnames, where DNS only works while the VPN is up. */
     internal val isTailnetHost: Boolean = runCatching {
         apiRoot.toHttpUrl().host.lowercase().endsWith(".ts.net")
@@ -770,7 +778,14 @@ class DshApiClient(
     }
 
     private suspend fun execute(request: Request): String = suspendCancellableCoroutine { continuation ->
-        val call = http.newCall(request)
+        val cacheKey = if (request.method == "GET") request.url.toString() else null
+        val cached = cacheKey?.let { key -> synchronized(conditionalGetCache) { conditionalGetCache[key] } }
+        val outgoing = if (cached != null) {
+            request.newBuilder().header("If-None-Match", cached.etag).build()
+        } else {
+            request
+        }
+        val call = http.newCall(outgoing)
         continuation.invokeOnCancellation { call.cancel() }
         call.enqueue(object : Callback {
             override fun onFailure(call: Call, error: IOException) {
@@ -784,13 +799,30 @@ class DshApiClient(
             override fun onResponse(call: Call, response: Response) {
                 response.use { resp ->
                     try {
+                        // 304: the host confirmed our cached body is current; no payload to read.
+                        if (resp.code == 304 && cached != null) {
+                            PerfBus.recordCacheHit()
+                            if (continuation.isActive) continuation.resume(cached.body)
+                            return
+                        }
                         val body = resp.body?.string().orEmpty()
                         if (!resp.isSuccessful) {
                             throw mapError(resp.code, resp.header("Retry-After"), body)
                         }
+                        val etag = resp.header("ETag")
+                        if (cacheKey != null && etag != null) {
+                            synchronized(conditionalGetCache) {
+                                conditionalGetCache[cacheKey] = CachedGet(etag, body)
+                            }
+                        }
                         if (continuation.isActive) continuation.resume(body)
                     } catch (error: Exception) {
-                        if (continuation.isActive) continuation.resumeWithException(error)
+                        if (continuation.isActive) {
+                            continuation.resumeWithException(
+                                error as? DshApiException
+                                    ?: DshApiException.Protocol("Unexpected response shape", error),
+                            )
+                        }
                     }
                 }
             }
@@ -803,7 +835,6 @@ class DshApiClient(
         throw DshApiException.Protocol("Unexpected response from the host", e)
     }
 
-    /** Like [execute] but for binary bodies: streams the response and enforces [maxBytes]. */
     private suspend fun executeBytes(request: Request, maxBytes: Long): ByteArray =
         suspendCancellableCoroutine { continuation ->
             val call = http.newCall(request)
