@@ -1,14 +1,14 @@
 {
-    "schemaVersion":  1,
-    "versionCode":  150,
-    "versionName":  "0.3.4",
-    "tag":  "v0.3.4",
-    "publishedAt":  "2026-11-07T23:07:06-05:00",
-    "apkUrl":  "https://github.com/LordGrimTaken/dsh-mobile/releases/download/v0.3.4/dsh-android-0.3.4-debug.apk",
-    "apkAssetName":  "dsh-android-0.3.4-debug.apk",
-    "apkSizeBytes":  19446225,
-    "sha256":  "698a5afc45f616c91818445f819e1560691d0963539ca38512e9e9378dcc4f58",
-    "minSdk":  26,
-    "notes":  "DSH Android 0.3.4: faster session switching and history loading, parallel snapshot refresh, transcript-first requests, lazy panel loading, reuse-aware background sync and bounded offline/DNS backoff.",
-    "releaseUrl":  "https://github.com/LordGrimTaken/dsh-mobile/releases/tag/v0.3.4"
+  "schemaVersion": 1,
+  "versionCode": 151,
+  "versionName": "0.4.0",
+  "tag": "v0.4.0",
+  "publishedAt": "2026-11-09T11:00:57Z",
+  "apkUrl": "https://github.com/LordGrimTaken/dsh-mobile/releases/download/v0.4.0/dsh-android-0.4.0-debug.apk",
+  "apkAssetName": "dsh-android-0.4.0-debug.apk",
+  "apkSizeBytes": 44011744,
+  "sha256": "b0d5d0b9ce1d0ca3ad9584a7702614862e6ff5da02413c26297a0f3115e19c01",
+  "minSdk": 26,
+  "notes": "DSH Android 0.4.0: QR pairing (host Connect-a-phone page + in-app CameraX/ML Kit scanner + dshmobile://pair deep link) and multi-route hosts with latency probing and automatic failover (Settings -> Hosts -> Routes, diagnostics ROUTES, fastest-route reconnect). Includes legible scanner chrome, manual-code fallback and the connection/design proposals in docs/design.",
+  "releaseUrl": "https://github.com/LordGrimTaken/dsh-mobile/releases/tag/v0.4.0"
 }

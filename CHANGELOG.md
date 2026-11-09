@@ -1,6 +1,10 @@
 # Changelog
 
-## Unreleased — mobile ecosystem batch 1
+## 0.4.0 — QR pairing, connection routes & design preview
+
+First release with the mobile-ecosystem batch 1 features: QR pairing (host page + app scanner),
+multi-route hosts with latency probing and automatic failover, and the connections UI/design
+proposals under `docs/design/`.
 
 - **P0 connection manager (multi-route hosts).** A paired host can now carry several endpoints
   (LAN / Tailscale / Cloudflare / custom). Every route shares the pairing token; the app probes
