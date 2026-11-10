@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Hosts — Termux host entry</title>
+<link rel="stylesheet" href="../mockups/mock.css">
+<style>
+.hero-phone { background: linear-gradient(135deg, rgba(78,229,155,.14), rgba(78,229,155,.03)); border: 1px solid var(--line-strong); border-radius: 18px; padding: 14px; display:flex; flex-direction:column; gap:10px; }
+.hero-phone .rowline { display:flex; align-items:center; gap:8px; }
+.big { font: 650 16px var(--sans); }
+.steps { display:flex; flex-direction:column; gap:6px; margin-top:2px; }
+.step { display:flex; gap:8px; align-items:baseline; font: 400 11px var(--sans); color: var(--text2); }
+.step b { color: var(--mint); font: 700 10px var(--mono); min-width: 14px; }
+.mini { font: 500 9.5px var(--mono); color: var(--text3); letter-spacing: .04em; }
+.actions { display:flex; gap:8px; margin-top:4px; }
+</style></head>
+<body><div class="app">
+  <div class="sb"><span>9:41</span><span class="right"><i class="wifi"></i><span class="batt"><i></i></span></span></div>
+  <header><span class="back">←</span><span class="h-title">Hosts</span><span class="proposed">MOCKUP</span></header>
+  <div class="content" style="gap:10px">
+    <div class="cap">Paired hosts <span class="val">1</span></div>
+    <div class="card" style="padding:12px;display:flex;flex-direction:column;gap:8px">
+      <div class="rowline"><span class="dot"></span><span class="big" style="font-size:14px">Dev host</span><span class="pill live" style="margin-left:auto">● live</span></div>
+      <div class="route" style="font:500 10.5px var(--mono);color:var(--text2)">active <b style="color:var(--mint)">LAN mirror</b> · http://10.0.2.2:3548</div>
+      <div class="mini">3 routes · auto-failover on · synced 2s ago</div>
+    </div>
+
+    <div class="cap" style="margin-top:2px">On this phone <span class="val">new</span></div>
+    <div class="hero-phone">
+      <div class="rowline">
+        <span class="dot" style="background:var(--amber);box-shadow:0 0 8px var(--amber)"></span>
+        <span class="big">Termux host</span>
+        <span class="pill warn" style="margin-left:auto">not connected</span>
+      </div>
+      <div style="font:400 11px/1.45 var(--sans);color:var(--text2)">
+        Run DeepSeek Harness on this phone itself. No desktop, no pairing across the network —
+        the app talks to a real harness in Termux over <b style="color:var(--mint)">127.0.0.1:3543</b>.
+      </div>
+      <div class="steps">
+        <div class="step"><b>1</b>Install Termux from Google Play</div>
+        <div class="step"><b>2</b>Install Node 24 + the DSH mobile host</div>
+        <div class="step"><b>3</b>Start the host and pair from here</div>
+      </div>
+      <div class="mini">Android 11+ · ~1.5 GB storage · runs while Termux is wake-locked</div>
+      <div class="actions">
+        <div class="btn primary" style="flex:1.1">Set up Termux</div>
+        <div class="btn ghost" style="flex:1">Detect host</div>
+      </div>
+    </div>
+
+    <div class="row" style="background:transparent;border-style:dashed">
+      <span class="ic">＋</span>
+      <span class="meta"><b>Add another host</b><span>Desktop, cloud VM or another phone</span></span>
+      <span class="chev">›</span>
+    </div>
+
+    <div class="note">Termux runs the real harness — git, Node, Python and your agent tools work. The phone is the host; the app is just its client.</div>
+    <div class="footer">mockup · dsh mobile · hosts / on this phone</div>
+  </div>
+</div></body></html>

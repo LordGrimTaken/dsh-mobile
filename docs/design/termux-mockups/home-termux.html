@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Home — running on phone host</title>
+<link rel="stylesheet" href="../mockups/mock.css">
+</head>
+<body><div class="app">
+  <div class="sb"><span>9:41</span><span class="right"><i class="wifi"></i><span class="batt"><i></i></span></span></div>
+  <header><span class="back">☰</span><span class="brand">❯</span><span class="h-title" style="letter-spacing:.1em">DeepSeek Harness</span><span class="proposed">MOCKUP</span></header>
+  <div class="content" style="gap:8px">
+    <div style="display:flex;align-items:center;gap:8px;padding:0 2px">
+      <span style="font:600 11.5px var(--mono);color:var(--mint)">dsh@Termux</span>
+      <span class="pill live" style="margin-left:auto">● 0 ms</span>
+      <span class="pill">on this phone</span>
+    </div>
+
+    <div style="display:flex;gap:8px;align-items:center">
+      <div class="search" style="flex:1"><span>⌕</span><span>Search sessions…</span></div>
+      <div class="btn primary" style="flex:0 0 auto;padding:10px 14px">＋ New</div>
+    </div>
+
+    <div style="display:flex;align-items:center;gap:7px;font:600 9.5px var(--mono);color:var(--mint);padding:2px 3px">
+      <span style="width:8px;height:8px;border-radius:50%;background:var(--mint);display:inline-block;box-shadow:0 0 8px var(--mint)"></span>
+      local harness · 127.0.0.1:3543 · 6 sessions
+    </div>
+
+    <div class="chips">
+      <span class="chip on">All</span><span class="chip">Working 1</span><span class="chip">Needs input</span><span class="chip">Idle</span><span class="chip">Filters</span>
+    </div>
+
+    <div class="cap">Today</div>
+    <div class="sess"><span class="dot"></span><div class="body">
+      <div class="t"><b>Refactor release script</b><span class="ago">4m ›</span></div>
+      <p>Split the publish step into a reusable Node script.</p>
+      <div class="meta"><span class="tag">dsh-workspace</span><span>idle</span><span class="goal">goal active</span></div>
+    </div></div>
+
+    <div class="sess"><span class="dot amber"></span><div class="body">
+      <div class="t"><b>Termux host onboarding</b><span class="ago">18m ›</span></div>
+      <p>Node 24 installed; harness profile ready for the mobile host plugin.</p>
+      <div class="meta"><span class="tag">dsh-workspace</span><span>working</span><span class="pill live" style="font-size:8.5px;padding:1px 5px">streaming</span></div>
+    </div></div>
+
+    <div class="sess"><span class="dot"></span><div class="body">
+      <div class="t"><b>Gradle build notes</b><span class="ago">2h ›</span></div>
+      <p>Recorded timing: 6 min clean build on the phone. Emulator not possible.</p>
+      <div class="meta"><span class="tag">androidide</span><span>idle</span><span class="goal">goal complete</span></div>
+    </div></div>
+
+    <div class="cap">Yesterday</div>
+    <div class="sess"><span class="dot"></span><div class="body">
+      <div class="t"><b>Sync dotfiles</b><span class="ago">Yesterday ›</span></div>
+      <p>git pull from Termux home; no desktop involved.</p>
+      <div class="meta"><span class="tag">~</span><span>idle</span><span class="goal">goal active</span></div>
+    </div></div>
+
+    <div class="note">Same app, same sessions UI — the harness is running in Termux on this device.</div>
+  </div>
+  <div class="navbar">
+    <div class="nav-item on"><span class="ni">▤</span>Home</div>
+    <div class="nav-item"><span class="ni">◎</span>Inbox<span class="badge">1</span></div>
+    <div class="nav-item"><span class="ni">◔</span>Usage</div>
+    <div class="nav-item"><span class="ni">⚙</span>Settings</div>
+  </div>
+</div></body></html>

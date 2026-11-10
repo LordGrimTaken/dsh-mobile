@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Termux host detail</title>
+<link rel="stylesheet" href="../mockups/mock.css">
+<style>
+.hero { background: linear-gradient(135deg, rgba(78,229,155,.13), rgba(78,229,155,.02)); border:1px solid var(--line-strong); border-radius:18px; padding:14px; display:flex; flex-direction:column; gap:9px; }
+.battery { display:flex; align-items:center; gap:6px; font: 600 10px var(--mono); color: var(--text2); }
+.bbar { width:40px; height:10px; border:1.5px solid var(--text3); border-radius:3px; position:relative; }
+.bbar i { position:absolute; inset:1.5px; width:72%; background: var(--mint); border-radius:1px; }
+.bbar::after { content:""; position:absolute; right:-4px; top:2px; width:2px; height:4px; background:var(--text3); border-radius:0 1px 1px 0; }
+.warn { border:1px dashed rgba(242,193,78,.45); background: rgba(242,193,78,.06); border-radius:12px; padding:9px 11px; font: 400 10.5px/1.45 var(--sans); color: var(--text2); }
+.warn b { color: var(--amber); }
+</style></head>
+<body><div class="app">
+  <div class="sb"><span>9:41</span><span class="right"><i class="wifi"></i><span class="batt"><i></i></span></span></div>
+  <header><span class="back">←</span><span class="h-title">Termux host</span><span class="proposed">MOCKUP</span></header>
+  <div class="content" style="gap:10px">
+    <div class="hero">
+      <div style="display:flex;align-items:center;gap:8px">
+        <span class="dot"></span><span style="font:650 15px var(--sans)">On this phone</span>
+        <span class="pill live" style="margin-left:auto">● live</span>
+      </div>
+      <div style="font:500 10.5px var(--mono);color:var(--text2)">http://127.0.0.1:3543 · loopback · profile web</div>
+      <div class="metrics">
+        <div class="metric"><div class="k">host</div><div class="v">v0.2.0</div></div>
+        <div class="metric"><div class="k">node</div><div class="v">v24.9.1</div></div>
+        <div class="metric"><div class="k">sessions</div><div class="v">6</div></div>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px">
+        <span class="battery"><span class="bbar"><i></i></span> 78%</span>
+        <span style="font:600 10px var(--mono);color:var(--text3)">uptime 1h 12m · 41°C</span>
+        <span class="pill" style="margin-left:auto">wake-locked</span>
+      </div>
+      <div class="actions" style="display:flex;gap:8px">
+        <div class="btn primary" style="flex:1">Open sessions</div>
+        <div class="btn ghost" style="flex:1">Termux</div>
+      </div>
+    </div>
+
+    <div class="cap">Host configuration</div>
+    <div class="row"><span class="ic">◈</span><span class="meta"><b>Pair this device</b><span>Device token stored encrypted · revocable</span></span><span class="chev">›</span></div>
+    <div class="row"><span class="ic">▤</span><span class="meta"><b>Workspace folder</b><span>~/dsh-workspace · shared with Termux</span></span><span class="chev">›</span></div>
+    <div class="row"><span class="ic">⇄</span><span class="meta"><b>Port</b><span>127.0.0.1:3543 · loopback only</span></span><span class="chev">›</span></div>
+
+    <div class="warn"><b>Keep Termux running.</b> Android can stop background apps; use <b>termux-wake-lock</b> and disable battery optimisation for Termux for long agent turns. The app shows this host as offline if Termux stops.</div>
+
+    <div class="cap">Actions</div>
+    <div class="row"><span class="ic">↻</span><span class="meta"><b>Re-detect host</b><span>Probe 127.0.0.1:3543 again</span></span><span class="chev">›</span></div>
+    <div class="row"><span class="ic">≡</span><span class="meta"><b>Copy diagnostics</b><span>Host version, Node, profile, paths</span></span><span class="chev">›</span></div>
+    <div class="row"><span class="ic">✕</span><span class="meta"><b>Disconnect</b><span>Keeps sessions on the phone</span></span><span class="chev">›</span></div>
+
+    <div class="footer">mockup · dsh mobile · phone-host detail</div>
+  </div>
+</div></body></html>

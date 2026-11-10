@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Detect local Termux host</title>
+<link rel="stylesheet" href="../mockups/mock.css">
+<style>
+.scan { display:flex; align-items:center; gap:10px; padding:12px; border:1px dashed var(--line-strong); border-radius:14px; background: rgba(78,229,155,.04); }
+.spinner { width:18px; height:18px; border-radius:50%; border:2px solid var(--line-strong); border-top-color: var(--mint); animation: spin 1s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg) } }
+.found { border:1px solid var(--line-strong); background: linear-gradient(135deg, rgba(78,229,155,.12), rgba(78,229,155,.02)); border-radius:16px; padding:13px; display:flex; flex-direction:column; gap:8px; }
+.metricrow { display:flex; gap:8px; }
+.metricrow .metric { flex:1; }
+.pairbox { display:flex; gap:8px; align-items:center; }
+.codeinput { flex:1; border:1px solid var(--line-strong); background:#04100b; border-radius:11px; padding:10px 12px; font: 650 18px var(--mono); letter-spacing:.35em; color: var(--mint-bright); }
+</style></head>
+<body><div class="app">
+  <div class="sb"><span>9:41</span><span class="right"><i class="wifi"></i><span class="batt"><i></i></span></span></div>
+  <header><span class="back">←</span><span class="h-title" style="font-size:13px;letter-spacing:.08em">On this phone</span><span class="proposed">MOCKUP</span></header>
+  <div class="content" style="gap:10px">
+    <div class="scan">
+      <span class="spinner"></span>
+      <div style="flex:1">
+        <div style="font:650 12px var(--sans)">Checking 127.0.0.1:3543…</div>
+        <div style="font:500 9.5px var(--mono);color:var(--text3);margin-top:2px">loopback only · no network exposure</div>
+      </div>
+      <span class="pill">scan</span>
+    </div>
+
+    <div class="cap">Found <span class="val">1 host</span></div>
+    <div class="found">
+      <div style="display:flex;align-items:center;gap:8px">
+        <span class="dot"></span>
+        <span style="font:650 14px var(--sans)">Termux host</span>
+        <span class="pill live" style="margin-left:auto">● reachable</span>
+      </div>
+      <div style="font:500 10.5px var(--mono);color:var(--text2)">http://127.0.0.1:3543 · host v0.2.0 · api v1</div>
+      <div class="metricrow">
+        <div class="metric"><div class="k">node</div><div class="v">v24.9.1</div></div>
+        <div class="metric"><div class="k">uptime</div><div class="v">1h 12m</div></div>
+        <div class="metric"><div class="k">profile</div><div class="v">web</div></div>
+      </div>
+    </div>
+
+    <div class="cap">Pair with this device</div>
+    <div class="card" style="padding:12px;display:flex;flex-direction:column;gap:9px">
+      <div style="font:400 11px/1.45 var(--sans);color:var(--text2)">Termux shows a six-digit pairing code on first start (or open <b style="color:var(--mint);font-family:var(--mono);font-size:10px">127.0.0.1:3543/pair</b> in the phone browser and scan its QR from here).</div>
+      <div class="pairbox"><div class="codeinput">4 2 8 1 6 3</div><div class="btn primary" style="flex:0 0 auto;padding:10px 14px">Pair</div></div>
+      <div style="display:flex;gap:8px">
+        <div class="btn ghost" style="flex:1">Scan QR code</div>
+        <div class="btn ghost" style="flex:1">Open 127.0.0.1:3543/pair</div>
+      </div>
+    </div>
+
+    <div class="note">Detection also re-runs automatically when you open the app — if Termux was restarted, the app re-probes loopback before showing hosts as offline.</div>
+    <div class="footer">mockup · dsh mobile · local host detection</div>
+  </div>
+</div></body></html>

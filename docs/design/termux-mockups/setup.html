@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Set up Termux host</title>
+<link rel="stylesheet" href="../mockups/mock.css">
+<style>
+.stepcard { background: var(--layer2); border: 1px solid var(--line); border-radius: 14px; padding: 11px 12px; display:flex; flex-direction:column; gap:6px; }
+.stephead { display:flex; align-items:center; gap:8px; }
+.num { width: 22px; height: 22px; border-radius: 7px; display:grid; place-items:center; font: 700 11px var(--mono); color:#04241a; background:var(--mint); }
+.stitle { font: 650 12.5px var(--sans); color: var(--text); }
+.sdesc { font: 400 10.5px/1.4 var(--sans); color: var(--text3); }
+.code { background:#04100b; border:1px solid var(--line); border-radius:9px; padding:7px 9px; font: 500 9.5px/1.55 var(--mono); color:var(--mint-bright); white-space:pre-wrap; word-break:break-word; }
+.code .dim { color: var(--text3); }
+.copybar { display:flex; gap:6px; align-items:center; }
+.small { font: 500 9px var(--mono); color: var(--text3); }
+.hint { border-left: 2px solid var(--line-strong); padding-left: 8px; font: 400 10px/1.45 var(--sans); color: var(--text3); }
+.progress { display:flex; gap:5px; }
+.progress i { height:3px; flex:1; border-radius:2px; background: var(--mint); display:block; }
+.progress i.off { background: var(--line); }
+</style></head>
+<body><div class="app">
+  <div class="sb"><span>9:41</span><span class="right"><i class="wifi"></i><span class="batt"><i></i></span></span></div>
+  <header><span class="back">←</span><span class="h-title" style="font-size:13px;letter-spacing:.08em">Set up Termux host</span><span class="proposed">MOCKUP</span></header>
+  <div class="content" style="gap:9px">
+    <div class="progress"><i></i><i class="off"></i><i class="off"></i></div>
+    <div class="note">Three steps on the phone. The app can’t install code into Termux for you — you paste these commands there once, then come back here.</div>
+
+    <div class="stepcard">
+      <div class="stephead"><span class="num">1</span><span class="stitle">Install Termux</span></div>
+      <div class="sdesc">Install <b style="color:var(--text)">Termux</b> from Google Play (the Play build is current; Android 11+).</div>
+      <div class="copybar"><span class="btn ghost" style="flex:0 0 auto;padding:6px 10px;font-size:11px">Open Play Store</span><span class="small">then open Termux</span></div>
+    </div>
+
+    <div class="stepcard">
+      <div class="stephead"><span class="num">2</span><span class="stitle">Install Node 24 + harness</span></div>
+      <div class="sdesc">In Termux, paste this — it installs Node, git, the harness and the mobile host plugin:</div>
+      <div class="code"><span class="dim"># in Termux</span>
+pkg update -y && pkg install -y nodejs git
+npm install -g @deepseek-ai/dsh
+git clone https://github.com/LordGrimTaken/dsh-mobile
+cd dsh-mobile/host-plugin && npm install
+dsh plugin add link:$PWD</div>
+      <div class="copybar"><span class="btn primary" style="flex:0 0 auto;padding:6px 10px;font-size:11px">Copy commands</span><span class="small">~1.5 GB · a few minutes on Wi-Fi</span></div>
+    </div>
+
+    <div class="stepcard">
+      <div class="stephead"><span class="num">3</span><span class="stitle">Start the host</span></div>
+      <div class="sdesc">Run the harness in Termux and keep it awake:</div>
+      <div class="code">termux-wake-lock
+cd ~/dsh-mobile
+dsh web --no-open       <span class="dim"># serves 127.0.0.1</span></div>
+      <div class="hint">First start asks you to configure a provider (DeepSeek API key) — the same onboarding the desktop harness uses. Keep Termux in the foreground for long turns; Android may stop background apps.</div>
+    </div>
+
+    <div class="note">When the host is up, come back and tap <b style="color:var(--mint)">Detect host</b> — pairing works entirely over loopback, nothing is exposed to the network.</div>
+    <div class="footer">mockup · dsh mobile · termux setup</div>
+  </div>
+</div></body></html>
