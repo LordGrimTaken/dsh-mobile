@@ -74,6 +74,8 @@ sealed interface LocalHostProbeState {
 class AppState(context: Context) {
 
     private val appContext = context.applicationContext
+    private val lanDiscovery = LanDiscovery(appContext)
+    private var lanDiscoverySink: ((List<LanDiscovery.FoundHost>) -> Unit)? = null
     private val legacyStore = PairingStore(appContext)
     private val hostStore = HostProfileStore(
         store = SharedPreferencesHostKeyValueStore(appContext),
@@ -3603,6 +3605,30 @@ class AppState(context: Context) {
     }
 
     // endregion
+
+    /** mDNS discovery for hosts on the local network; results stream to [onChanged] on main. */
+    fun discoverLanHosts(onChanged: (List<LanDiscovery.FoundHost>) -> Unit) {
+        lanDiscoverySink = onChanged
+        lanDiscovery.start { hosts -> lanDiscoverySink?.invoke(hosts) }
+    }
+
+    fun stopLanDiscovery() {
+        lanDiscovery.stop()
+        lanDiscoverySink = null
+    }
+
+    /** Opens pairing pre-filled with a discovered LAN URL and its advertised service name. */
+    fun openPairingPrefilled(baseUrl: String, label: String) {
+        pairingQrPrefill = PairQrPayload(
+            baseUrl = baseUrl.trimEnd('/'),
+            code = "",
+            hostLabel = label,
+        )
+        pairingQrRevision += 1
+        pairingLabelDefault = label
+        pairingError = null
+        showPairing = true
+    }
 
     fun openPairing(labelDefault: String? = null) {
         pairingLabelDefault = labelDefault.orEmpty()

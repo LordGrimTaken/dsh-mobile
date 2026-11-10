@@ -1,14 +1,14 @@
 {
   "schemaVersion": 1,
-  "versionCode": 161,
-  "versionName": "0.12.1",
-  "tag": "v0.12.1",
-  "publishedAt": "2026-11-10T02:44:23Z",
-  "apkUrl": "https://github.com/LordGrimTaken/dsh-mobile/releases/download/v0.12.1/dsh-android-0.12.1-debug.apk",
-  "apkAssetName": "dsh-android-0.12.1-debug.apk",
-  "apkSizeBytes": 44142816,
-  "sha256": "7505944db75e1391f4282dd4d7fc1907854dbc08ef55cfe2e6356279821431dc",
+  "versionCode": 162,
+  "versionName": "0.13.0",
+  "tag": "v0.13.0",
+  "publishedAt": "2026-11-10T13:24:21Z",
+  "apkUrl": "https://github.com/LordGrimTaken/dsh-mobile/releases/download/v0.13.0/dsh-android-0.13.0-debug.apk",
+  "apkAssetName": "dsh-android-0.13.0-debug.apk",
+  "apkSizeBytes": 44408608,
+  "sha256": "c6328372e86857610b7212a3bb9bb76bb09302bf7f216030609e294a9e4c3bc8",
   "minSdk": 26,
-  "notes": "DSH Android 0.12.1: bottom navigation now stacks icon over label with a single-line 12sp label, so Settings no longer wraps or clips on narrow (360 dp) screens. Includes 0.12.0 session defaults, plugin inventory and ETag/304 conditional GET improvements.",
-  "releaseUrl": "https://github.com/LordGrimTaken/dsh-mobile/releases/tag/v0.12.1"
+  "notes": "DSH Android 0.13.0: Use this phone as the host (Termux harness, bundled setup export), redesigned first run (demo first, scan host QR, find hosts on your Wi-Fi, desktop/cloud/Tailscale, recovery/backup restore), and host-side mDNS discovery (_dsh._tcp).",
+  "releaseUrl": "https://github.com/LordGrimTaken/dsh-mobile/releases/tag/v0.13.0"
 }

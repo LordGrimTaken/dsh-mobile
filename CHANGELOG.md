@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.13.0 — phone host, new first-run, LAN discovery
+
+- **“Use this phone” host** (Settings → Hosts → On this phone): detect a DeepSeek Harness running in
+  Termux over loopback (`127.0.0.1:3543`), pair it as a normal host, setup guide with the host plugin
+  bundled inside the APK (export to Downloads — no GitHub checkout) and a local Termux installer.
+- **Redesigned first run**: demo data first, then **Scan host QR**, **Find hosts on this network**
+  (mDNS discovery), **Use this phone**, pair desktop/cloud, Tailscale, and an “Already set up?”
+  group (recovery code, import a backup file).
+- **Host plugin advertises `_dsh._tcp` over mDNS** so the app can discover desktop hosts on the same
+  Wi-Fi without typing IPs (zero dependencies; PTR/SRV/TXT/A responses).
+- Fixes: setup-screen navigation from Hosts (overlay no longer swallows it), route-row layout.
+
 ## Unreleased — bundled Termux host (no GitHub checkout)
 
 - **No repository exposure**: the host plugin (zero npm deps) + installer are now packaged inside

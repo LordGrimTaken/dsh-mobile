@@ -31,6 +31,7 @@ import { PairingStore } from './pairing.js';
 import { PushConfigFileStore, createPushManager } from './push.js';
 import { createRouter } from './router.js';
 import { createMobileServer } from './server.js';
+import { startMdnsAdvertiser } from './mdns.js';
 import { JsonStateStore } from './store.js';
 
 import path from 'node:path';
@@ -121,6 +122,7 @@ function activate(ctx, config, logger) {
   ctx.effect(() => {
     const disposeEvents = adapter.attach();
     let closed = false;
+    let mdnsStop = null;
 
     ready = (async () => {
       // Load the curated hidden list before serving the first request (missing
@@ -151,6 +153,16 @@ function activate(ctx, config, logger) {
         `[dsh-mobile-host] Mobile API v1 listening on ${resolved.host}:${host.port ?? resolved.port} ` +
           `(state: ${resolved.stateFile}, hidden: ${hiddenStore.size}, paired: ${pairing.hasDevices() ? 'yes' : 'no'})`,
       );
+      try {
+        mdnsStop = startMdnsAdvertiser({
+          port: Number(host.port ?? resolved.port),
+          hostName: resolved.hostName,
+          version: resolved.version,
+          logger,
+        });
+      } catch {
+        mdnsStop = null;
+      }
       return { pairing, server };
     })().catch((error) => {
       logger.error?.(
@@ -168,6 +180,11 @@ function activate(ctx, config, logger) {
         disposeEvents();
       } catch {
         /* already torn down */
+      }
+      try {
+        mdnsStop?.();
+      } catch {
+        /* ignore */
       }
       push.close();
       attachmentStore.clear();

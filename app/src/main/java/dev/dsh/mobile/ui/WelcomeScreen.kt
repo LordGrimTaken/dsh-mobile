@@ -5,6 +5,8 @@ import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
 import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -28,20 +30,28 @@ import androidx.compose.material.icons.filled.Cloud
 import androidx.compose.material.icons.filled.Computer
 import androidx.compose.material.icons.filled.Link
 import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.filled.PhoneAndroid
 import androidx.compose.material.icons.filled.PlayCircle
+import androidx.compose.material.icons.filled.QrCodeScanner
+import androidx.compose.material.icons.filled.UploadFile
+import androidx.compose.material.icons.filled.Wifi
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
@@ -57,7 +67,15 @@ import dev.dsh.mobile.data.recoveryCodeLooksValid
 import dev.dsh.mobile.data.recoveryCompletionLink
 import dev.dsh.mobile.data.recoveryCompletionMessage
 import dev.dsh.mobile.data.tailscaleMethodsHint
+import dev.dsh.mobile.data.LOCAL_BACKUP_MAX_FILE_BYTES
+import dev.dsh.mobile.data.LanDiscovery
+import dev.dsh.mobile.data.decodeLocalBackup
+import dev.dsh.mobile.data.localBackupCounts
+import dev.dsh.mobile.data.LocalBackupDecodeResult
 import dev.dsh.mobile.data.tailscaleSignInAvailable
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import kotlinx.coroutines.delay
 
 /**
@@ -69,6 +87,34 @@ fun WelcomeScreen(state: AppState) {
     var showRecoveryRestore by remember { mutableStateOf(false) }
     var showTailscaleSignIn by remember { mutableStateOf(false) }
     var tailscaleUrl by remember { mutableStateOf("") }
+
+    var showLanDiscovery by remember { mutableStateOf(false) }
+    var lanScanning by remember { mutableStateOf(false) }
+    var lanHosts by remember { mutableStateOf(emptyList<LanDiscovery.FoundHost>()) }
+    val importContext = LocalContext.current
+    val importScope = rememberCoroutineScope()
+    val backupImportLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.OpenDocument(),
+    ) { uri ->
+        if (uri == null) return@rememberLauncherForActivityResult
+        importScope.launch {
+            val raw = withContext(Dispatchers.IO) {
+                runCatching { readBackupTextLimitedLocal(importContext, uri) }.getOrNull()
+            }
+            val status = when (val decoded = raw?.let { decodeLocalBackup(it) }) {
+                is LocalBackupDecodeResult.Success -> {
+                    val counts = localBackupCounts(decoded.data)
+                    state.applyLocalBackup(decoded.data)
+                    "Backup imported · ${counts.summaryLine()}"
+                }
+                is LocalBackupDecodeResult.UnsupportedVersion ->
+                    "Unsupported backup version ${decoded.version ?: "?"}"
+                is LocalBackupDecodeResult.Invalid -> decoded.message
+                else -> "Couldn't read that file."
+            }
+            Toast.makeText(importContext, status, Toast.LENGTH_LONG).show()
+        }
+    }
 
     val setupContext = LocalContext.current
     val setupPrefs = remember(setupContext) {
@@ -150,43 +196,81 @@ fun WelcomeScreen(state: AppState) {
         )
         Spacer(Modifier.height(8.dp))
 
-        SetupGuideEntryCard(onClick = { showSetupGuide = true })
-        Spacer(Modifier.height(2.dp))
-        WelcomeOption(
-            icon = Icons.Filled.PlayCircle,
-            title = "Use demo data - no host or login",
-            body = "Explore sample sessions, approvals and plans first. Pair a real host later in Settings.",
-            accent = true,
-            onClick = state::chooseDemoData,
-        )
-        WelcomeOption(
-            icon = Icons.Filled.Computer,
-            title = "Pair your desktop host",
-            body = "The DSH app on your computer shows a 6-digit code for this phone.",
-            accent = true,
-            onClick = { state.openPairing("Desktop") },
-        )
-        WelcomeOption(
-            icon = Icons.Filled.Cloud,
-            title = "Connect to a cloud host",
-            body = "Point at a headless DSH server over HTTPS; it saves as \"Cloud\".",
-            onClick = { state.openPairing("Cloud") },
-        )
-        WelcomeOption(
-            icon = Icons.Filled.Link,
-            title = "Sign in with Tailscale",
-            body = "No pairing code needed on a Tailscale Serve URL; the tailnet verifies this " +
-                "device.",
-            onClick = { showTailscaleSignIn = true },
-        )
-        WelcomeOption(
-            icon = Icons.Filled.Lock,
-            title = "Restore with recovery code",
-            body = "Use a saved recovery link after clearing app data or reinstalling - no " +
-                "desktop pairing code needed.",
-            onClick = { showRecoveryRestore = true },
-        )
+        HadalCaps("quick start")
+    WelcomeOption(
+        icon = Icons.Filled.PlayCircle,
+        title = "Explore demo data - no host or login",
+        body = "Look around first with sample sessions; pair a real host later.",
+        accent = true,
+        onClick = state::chooseDemoData,
+    )
+    WelcomeOption(
+        icon = Icons.Filled.QrCodeScanner,
+        title = "Scan host QR",
+        body = "Point the camera at the QR shown by the DSH desktop app.",
+        onClick = state::openQrScanner,
+    )
+    WelcomeOption(
+        icon = Icons.Filled.Wifi,
+        title = "Find hosts on this network",
+        body = "Discover desktops running the mobile host plugin on your Wi-Fi.",
+        onClick = {
+            showLanDiscovery = true
+            lanScanning = true
+            state.discoverLanHosts { hosts ->
+                lanHosts = hosts
+                lanScanning = false
+            }
+        },
+    )
 
+    HadalCaps("connect a host")
+    WelcomeOption(
+        icon = Icons.Filled.PhoneAndroid,
+        title = "Use this phone",
+        body = "Run the harness inside Termux on this device - no PC needed.",
+        accent = true,
+        onClick = state::openLocalHostSetup,
+    )
+    WelcomeOption(
+        icon = Icons.Filled.Computer,
+        title = "Pair your desktop host",
+        body = "The DSH app on your computer shows a 6-digit code for this phone.",
+        accent = true,
+        onClick = { state.openPairing("Desktop") },
+    )
+    WelcomeOption(
+        icon = Icons.Filled.Cloud,
+        title = "Connect to a cloud host",
+        body = "Point at a headless DSH server over HTTPS; it saves as \"Cloud\".",
+        onClick = { state.openPairing("Cloud") },
+    )
+    WelcomeOption(
+        icon = Icons.Filled.Link,
+        title = "Connect with Tailscale",
+        body = "No pairing code needed on a Tailscale Serve URL; the tailnet verifies this device.",
+        onClick = { showTailscaleSignIn = true },
+    )
+
+    HadalCaps("already set up?")
+    WelcomeOption(
+        icon = Icons.Filled.Lock,
+        title = "Restore with recovery code",
+        body = "Use a saved recovery link after clearing app data or reinstalling.",
+        onClick = { showRecoveryRestore = true },
+    )
+    WelcomeOption(
+        icon = Icons.Filled.UploadFile,
+        title = "Import a backup file",
+        body = "Restore aliases, pins, drafts and appearance from a backup JSON.",
+        onClick = { backupImportLauncher.launch(arrayOf("application/json", "text/plain")) },
+    )
+    Spacer(Modifier.height(2.dp))
+    HadalGhostButton(
+        text = "Read the setup guide",
+        onClick = { showSetupGuide = true },
+        modifier = Modifier.fillMaxWidth(),
+    )
 
         Spacer(Modifier.height(6.dp))
         Text(
@@ -194,6 +278,29 @@ fun WelcomeScreen(state: AppState) {
                 "Hosts can be switched later in Settings → Hosts.",
             style = MaterialTheme.typography.labelSmall,
             color = MaterialTheme.colorScheme.tertiary,
+        )
+    }
+    if (showLanDiscovery) {
+        LanDiscoveryDialog(
+            hosts = lanHosts,
+            scanning = lanScanning,
+            onRefresh = {
+                lanScanning = true
+                lanHosts = emptyList()
+                state.discoverLanHosts { hosts ->
+                    lanHosts = hosts
+                    lanScanning = false
+                }
+            },
+            onPair = { host ->
+                state.stopLanDiscovery()
+                showLanDiscovery = false
+                state.openPairingPrefilled(host.baseUrl, host.serviceName)
+            },
+            onDismiss = {
+                state.stopLanDiscovery()
+                showLanDiscovery = false
+            },
         )
     }
     if (showRecoveryRestore) {
@@ -637,3 +744,114 @@ private fun WelcomeOption(
 }
 
 private const val SETUP_GUIDE_SEEN_KEY = "setup_guide_seen"
+
+/** Reads a backup file with a hard byte cap so a huge pick can't exhaust memory. */
+private fun readBackupTextLimitedLocal(context: Context, uri: android.net.Uri): String {
+    context.contentResolver.openInputStream(uri)?.use { stream ->
+        val buffer = ByteArray(8 * 1024)
+        val out = java.io.ByteArrayOutputStream()
+        var total = 0L
+        while (total < LOCAL_BACKUP_MAX_FILE_BYTES) {
+            val read = stream.read(buffer)
+            if (read <= 0) break
+            val allowed = minOf(read.toLong(), LOCAL_BACKUP_MAX_FILE_BYTES - total).toInt()
+            out.write(buffer, 0, allowed)
+            total += allowed
+            if (allowed < read) break
+        }
+        return out.toString(Charsets.UTF_8.name())
+    }
+    return ""
+}
+
+/** Lists hosts advertised over mDNS on the local network and lets the user pair one. */
+@Composable
+private fun LanDiscoveryDialog(
+    hosts: List<LanDiscovery.FoundHost>,
+    scanning: Boolean,
+    onRefresh: () -> Unit,
+    onPair: (LanDiscovery.FoundHost) -> Unit,
+    onDismiss: () -> Unit,
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        containerColor = MaterialTheme.colorScheme.surface,
+        title = {
+            Text(
+                if (scanning) "Searching your Wi-Fi…" else "Hosts on this network",
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onSurface,
+            )
+        },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                if (hosts.isEmpty()) {
+                    Text(
+                        "No hosts found yet. The desktop must be on the same Wi-Fi with the mobile " +
+                            "host plugin running (updated version), and its firewall must allow " +
+                            "discovery.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.tertiary,
+                    )
+                } else {
+                    hosts.forEach { host ->
+                        Row(
+                            Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(10.dp))
+                                .background(MaterialTheme.colorScheme.surfaceVariant)
+                                .padding(horizontal = 10.dp, vertical = 8.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Column(Modifier.weight(1f)) {
+                                Text(
+                                    host.serviceName,
+                                    style = MaterialTheme.typography.titleSmall,
+                                    color = MaterialTheme.colorScheme.onSurface,
+                                    maxLines = 1,
+                                )
+                                Text(
+                                    host.baseUrl,
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.tertiary,
+                                    maxLines = 1,
+                                )
+                            }
+                            Text(
+                                "Pair",
+                                modifier = Modifier
+                                    .clip(RoundedCornerShape(6.dp))
+                                    .clickable { onPair(host) }
+                                    .padding(horizontal = 10.dp, vertical = 4.dp),
+                                style = MaterialTheme.typography.labelLarge,
+                                color = MaterialTheme.colorScheme.primary,
+                            )
+                        }
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            Text(
+                if (scanning) "Scanning…" else "Scan again",
+                modifier = Modifier
+                    .clip(RoundedCornerShape(6.dp))
+                    .clickable(enabled = !scanning, onClick = onRefresh)
+                    .padding(horizontal = 12.dp, vertical = 6.dp),
+                style = MaterialTheme.typography.labelLarge,
+                color = MaterialTheme.colorScheme.primary,
+            )
+        },
+        dismissButton = {
+            Text(
+                "Close",
+                modifier = Modifier
+                    .clip(RoundedCornerShape(6.dp))
+                    .clickable(onClick = onDismiss)
+                    .padding(horizontal = 12.dp, vertical = 6.dp),
+                style = MaterialTheme.typography.labelLarge,
+                color = MaterialTheme.colorScheme.tertiary,
+            )
+        },
+    )
+}
