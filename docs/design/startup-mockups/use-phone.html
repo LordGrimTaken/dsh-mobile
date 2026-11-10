@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>First run — use this phone</title>
+<link rel="stylesheet" href="../mockups/mock.css">
+<style>
+.hero2 { display:flex; flex-direction:column; align-items:center; gap:6px; padding: 6px 8px 2px; text-align:center; }
+.phoneglyph { width: 54px; height: 54px; border-radius: 16px; display:grid; place-items:center; background: var(--mint-wash); border:1px solid var(--line-strong); font-size: 24px; color: var(--mint); }
+.hero2 .h { font: 650 19px/1.25 var(--sans); color: var(--text); }
+.hero2 .s { font: 400 11px/1.45 var(--sans); color: var(--text3); }
+.bullets { display:flex; flex-direction:column; gap:7px; }
+.bullet { display:flex; gap:8px; align-items:flex-start; font: 400 11px/1.4 var(--sans); color: var(--text2); }
+.bullet .tick { color: var(--mint); font: 700 11px var(--mono); flex: 0 0 auto; }
+.reqs { display:flex; gap:6px; flex-wrap:wrap; }
+.req { font: 600 9px var(--mono); color: var(--text2); border:1px solid var(--line); border-radius: 20px; padding: 3px 7px; background: rgba(0,0,0,.2); }
+.limits { border:1px dashed rgba(242,193,78,.4); background: rgba(242,193,78,.06); border-radius: 12px; padding: 9px 11px; font: 400 10.5px/1.45 var(--sans); color: var(--text2); }
+.limits b { color: var(--amber); }
+</style></head>
+<body><div class="app">
+  <div class="sb"><span>9:41</span><span class="right"><i class="wifi"></i><span class="batt"><i></i></span></span></div>
+  <header><span class="back">←</span><span class="h-title" style="font-size:13px;letter-spacing:.08em">Use this phone</span><span class="proposed">MOCKUP</span></header>
+  <div class="content" style="gap:10px">
+    <div class="hero2">
+      <span class="phoneglyph">▣</span>
+      <div class="h">This phone becomes the host</div>
+      <div class="s">A real DeepSeek Harness runs in Termux on this device; the app connects to it over loopback.</div>
+    </div>
+
+    <div class="card" style="padding:12px">
+      <div class="bullets">
+        <div class="bullet"><span class="tick">✓</span> Real harness — git, Node, Python, plugins and agent tools</div>
+        <div class="bullet"><span class="tick">✓</span> Sessions, transcripts and workspace files stay on this phone</div>
+        <div class="bullet"><span class="tick">✓</span> Loopback only (127.0.0.1) — nothing exposed to the network</div>
+        <div class="bullet"><span class="tick">✓</span> No desktop, account or pairing codes from a PC</div>
+      </div>
+      <div style="height:10px"></div>
+      <div class="reqs"><span class="req">Android 11+</span><span class="req">Termux (Play)</span><span class="req">~1.5 GB</span><span class="req">provider API key</span></div>
+    </div>
+
+    <div class="limits"><b>Phone limits:</b> no Android emulator, no desktop GUI apps, no MCP servers from a PC; heavy builds are slow and Android may stop Termux in the background — keep it wake-locked for long turns.</div>
+
+    <div class="cap">What happens next</div>
+    <div class="row"><span class="ic">1</span><span class="meta"><b>Export the host bundle</b><span>Bundled in the app · written to Downloads</span></span></div>
+    <div class="row"><span class="ic">2</span><span class="meta"><b>Run the installer in Termux</b><span>Copy-paste commands · installs Node + harness</span></span></div>
+    <div class="row"><span class="ic">3</span><span class="meta"><b>Detect and pair</b><span>App probes 127.0.0.1:3543 automatically</span></span></div>
+
+    <div class="actions" style="display:flex;gap:8px">
+      <div class="btn primary" style="flex:1.2">Set up Termux</div>
+      <div class="btn ghost" style="flex:1">I already have it</div>
+    </div>
+    <div class="note">“I already have it” jumps straight to detect + pair for people who already run the harness in Termux.</div>
+    <div class="footer">mockup · dsh mobile · first run / use this phone</div>
+  </div>
+</div></body></html>

@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>First run — phone host ready</title>
+<link rel="stylesheet" href="../mockups/mock.css">
+<style>
+.ready { display:flex; flex-direction:column; align-items:center; text-align:center; gap:8px; padding: 10px 8px 2px; }
+.check { width: 58px; height: 58px; border-radius: 50%; display:grid; place-items:center; background: var(--mint); color:#04241a; font: 700 26px var(--sans); box-shadow: 0 0 30px rgba(78,229,155,.25); }
+.ready .h { font: 650 21px/1.25 var(--sans); color: var(--text); }
+.ready .s { font: 400 11px/1.45 var(--sans); color: var(--text3); }
+.hostcard { background: linear-gradient(135deg, rgba(78,229,155,.12), rgba(78,229,155,.02)); border:1px solid var(--line-strong); border-radius: 16px; padding: 13px; display:flex; flex-direction:column; gap:8px; }
+.metrics { display:flex; gap:8px; }
+.metric { flex:1; background: rgba(0,0,0,.22); border:1px solid var(--line); border-radius: 10px; padding: 7px 8px; }
+.metric .k { font: 650 8px var(--mono); letter-spacing:.1em; text-transform:uppercase; color: var(--text3); }
+.metric .v { font: 650 12px var(--mono); color: var(--text); margin-top:2px; }
+.tip { border-left: 2px solid var(--line-strong); padding-left: 9px; font: 400 10.5px/1.45 var(--sans); color: var(--text3); }
+</style></head>
+<body><div class="app">
+  <div class="sb"><span>9:41</span><span class="right"><i class="wifi"></i><span class="batt"><i></i></span></span></div>
+  <div class="content" style="gap:12px; padding-top:10px">
+    <div class="ready">
+      <div class="check">✓</div>
+      <div class="h">Your phone is the host</div>
+      <div class="s">The harness is running in Termux. Sessions now come from this device — no desktop involved.</div>
+    </div>
+
+    <div class="hostcard">
+      <div style="display:flex;align-items:center;gap:8px">
+        <span class="dot"></span><span style="font:650 14px var(--sans)">dsh@Termux</span><span class="pill live" style="margin-left:auto">● live</span>
+      </div>
+      <div style="font:500 10.5px var(--mono);color:var(--text2)">http://127.0.0.1:3543 · loopback · profile web</div>
+      <div class="metrics">
+        <div class="metric"><div class="k">host</div><div class="v">v0.2.0</div></div>
+        <div class="metric"><div class="k">node</div><div class="v">v24.9.1</div></div>
+        <div class="metric"><div class="k">sessions</div><div class="v">0</div></div>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;font:600 9.5px var(--mono);color:var(--text3)">
+        <span>workspace ~/dsh-workspace</span><span style="margin-left:auto">wake-locked</span>
+      </div>
+    </div>
+
+    <div class="actions" style="display:flex;gap:8px">
+      <div class="btn primary" style="flex:1.2">Open sessions</div>
+      <div class="btn ghost" style="flex:1">Host settings</div>
+    </div>
+
+    <div class="tip">Keep Termux running (ideally in tmux) and battery optimisation off for Termux so long agent turns survive. The app shows this host as offline if Termux stops — re-open Termux and tap Re-detect.</div>
+
+    <div class="cap" style="margin-top:2px">You can also</div>
+    <div class="row"><span class="ic">＋</span><span class="meta"><b>Pair another host</b><span>Desktop, cloud or a second phone</span></span><span class="chev">›</span></div>
+    <div class="row"><span class="ic">▶</span><span class="meta"><b>Try demo data</b><span>Look around without touching the harness</span></span><span class="chev">›</span></div>
+
+    <div class="note">Everything on this screen is real state from the on-device harness — no simulated “ready” screen.</div>
+    <div class="footer">mockup · dsh mobile · first run / host ready</div>
+  </div>
+</div></body></html>
