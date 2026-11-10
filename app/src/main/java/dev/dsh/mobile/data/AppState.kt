@@ -3576,12 +3576,16 @@ class AppState(context: Context) {
     }
 
     fun openLocalHostSetup() {
+        // The setup guide is its own full-screen surface; hide the Hosts overlay so it renders.
+        showHosts = false
         showLocalHostSetup = true
         probeLocalHost()
     }
 
+    /** Back from the setup guide returns to Hosts, where the Termux card reflects the probe. */
     fun closeLocalHostSetup() {
         showLocalHostSetup = false
+        showHosts = true
     }
 
     /** Opens pairing pre-filled with the loopback URL and the "Termux" label; the user enters the code. */

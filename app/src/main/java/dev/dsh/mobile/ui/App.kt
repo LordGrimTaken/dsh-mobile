@@ -506,8 +506,8 @@ fun DshMobileApp(
             when {
                 state.showQrScanner -> QrScanScreen(state = state)
                 state.showPairing -> PairingScreen(state = state)
-                state.showHosts -> HostsScreen(state = state)
                 state.showLocalHostSetup -> TermuxHostSetupScreen(state = state)
+                state.showHosts -> HostsScreen(state = state)
 
                 state.showWelcome -> WelcomeScreen(state = state)
 

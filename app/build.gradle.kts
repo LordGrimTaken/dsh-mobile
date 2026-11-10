@@ -30,6 +30,27 @@ fun findSigningCredentials(): SigningCredentials? {
     return SigningCredentials(properties, propertiesFile)
 }
 
+/**
+ * Termux on-phone host bundle: ships the host plugin (zero npm dependencies) plus the installer
+ * inside the APK, so setup never needs a GitHub checkout. The app exports this zip to Downloads.
+ */
+val termuxAssetsDir = layout.buildDirectory.dir("generated/termux-assets")
+val zipTermuxHostBundle = tasks.register<Zip>("zipTermuxHostBundle") {
+    from(layout.projectDirectory.dir("../host-plugin")) {
+        exclude("test/**", "node_modules/**", "package-lock.json", "**/.DS_Store")
+        into("plugin")
+    }
+    from(layout.projectDirectory.file("../scripts/termux-install.sh")) {
+        rename { "install.sh" }
+    }
+    archiveFileName.set("dsh-mobile-host.zip")
+    destinationDirectory.set(termuxAssetsDir)
+    isPreserveFileTimestamps = false
+    isReproducibleFileOrder = true
+}
+
+tasks.named("preBuild").configure { dependsOn(zipTermuxHostBundle) }
+
 val signingCredentials = findSigningCredentials()
 if (signingCredentials == null) {
     logger.warn(
@@ -40,6 +61,7 @@ if (signingCredentials == null) {
 
 android {
     namespace = "dev.dsh.mobile"
+    sourceSets.getByName("main").assets.srcDir(termuxAssetsDir)
     compileSdk = 36
 
     // Google Play builds pass -PplayApplicationId=com.dsh.unofficial.app. The default keeps the

@@ -1,6 +1,11 @@
 package dev.dsh.mobile.ui
 
+import android.content.ContentValues
+import android.content.Context
 import android.content.Intent
+import android.os.Build
+import android.os.Environment
+import android.provider.MediaStore
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -29,6 +34,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -42,18 +48,52 @@ import androidx.compose.ui.unit.dp
 import dev.dsh.mobile.data.AppState
 import dev.dsh.mobile.data.LOCAL_HOST_BASE_URL
 import dev.dsh.mobile.data.LocalHostProbeState
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import java.io.File
 
 private const val TERMUX_TERMUX_PACKAGE = "com.termux"
 private const val TERMUX_PLAY_URL = "market://details?id=$TERMUX_TERMUX_PACKAGE"
 private const val TERMUX_PLAY_FALLBACK = "https://play.google.com/store/apps/details?id=$TERMUX_TERMUX_PACKAGE"
 
-/** Commands to paste in Termux; the script handles plugin registration and starts the harness. */
+/** Commands to paste in Termux after exporting the bundled host plugin (no GitHub needed). */
 private val TERMUX_COMMANDS = """
 # In Termux:
-pkg update -y && pkg install -y nodejs git
-git clone https://github.com/LordGrimTaken/dsh-mobile
-cd dsh-mobile && bash scripts/termux-host.sh
+pkg install -y nodejs unzip
+termux-setup-storage      # first run only
+cd ~/storage/downloads && unzip -o dsh-mobile-host.zip -d dsh-mobile-host
+cd dsh-mobile-host && bash install.sh
 """.trimIndent()
+
+/** Copies the bundled host-plugin zip from the APK into shared Downloads so Termux can unzip it. */
+private suspend fun exportHostBundle(context: Context): Result<String> = withContext(Dispatchers.IO) {
+    runCatching {
+        val bytes = context.assets.open("dsh-mobile-host.zip").use { it.readBytes() }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            val values = ContentValues().apply {
+                put(MediaStore.MediaColumns.DISPLAY_NAME, "dsh-mobile-host.zip")
+                put(MediaStore.MediaColumns.MIME_TYPE, "application/zip")
+                put(MediaStore.MediaColumns.RELATIVE_PATH, "Download/dsh-mobile")
+            }
+            val resolver = context.contentResolver
+            val uri = resolver.insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, values)
+                ?: error("Could not create the download")
+            resolver.openOutputStream(uri)?.use { it.write(bytes) }
+                ?: error("Could not write the download")
+            "Download/dsh-mobile/dsh-mobile-host.zip"
+        } else {
+            val dir = File(
+                Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS),
+                "dsh-mobile",
+            )
+            dir.mkdirs()
+            val file = File(dir, "dsh-mobile-host.zip")
+            file.writeBytes(bytes)
+            file.absolutePath
+        }
+    }
+}
 
 /**
  * Settings → Hosts → “On this phone”: detects and pairs a DeepSeek Harness running inside
@@ -231,8 +271,9 @@ fun TermuxHostSetupScreen(state: AppState) {
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             Text(
-                "The app can’t install code into Termux for you. Do these three steps on the phone " +
-                    "once, then come back and pair — the harness then runs entirely on this device.",
+                "The app exports the host plugin from inside itself — no repository clone and no " +
+                    "account needed. Do these three steps on the phone once; the harness then runs " +
+                    "entirely on this device.",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.tertiary,
             )
@@ -265,10 +306,46 @@ fun TermuxHostSetupScreen(state: AppState) {
                 )
             }
 
-            SetupStepCard(number = "2", title = "Install Node 24 + the harness") {
+            SetupStepCard(number = "2", title = "Export the host bundle") {
                 Text(
-                    "Paste this in Termux. It installs Node/git, the harness, registers the mobile " +
-                        "host plugin and starts it with a wake lock.",
+                    "Writes the mobile host plugin and installer to Downloads so Termux can unzip " +
+                        "it. The only online step later is installing the harness from npm.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.tertiary,
+                )
+                Spacer(Modifier.height(8.dp))
+                var exportStatus by remember { mutableStateOf<String?>(null) }
+                var exporting by remember { mutableStateOf(false) }
+                val exportScope = rememberCoroutineScope()
+                HadalGhostButton(
+                    text = if (exporting) "Exporting…" else "Export host bundle",
+                    onClick = {
+                        if (exporting) return@HadalGhostButton
+                        exporting = true
+                        exportScope.launch {
+                            exportStatus = exportHostBundle(context).fold(
+                                onSuccess = { "Exported to $it" },
+                                onFailure = { "Export failed: ${it.message ?: "unknown error"}" },
+                            )
+                            exporting = false
+                        }
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                )
+                exportStatus?.let { status ->
+                    Text(
+                        status,
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.padding(top = 6.dp),
+                    )
+                }
+            }
+
+            SetupStepCard(number = "3", title = "Run the installer in Termux") {
+                Text(
+                    "Paste these commands. They install Node/unzip if needed, unpack the bundle and " +
+                        "start the harness with a wake lock.",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.tertiary,
                 )
@@ -293,15 +370,15 @@ fun TermuxHostSetupScreen(state: AppState) {
                     modifier = Modifier.fillMaxWidth(),
                 )
                 Text(
-                    "~1.5 GB · first install takes a few minutes on Wi-Fi. The first harness start " +
-                        "asks for a provider API key.",
+                    "~1.5 GB for the harness · first npm install takes a few minutes on Wi-Fi. The " +
+                        "first harness start asks for a provider API key.",
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.tertiary,
                     modifier = Modifier.padding(top = 6.dp),
                 )
             }
 
-            SetupStepCard(number = "3", title = "Detect and pair") {
+            SetupStepCard(number = "4", title = "Detect and pair") {
                 Text(
                     when (val current = probe) {
                         is LocalHostProbeState.Checking -> "Checking 127.0.0.1:3543…"
@@ -331,8 +408,8 @@ fun TermuxHostSetupScreen(state: AppState) {
             }
 
             Text(
-                "Preview instructions: run the script once and check the output. If Termux reports a " +
-                    "missing command, update Termux’s packages and run it again.",
+                "The harness is @deepseek-ai/dsh from npm (public package, not this app’s repo). " +
+                    "The host plugin itself is bundled inside DSH Mobile and exported above.",
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.tertiary,
             )

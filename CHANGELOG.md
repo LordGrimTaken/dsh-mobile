@@ -1,5 +1,20 @@
 # Changelog
 
+## Unreleased — bundled Termux host (no GitHub checkout)
+
+- **No repository exposure**: the host plugin (zero npm deps) + installer are now packaged inside
+  the APK as `assets/dsh-mobile-host.zip`. The setup guide has **Export host bundle**, which writes
+  the zip to `Download/dsh-mobile/`; Termux unzips it locally — no GitHub clone, no repo name in the
+  app, no account.
+- Installer rewritten to a **local-bundle mode** (`scripts/termux-install.sh`, shipped inside the
+  zip as `install.sh`): registers the bundled plugin in the `web` profile, appends the bundle,
+  takes a wake lock and starts `dsh web --no-open`. The only network step is
+  `npm install -g @deepseek-ai/dsh` (public DeepSeek package, not this app's repo).
+- Gradle packages the bundle automatically (`zipTermuxHostBundle` → generated assets, wired into
+  preBuild), so plugin and installer stay in sync with the source tree.
+- Fixed setup-screen navigation: opening the guide now hides the Hosts overlay (taps previously
+  looked dead) and Back returns to Hosts.
+
 ## Unreleased — “On this phone” Termux host (local, not released yet)
 
 - **Settings → Hosts → On this phone**: detects a DeepSeek Harness running inside Termux on the
