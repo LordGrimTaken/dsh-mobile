@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased — bottom nav label fit (local, not released yet)
+## 0.12.1 — bottom nav label fit
 
 - Home bottom nav now uses a stacked icon-above-label layout (label `maxLines = 1`, no soft wrap,
   12 sp) so **Settings** no longer wraps/cuts off on 360 dp phones; all four tabs stay equal width.
