@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>First run — choose host</title>
+<link rel="stylesheet" href="../mockups/mock.css">
+<style>
+.brandline { display:flex; align-items:center; gap:8px; padding: 2px 2px 0; }
+.brandline .b { color: var(--mint); font: 700 17px var(--mono); }
+.brandline .t { font: 650 12px var(--mono); letter-spacing:.18em; color: var(--text2); }
+.kicker { font: 600 9.5px var(--mono); letter-spacing:.16em; color: var(--text3); }
+.big { font: 650 24px/1.2 var(--sans); color: var(--text); margin-top: 2px; }
+.lead { font: 400 11.5px/1.5 var(--sans); color: var(--text3); }
+.hostcard { display:flex; align-items:center; gap:11px; background: var(--layer2); border:1px solid var(--line); border-radius: 15px; padding: 12px; }
+.hostcard.hot { border-color: var(--line-strong); background: linear-gradient(135deg, rgba(78,229,155,.13), rgba(78,229,155,.03)); box-shadow: 0 0 22px rgba(78,229,155,.08); }
+.hostcard .ic2 { width: 38px; height: 38px; border-radius: 11px; display:grid; place-items:center; background: var(--mint-wash); border:1px solid var(--line); font-size:16px; flex:0 0 auto; }
+.hostcard .txt { flex:1; min-width:0; }
+.hostcard .txt b { display:block; font: 650 13px var(--sans); color: var(--text); }
+.hostcard .txt span { display:block; margin-top:2px; font: 400 10.5px/1.35 var(--sans); color: var(--text3); }
+.titleline { display:flex; align-items:center; gap:6px; }
+.titleline b { font: 650 13px var(--sans); color: var(--text); }
+.tagnew { display:inline-block; width:max-content; font: 700 8px var(--mono); letter-spacing:.12em; color:#04241a; background: var(--mint); border-radius: 20px; padding: 2px 6px; margin-left: 6px; }
+.smallrow { display:flex; gap:10px; align-items:center; font: 500 10px var(--mono); color: var(--text3); }
+.smallrow b { color: var(--text2); font-weight: 600; }
+</style><style>body{height:1180px}</style>
+</head>
+<body><div class="app">
+  <div class="sb"><span>9:41</span><span class="right"><i class="wifi"></i><span class="batt"><i></i></span></span></div>
+  <div class="content" style="gap:10px; padding-top:8px">
+    <div class="brandline"><span class="b">❯</span><span class="t">DEEPSEEK HARNESS</span><span class="proposed" style="margin-left:auto">MOCKUP</span></div>
+    <div class="kicker">MOBILE · FIRST RUN</div>
+    <div class="big">Connect a DSH host</div>
+    <div class="lead">A host is any machine running the DSH mobile plugin — your computer, a cloud server, or <b style="color:var(--text)">this phone itself</b>.</div>
+
+    <div class="cap" style="margin-top:0">Quick start</div>
+
+    <div class="hostcard hot">
+      <div class="ic2">▶</div>
+      <div class="txt"><b>Explore demo data</b><span>Look around first — no host, no login.</span></div>
+      <div class="chev">›</div>
+    </div>
+
+    <div class="hostcard">
+      <div class="ic2">▦</div>
+      <div class="txt"><b>Scan host QR</b><span>Point at the QR shown by the DSH desktop app.</span></div>
+      <div class="chev">›</div>
+    </div>
+
+    <div class="hostcard">
+      <div class="ic2">◎</div>
+      <div class="txt"><div class="titleline"><b>Find hosts on this network</b><span class="tagnew">AUTO</span></div><span>Discover desktops running DSH on your Wi-Fi.</span></div>
+      <div class="chev">›</div>
+    </div>
+
+    <div class="cap">Connect a host</div>
+
+    <div class="hostcard">
+      <div class="ic2">▣</div>
+      <div class="txt"><div class="titleline"><b>Use this phone</b><span class="tagnew">NEW</span></div><span>Run the harness in Termux — no PC needed.</span></div>
+      <div class="chev">›</div>
+    </div>
+
+    <div class="hostcard">
+      <div class="ic2">▤</div>
+      <div class="txt"><b>Pair your desktop host</b><span>Enter the 6-digit code from your computer.</span></div>
+      <div class="chev">›</div>
+    </div>
+
+    <div class="hostcard">
+      <div class="ic2">☁</div>
+      <div class="txt"><b>Connect to a cloud host</b><span>Point at a headless DSH server over HTTPS.</span></div>
+      <div class="chev">›</div>
+    </div>
+
+    <div class="hostcard">
+      <div class="ic2">⇄</div>
+      <div class="txt"><b>Connect with Tailscale</b><span>Use a Tailscale Serve URL — no pairing code.</span></div>
+      <div class="chev">›</div>
+    </div>
+
+    <div class="cap">Already set up?</div>
+    <div class="row" style="padding:10px 12px">
+      <span class="ic" style="font-size:13px">↺</span>
+      <span class="meta"><b>Restore with recovery code</b><span>Keep sessions and pairings from another phone</span></span>
+      <span class="chev">›</span>
+    </div>
+    <div class="row" style="padding:10px 12px">
+      <span class="ic" style="font-size:13px">⇩</span>
+      <span class="meta"><b>Import a backup file</b><span>Aliases, pins, drafts and appearance</span></span>
+      <span class="chev">›</span>
+    </div>
+    <div class="note">No account required. Reached over your own network only: loopback for “this phone”, Tailscale/HTTPS for remote hosts.</div>
+    <div class="footer">mockup · dsh mobile · first run / choose host</div>
+  </div>
+</div></body></html>
