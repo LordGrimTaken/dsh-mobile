@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Find hosts on this network</title>
+<link rel="stylesheet" href="../mockups/mock.css">
+<style>
+.scanline { display:flex; align-items:center; gap:9px; border:1px dashed var(--line-strong); border-radius:14px; padding: 11px 12px; background: rgba(78,229,155,.05); }
+.spinner { width:16px; height:16px; border-radius:50%; border:2px solid var(--line-strong); border-top-color: var(--mint); animation: spin 1s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg) } }
+.found { display:flex; align-items:center; gap:10px; background: var(--layer2); border:1px solid var(--line); border-radius:14px; padding: 11px 12px; }
+.found.hot { border-color: var(--line-strong); }
+.ic2 { width:34px; height:34px; border-radius:9px; display:grid; place-items:center; background: var(--mint-wash); border:1px solid var(--line); font-size:14px; color: var(--mint); flex:0 0 auto; }
+.meta2 { flex:1; min-width:0; }
+.meta2 b { display:block; font: 650 12.5px var(--sans); color: var(--text); }
+.meta2 span { display:block; margin-top:2px; font: 500 9.5px var(--mono); color: var(--text3); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.pairbtn { flex:0 0 auto; font: 650 10px var(--sans); color:#04241a; background: var(--mint); border-radius:9px; padding: 7px 10px; }
+.smallrow { display:flex; gap:12px; font: 500 10px var(--mono); color: var(--text3); }
+</style></head>
+<body><div class="app">
+  <div class="sb"><span>9:41</span><span class="right"><i class="wifi"></i><span class="batt"><i></i></span></span></div>
+  <header><span class="back">←</span><span class="h-title" style="font-size:13px;letter-spacing:.08em">Find hosts</span><span class="proposed">MOCKUP</span></header>
+  <div class="content" style="gap:10px">
+    <div class="scanline">
+      <span class="spinner"></span>
+      <div style="flex:1">
+        <div style="font:650 12px var(--sans)">Searching your Wi-Fi…</div>
+        <div style="font:500 9.5px var(--mono);color:var(--text3);margin-top:2px">mDNS · _dsh._tcp · local network only</div>
+      </div>
+      <span class="pill">2 found</span>
+    </div>
+
+    <div class="cap">Hosts on this network</div>
+    <div class="found hot">
+      <span class="ic2">▤</span>
+      <div class="meta2"><b>Studio PC</b><span>192.168.1.24:3543 · host v0.2.0</span></div>
+      <span class="pairbtn">Pair</span>
+    </div>
+    <div class="found">
+      <span class="ic2">▤</span>
+      <div class="meta2"><b>Living-room Mac</b><span>192.168.1.31:3543 · host v0.2.0</span></div>
+      <span class="pairbtn">Pair</span>
+    </div>
+
+    <div class="note">Pairing still asks the host for a 6-digit code (or scan its QR) — discovery only saves you typing the IP. Nothing is announced outside your network.</div>
+
+    <div class="cap">Nothing listed?</div>
+    <div class="card" style="padding:12px;display:flex;flex-direction:column;gap:7px">
+      <div style="font:400 10.5px/1.5 var(--sans);color:var(--text3)">Phone and desktop must be on the same Wi-Fi, the mobile host plugin must be running, and the desktop firewall must allow port 3543. Discovery can be blocked on guest/isolated networks.</div>
+      <div class="smallrow"><span><b style="color:var(--text2)">Retry scan</b></span><span><b style="color:var(--text2)">Scan QR instead</b></span><span><b style="color:var(--text2)">Enter URL</b></span></div>
+    </div>
+
+    <div class="footer">mockup · dsh mobile · LAN discovery</div>
+  </div>
+</div></body></html>

@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Scan host QR</title>
+<link rel="stylesheet" href="../mockups/mock.css">
+<style>
+.camera { position:relative; flex:1; margin: 0 16px; border-radius: 20px; overflow:hidden; border:1px solid var(--line-strong); background:
+  radial-gradient(220px 160px at 30% 25%, rgba(78,229,155,.12), transparent 70%),
+  radial-gradient(260px 200px at 75% 70%, rgba(110,182,255,.10), transparent 70%),
+  repeating-linear-gradient(45deg, rgba(255,255,255,.02) 0 1px, transparent 1px 3px),
+  #07120d; min-height: 300px; }
+.finder { position:absolute; inset: 22% 16%; border-radius: 18px; }
+.finder i { position:absolute; width: 30px; height: 30px; border: 3px solid var(--mint); border-radius: 8px; }
+.finder i:nth-child(1){ top:0; left:0; border-right:0; border-bottom:0; }
+.finder i:nth-child(2){ top:0; right:0; border-left:0; border-bottom:0; }
+.finder i:nth-child(3){ bottom:0; left:0; border-right:0; border-top:0; }
+.finder i:nth-child(4){ bottom:0; right:0; border-left:0; border-top:0; }
+.scanbar { position:absolute; left:16%; right:16%; top:50%; height:2px; background: linear-gradient(90deg, transparent, var(--mint), transparent); box-shadow: 0 0 12px var(--mint); }
+.hint { position:absolute; bottom: 10px; left: 0; right: 0; text-align:center; font: 600 9.5px var(--mono); color: var(--text2); }
+.sheet { margin: 10px 16px 0; background: var(--layer2); border:1px solid var(--line); border-radius: 16px 16px 0 0; padding: 12px; display:flex; flex-direction:column; gap:8px; }
+.sheet .h { font: 650 13px var(--sans); color: var(--text); }
+.sheet .s { font: 400 10.5px/1.45 var(--sans); color: var(--text3); }
+.linkrow { display:flex; gap:14px; font: 600 10px var(--mono); color: var(--text2); }
+</style></head>
+<body><div class="app">
+  <div class="sb"><span>9:41</span><span class="right"><i class="wifi"></i><span class="batt"><i></i></span></span></div>
+  <header><span class="back">←</span><span class="h-title" style="font-size:13px;letter-spacing:.08em">Scan host QR</span><span class="proposed">MOCKUP</span></header>
+  <div class="camera">
+    <div class="finder"><i></i><i></i><i></i><i></i><span class="scanbar"></span></div>
+    <div class="hint">align the QR inside the frame</div>
+  </div>
+  <div class="sheet">
+    <div class="h">Point at the QR on your DSH desktop</div>
+    <div class="s">The desktop app's “Connect a phone” page shows a one-use QR. Scanning it fills the host URL and code; it never pairs without your tap.</div>
+    <div class="linkrow"><span>Enter code instead</span><span>Paste a pair link</span><span>Torch</span></div>
+    <div style="font:500 9px var(--mono);color:var(--text3)">Camera frames stay on the device — decoded locally by ML Kit.</div>
+  </div>
+  <div class="footer">mockup · dsh mobile · scan pairing QR</div>
+</div></body></html>

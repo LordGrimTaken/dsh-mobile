@@ -28,38 +28,62 @@
     <div class="big">Connect a DSH host</div>
     <div class="lead">A host is any machine running the DSH mobile plugin — your computer, a cloud server, or <b style="color:var(--text)">this phone itself</b>.</div>
 
+    <div class="cap" style="margin-top:0">Quick start</div>
+
     <div class="hostcard hot">
       <div class="ic2">▶</div>
-      <div class="txt"><b>Explore demo data</b><span>Look around first — no host, no login. Pair later.</span></div>
+      <div class="txt"><b>Explore demo data</b><span>Look around first — no host, no login.</span></div>
       <div class="chev">›</div>
     </div>
 
     <div class="hostcard">
+      <div class="ic2">▦</div>
+      <div class="txt"><b>Scan host QR</b><span>Point at the QR shown by the DSH desktop app.</span></div>
+      <div class="chev">›</div>
+    </div>
+
+    <div class="hostcard">
+      <div class="ic2">◎</div>
+      <div class="txt"><div class="titleline"><b>Find hosts on this network</b><span class="tagnew">AUTO</span></div><span>Discover desktops running DSH on your Wi-Fi.</span></div>
+      <div class="chev">›</div>
+    </div>
+
+    <div class="cap">Connect a host</div>
+
+    <div class="hostcard">
       <div class="ic2">▣</div>
-      <div class="txt"><div class="titleline"><b>Use this phone</b><span class="tagnew">NEW</span></div><span>Run the harness on this device in Termux — no PC needed.</span></div>
+      <div class="txt"><div class="titleline"><b>Use this phone</b><span class="tagnew">NEW</span></div><span>Run the harness in Termux — no PC needed.</span></div>
       <div class="chev">›</div>
     </div>
 
     <div class="hostcard">
       <div class="ic2">▤</div>
-      <div class="txt"><b>Pair your desktop host</b><span>The DSH app on your computer shows a 6-digit code.</span></div>
+      <div class="txt"><b>Pair your desktop host</b><span>Enter the 6-digit code from your computer.</span></div>
       <div class="chev">›</div>
     </div>
 
     <div class="hostcard">
       <div class="ic2">☁</div>
-      <div class="txt"><b>Connect to a cloud host</b><span>Point at a headless DSH server over HTTPS; saved as “Cloud”.</span></div>
+      <div class="txt"><b>Connect to a cloud host</b><span>Point at a headless DSH server over HTTPS.</span></div>
       <div class="chev">›</div>
     </div>
 
     <div class="hostcard">
       <div class="ic2">⇄</div>
-      <div class="txt"><b>Connect with Tailscale</b><span>Use a Tailscale Serve URL — the tailnet verifies this device, no pairing code.</span></div>
+      <div class="txt"><b>Connect with Tailscale</b><span>Use a Tailscale Serve URL — no pairing code.</span></div>
       <div class="chev">›</div>
     </div>
 
-    <div class="smallrow">
-      <span><b>Restore with recovery code</b></span>
+    <div class="cap">Already set up?</div>
+    <div class="row" style="padding:10px 12px">
+      <span class="ic" style="font-size:13px">↺</span>
+      <span class="meta"><b>Restore with recovery code</b><span>Keep sessions and pairings from another phone</span></span>
+      <span class="chev">›</span>
+    </div>
+    <div class="row" style="padding:10px 12px">
+      <span class="ic" style="font-size:13px">⇩</span>
+      <span class="meta"><b>Import a backup file</b><span>Aliases, pins, drafts and appearance</span></span>
+      <span class="chev">›</span>
     </div>
     <div class="note">No account required. Reached over your own network only: loopback for “this phone”, Tailscale/HTTPS for remote hosts.</div>
     <div class="footer">mockup · dsh mobile · first run / choose host</div>
