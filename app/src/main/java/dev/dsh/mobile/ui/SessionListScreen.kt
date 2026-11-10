@@ -742,7 +742,10 @@ private fun HomeNavItem(
     onClick: () -> Unit,
 ) {
     val haptics = LocalHapticFeedback.current
-    Row(
+    val contentColor = if (active) MaterialTheme.colorScheme.primary
+    else MaterialTheme.colorScheme.onSurfaceVariant
+    // Stacked icon + label: four equal tabs fit a 360 dp phone without wrapping "Settings".
+    Column(
         modifier
             .semantics { contentDescription = if (badge > 0) "$label, $badge pending" else label }
             .clip(RoundedCornerShape(14.dp))
@@ -754,34 +757,35 @@ private fun HomeNavItem(
                 haptics.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                 onClick()
             }
-            .padding(horizontal = 10.dp, vertical = 11.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.Center,
+            .padding(horizontal = 6.dp, vertical = 7.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(2.dp),
     ) {
-        Text(
-            glyph,
-            style = MaterialTheme.typography.titleMedium,
-            color = if (active) MaterialTheme.colorScheme.primary
-            else MaterialTheme.colorScheme.onSurfaceVariant,
-        )
-        Spacer(Modifier.width(6.dp))
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(3.dp),
+        ) {
+            Text(glyph, style = MaterialTheme.typography.titleMedium, color = contentColor)
+            if (badge > 0) {
+                Text(
+                    "$badge",
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(20.dp))
+                        .background(MaterialTheme.colorScheme.primary)
+                        .padding(horizontal = 4.dp, vertical = 1.dp),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onPrimary,
+                )
+            }
+        }
         Text(
             label,
-            style = MaterialTheme.typography.titleSmall,
-            color = if (active) MaterialTheme.colorScheme.primary
-            else MaterialTheme.colorScheme.onSurfaceVariant,
+            style = MaterialTheme.typography.labelMedium,
+            color = contentColor,
+            maxLines = 1,
+            softWrap = false,
+            overflow = TextOverflow.Ellipsis,
         )
-        if (badge > 0) {
-            Text(
-                "$badge",
-                modifier = Modifier
-                    .clip(RoundedCornerShape(20.dp))
-                    .background(MaterialTheme.colorScheme.primary)
-                    .padding(horizontal = 5.dp, vertical = 1.dp),
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onPrimary,
-            )
-        }
     }
 }
 

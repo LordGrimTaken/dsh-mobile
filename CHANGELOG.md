@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased — bottom nav label fit (local, not released yet)
+
+- Home bottom nav now uses a stacked icon-above-label layout (label `maxLines = 1`, no soft wrap,
+  12 sp) so **Settings** no longer wraps/cuts off on 360 dp phones; all four tabs stay equal width.
+
 ## 0.12.0 — session defaults, plugin inventory, conditional GETs
 
 Three batches built against the existing host API (no new DSH surface needed).
