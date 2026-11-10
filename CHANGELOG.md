@@ -1,40 +1,30 @@
 # Changelog
 
-## Unreleased — conditional GETs / buffering deltas (local, not released yet)
+## 0.12.0 — session defaults, plugin inventory, conditional GETs
 
-- **Host: weak ETags + 304** on the two big reads: `GET /sessions` (snapshot) and
-  `GET /sessions/{id}` (transcript). Bodies over 512 KiB stay untagged; a matching
-  `If-None-Match` returns an empty 304 with the same ETag (same weak-ETag format the app sends).
-- **App: conditional GET cache** in `DshApiClient` (LRU, 16 URLs): GETs carry `If-None-Match` when a
-  cached body exists, 304s resume the cached body without parsing, and a `CACHE HITS` metric on the
-  Connection page shows how many revalidations were saved.
-- **Connection page route rows fixed**: unreachable routes no longer inflate the row height
-  (removed the verbose error line — `RouteProbe.summary()` already carries the reason — and capped
-  the row at 64dp). Buffering status rows are visible under ROUTES.
-- Fake host mirrors the ETag/304 contract; host tests: **358/358 green** (including a router test
-  asserting 200+ETag → 304 with empty body → stale ETag → 200).
+Three batches built against the existing host API (no new DSH surface needed).
 
-## Unreleased — plugin ecosystem inventory (local, not released yet)
+### Session defaults
+- Settings → Session defaults: pick the default agent preset and default provider/model for
+  sessions created on the phone ("Host default" preserved for both; broken presets unselectable).
+- New Session sheet preselects the saved preset; session creation applies the default model via
+  the existing `PUT /sessions/{id}/model` (best effort; hosts without the model service still create).
 
-- **Host: `GET /plugins`** reads the active DSH profile (`$DSH_HOME/profiles/web/package.json`) and
-  returns the installed packages (`name`, `version`, `specifier`, `local`), the profile's bundle
-  list, a `truncated` flag (200 entries max) and `supported:false` when unreadable. Read-only,
-  bounded, never throws.
-- **App: Settings → Plugins & ecosystem** lists the profile package inventory with versions and
-  `local` badges, plus the profile bundle list. Runtime health/enable actions stay desktop-side.
-- Fake host mirrors the endpoint for UI/contract tests; new host test covers the parser
-  (link/local detection, missing profile, 200-entry cap).
+### Plugins & ecosystem
+- Host: `GET /plugins` reads the active DSH profile's `package.json` (read-only, bounded at 200
+  packages) and returns installed packages, local `link:` plugins and the profile bundle list.
+- App: Settings → Plugins & ecosystem lists the real inventory with versions/`local` badges and
+  the bundle list; unsupported hosts show an honest "not available" state.
 
-## Unreleased — session defaults (local, not released yet)
+### Conditional GETs / buffering
+- Host: weak ETags + empty 304s for `GET /sessions` and `GET /sessions/{id}` (512 KiB tag budget).
+- App: LRU conditional-GET cache sends `If-None-Match` and resumes cached bodies on 304; the
+  Connection page shows a `CACHE HITS` counter.
+- Connection page: unreachable route rows no longer balloon (verbose error line removed, 64dp cap).
 
-- **Session defaults page** (Settings → Session defaults): pick the default agent preset and the
-  default provider/model for sessions created from the phone ("Host default" preserved for both).
-  A disabled/broken preset is shown but not selectable.
-- New Session sheet preselects the chosen default preset; session creation applies the default
-  model via the existing `PUT /sessions/{id}/model` API (best effort — hosts without the model
-  service fall back to the host default instead of failing creation).
-- Choices persist in the app's presentation preferences; the per-session model picker in chat still
-  overrides for a single session.
+### Fixes/notes
+- Host tests: 358/358 (ETag 200→304→stale→200 router test, plugin parser tests).
+- Screenshots: ui-session-defaults, ui-new-session-default, ui-plugins, ui-connection-deltas.
 
 
 ## 0.11.1 — Connection route row layout fix

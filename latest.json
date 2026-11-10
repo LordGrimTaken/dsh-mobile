@@ -1,14 +1,14 @@
 {
   "schemaVersion": 1,
-  "versionCode": 159,
-  "versionName": "0.11.1",
-  "tag": "v0.11.1",
-  "publishedAt": "2026-11-09T13:57:09Z",
-  "apkUrl": "https://github.com/LordGrimTaken/dsh-mobile/releases/download/v0.11.1/dsh-android-0.11.1-debug.apk",
-  "apkAssetName": "dsh-android-0.11.1-debug.apk",
-  "apkSizeBytes": 44110048,
-  "sha256": "696c77d7f606de7988d0dbb4d4bb301ee8a5434f2ea7ec38775f4aac92952956",
+  "versionCode": 160,
+  "versionName": "0.12.0",
+  "tag": "v0.12.0",
+  "publishedAt": "2026-11-10T01:55:34Z",
+  "apkUrl": "https://github.com/LordGrimTaken/dsh-mobile/releases/download/v0.12.0/dsh-android-0.12.0-debug.apk",
+  "apkAssetName": "dsh-android-0.12.0-debug.apk",
+  "apkSizeBytes": 44142816,
+  "sha256": "5889820dc5079bb3a3178a6e1caf777126347e93a6a9d3d7cfb2bc1ba3e17b01",
   "minSdk": 26,
-  "notes": "DSH Android 0.11.1: fixes Connection route rows ballooning when a route is unreachable; includes 0.11.0 Inbox Done history, theme JSON copy/import, stalled-stream seconds, accessibility + haptics. Screenshots for home tabs, settings hub, appearance, theme backup, inbox filters, chat strip and connection page in docs/screenshots/ui-*.png.",
-  "releaseUrl": "https://github.com/LordGrimTaken/dsh-mobile/releases/tag/v0.11.1"
+  "notes": "DSH Android 0.12.0: Session defaults (preset + provider/model for new sessions), Plugins & ecosystem inventory (host GET /plugins reading the profile package.json), conditional GETs (weak ETags + 304 with a CACHE HITS counter) and a Connection route-row height fix.",
+  "releaseUrl": "https://github.com/LordGrimTaken/dsh-mobile/releases/tag/v0.12.0"
 }
