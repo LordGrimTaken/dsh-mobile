@@ -1,5 +1,22 @@
 # Changelog
 
+## Unreleased — “On this phone” Termux host (local, not released yet)
+
+- **Settings → Hosts → On this phone**: detects a DeepSeek Harness running inside Termux on the
+  same device over loopback (`http://127.0.0.1:3543`), shows host version/latency, and pairs it as a
+  normal host — no desktop or network pairing needed. Auto-probes when the screen opens.
+- **Setup guide** (`Set up Termux`): three steps with copyable commands, Play Store shortcut for
+  Termux, detection status and a `Pair this host` action once the harness answers.
+- **`scripts/termux-host.sh`**: preview installer for Termux — installs Node/git + the harness,
+  registers the `dsh-mobile-host` bundle in the `web` profile, takes a wake lock and starts
+  `dsh web --no-open`.
+- Verified end-to-end on the emulator with a harness reached through `adb reverse` over the same
+  loopback path: not detected → detected → pairing prefilled (`Termux`, `127.0.0.1:3543`) → paired
+  and live host. Screenshots: `ui-termux-hosts|setup|pair|paired.png`.
+- Honest scope: runs the *real* harness on the phone (Termux userland: git/Node/Python/plugins),
+  limited by phone RAM/thermals and no Android emulator; instructions are previews to validate on
+  a real device.
+
 ## 0.12.1 — bottom nav label fit
 
 - Home bottom nav now uses a stacked icon-above-label layout (label `maxLines = 1`, no soft wrap,

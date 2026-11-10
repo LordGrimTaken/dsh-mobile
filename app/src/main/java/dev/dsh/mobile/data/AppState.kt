@@ -52,6 +52,25 @@ import java.util.concurrent.ConcurrentHashMap
  * Screens read plain properties; data lists they see are Compose snapshot lists from the
  * repository, so live SSE updates recompose exactly like before.
  */
+/** Loopback base URL where a harness running inside Termux (on this phone) binds. */
+const val LOCAL_HOST_BASE_URL: String = "http://127.0.0.1:3543"
+
+/** Host label used when pairing the on-device Termux harness. */
+const val LOCAL_HOST_LABEL: String = "Termux"
+
+/** Result of probing the on-device harness over loopback. */
+sealed interface LocalHostProbeState {
+    data object Idle : LocalHostProbeState
+    data object Checking : LocalHostProbeState
+    data class Found(
+        val version: String,
+        val hostName: String,
+        val latencyMs: Long,
+    ) : LocalHostProbeState
+
+    data class NotFound(val message: String) : LocalHostProbeState
+}
+
 class AppState(context: Context) {
 
     private val appContext = context.applicationContext
@@ -3521,6 +3540,66 @@ class AppState(context: Context) {
      * Opens the pairing screen. [labelDefault] pre-fills the host label: "Desktop" from the
      * welcome screen, "Cloud" for the cloud-host path, empty for "Add host".
      */
+    // region on-this-phone (Termux) host
+
+    /** True while the setup guide screen is open. */
+    var showLocalHostSetup: Boolean by mutableStateOf(false)
+
+    /** Latest loopback probe result for the Termux host card. */
+    var localHostProbe: LocalHostProbeState by mutableStateOf(LocalHostProbeState.Idle)
+
+    /** Saved profile that points at the loopback Termux host, if it has been paired. */
+    val localHostProfile: HostProfile?
+        get() = profiles.firstOrNull { it.baseUrl.contains("127.0.0.1:3543") }
+
+    /** Probes the harness running inside Termux on this phone (loopback, no network exposure). */
+    fun probeLocalHost() {
+        if (localHostProbe is LocalHostProbeState.Checking) return
+        localHostProbe = LocalHostProbeState.Checking
+        scope.launch {
+            val startedAt = System.nanoTime()
+            localHostProbe = try {
+                val health = DshApiClient(LOCAL_HOST_BASE_URL).health()
+                LocalHostProbeState.Found(
+                    version = health.version,
+                    hostName = "",
+                    latencyMs = (System.nanoTime() - startedAt) / 1_000_000,
+                )
+            } catch (cancelled: CancellationException) {
+                throw cancelled
+            } catch (error: Exception) {
+                LocalHostProbeState.NotFound(
+                    "No harness on 127.0.0.1:3543. Run the setup in Termux, then re-detect.",
+                )
+            }
+        }
+    }
+
+    fun openLocalHostSetup() {
+        showLocalHostSetup = true
+        probeLocalHost()
+    }
+
+    fun closeLocalHostSetup() {
+        showLocalHostSetup = false
+    }
+
+    /** Opens pairing pre-filled with the loopback URL and the "Termux" label; the user enters the code. */
+    fun openLocalHostPairing() {
+        showLocalHostSetup = false
+        pairingQrPrefill = PairQrPayload(
+            baseUrl = LOCAL_HOST_BASE_URL,
+            code = "",
+            hostLabel = LOCAL_HOST_LABEL,
+        )
+        pairingQrRevision += 1
+        pairingLabelDefault = LOCAL_HOST_LABEL
+        pairingError = null
+        showPairing = true
+    }
+
+    // endregion
+
     fun openPairing(labelDefault: String? = null) {
         pairingLabelDefault = labelDefault.orEmpty()
         pairingQrPrefill = null

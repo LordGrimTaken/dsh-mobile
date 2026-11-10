@@ -423,7 +423,8 @@ fun DshMobileApp(
             val overlayShowing = state.showQrScanner || state.showPairing || state.showHosts || state.showWelcome ||
                 state.showSettings || state.showUsage || state.showConnectionDiagnostics ||
                 state.showGoals || state.showSchedules || state.showInbox ||
-                state.showHiddenSessions || state.showArchivedSessions || state.showHostSearch
+                state.showHiddenSessions || state.showArchivedSessions || state.showHostSearch ||
+                state.showLocalHostSetup
             val twoPane = usesTwoPaneLayout(
                 widthDp = maxWidth.value,
                 hasSession = session != null,
@@ -453,7 +454,7 @@ fun DshMobileApp(
                     state.showUsage || state.showInbox || state.showGoals ||
                     state.showSchedules ||
                     state.showHiddenSessions || state.showArchivedSessions ||
-                    state.showHostSearch ||
+                    state.showHostSearch || state.showLocalHostSetup ||
                     state.showConnectionDiagnostics ||
                     session != null,
             ) {
@@ -468,6 +469,7 @@ fun DshMobileApp(
                     state.showSchedules -> state.closeSchedules()
                     state.showHiddenSessions -> state.closeHiddenSessions()
                     state.showArchivedSessions -> state.closeArchivedSessions()
+                    state.showLocalHostSetup -> state.closeLocalHostSetup()
                     state.showHostSearch -> state.closeHostSearch()
                     state.showConnectionDiagnostics -> state.closeConnectionDiagnostics()
                     else -> state.closeSession()
@@ -505,6 +507,7 @@ fun DshMobileApp(
                 state.showQrScanner -> QrScanScreen(state = state)
                 state.showPairing -> PairingScreen(state = state)
                 state.showHosts -> HostsScreen(state = state)
+                state.showLocalHostSetup -> TermuxHostSetupScreen(state = state)
 
                 state.showWelcome -> WelcomeScreen(state = state)
 

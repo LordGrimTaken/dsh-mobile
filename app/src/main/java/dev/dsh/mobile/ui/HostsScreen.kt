@@ -193,6 +193,8 @@ fun HostsScreen(state: AppState) {
                 )
             }
 
+            TermuxHostSection(state = state)
+
             Text(
                 "Switching hosts rebuilds the live connection and reloads sessions for that host. " +
                     "Removing a host unpairs only that host.",
