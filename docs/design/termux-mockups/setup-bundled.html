@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Termux setup — bundled export (implemented layout)</title>
+<link rel="stylesheet" href="../mockups/mock.css">
+<style>
+.stepcard { background: var(--layer2); border: 1px solid var(--line); border-radius: 14px; padding: 11px 12px; display:flex; flex-direction:column; gap:6px; }
+.stephead { display:flex; align-items:center; gap:8px; }
+.num { width: 22px; height: 22px; border-radius: 7px; display:grid; place-items:center; font: 700 11px var(--mono); color:#04241a; background: var(--mint); }
+.stitle { font: 650 12.5px var(--sans); color: var(--text); }
+.sdesc { font: 400 10.5px/1.4 var(--sans); color: var(--text3); }
+.code { background:#04100b; border:1px solid var(--line); border-radius:9px; padding:7px 9px; font: 500 9.5px/1.55 var(--mono); color:var(--mint-bright); white-space:pre-wrap; word-break:break-word; }
+.code .dim { color: var(--text3); }
+.okline { font: 500 9.5px var(--mono); color: var(--mint); padding-top: 5px; }
+.btnrow { display:flex; gap:8px; }
+.btn { flex:1; display:flex; align-items:center; justify-content:center; font: 650 12px var(--sans); padding:10px 12px; border-radius:11px; }
+.btn.primary { background: var(--mint); color:#04241a; }
+.btn.ghost { border:1px solid var(--line); color: var(--text2); background:transparent; }
+</style></head>
+<body><div class="app">
+  <div class="sb"><span>9:41</span><span class="right"><i class="wifi"></i><span class="batt"><i></i></span></span></div>
+  <header><span class="back">←</span><span class="h-title" style="font-size:13px;letter-spacing:.08em">Set up Termux host</span><span class="proposed">RENDER</span></header>
+  <div class="content" style="gap:9px">
+    <div class="note">The app exports the host plugin from inside itself — no repository clone and no account needed. Do these three steps on the phone once; the harness then runs entirely on this device.</div>
+
+    <div class="stepcard">
+      <div class="stephead"><span class="num">1</span><span class="stitle">Install Termux from Google Play</span></div>
+      <div class="sdesc">Use the Play Store build (current, works on Android 11+ with modern targetSdk).</div>
+      <div class="btn ghost">Open Play Store</div>
+    </div>
+
+    <div class="stepcard">
+      <div class="stephead"><span class="num">2</span><span class="stitle">Export the host bundle</span></div>
+      <div class="sdesc">Writes the mobile host plugin and installer to Downloads so Termux can unzip it. The only online step later is installing the harness from npm.</div>
+      <div class="btn ghost">Export host bundle</div>
+      <div class="okline">Exported to Download/dsh-mobile/dsh-mobile-host.zip</div>
+    </div>
+
+    <div class="stepcard">
+      <div class="stephead"><span class="num">3</span><span class="stitle">Run the installer in Termux</span></div>
+      <div class="sdesc">Paste these commands. They install Node/unzip if needed, unpack the bundle and start the harness with a wake lock.</div>
+      <div class="code"><span class="dim"># In Termux:</span>
+pkg install -y nodejs unzip
+termux-setup-storage      <span class="dim"># first run only</span>
+cd ~/storage/downloads &amp;&amp; unzip -o dsh-mobile-host.zip -d dsh-mobile-host
+cd dsh-mobile-host &amp;&amp; bash install.sh</div>
+      <div class="btn ghost">Copy commands</div>
+      <div style="font: 500 9px var(--mono);color:var(--text3)">~1.5 GB for the harness · first npm install takes a few minutes on Wi-Fi. The first harness start asks for a provider API key.</div>
+    </div>
+
+    <div class="stepcard">
+      <div class="stephead"><span class="num">4</span><span class="stitle">Detect and pair</span></div>
+      <div class="sdesc">When Termux says the host is running, tap Detect host. The app probes 127.0.0.1:3543 and offers Pair this host.</div>
+      <div class="btn primary">Detect host</div>
+    </div>
+
+    <div class="note">The harness is @deepseek-ai/dsh from npm (public package, not this app’s repo). The host plugin itself is bundled inside DSH Mobile and exported above.</div>
+    <div class="footer">render · matches implemented Compose layout · dsh mobile setup</div>
+  </div>
+</div></body></html>
